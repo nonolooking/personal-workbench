@@ -1,0 +1,32 @@
+{
+  "name": "个人看板 · 工作台",
+  "short_name": "看板",
+  "description": "复古报刊风格的个人看板：待办·习惯·记账·笔记·课表·投资",
+  "start_url": "./workbench-desktop.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f1de",
+  "theme_color": "#3a3530",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "assets/avatar.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/avatar.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/avatar.jpg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ]
+}

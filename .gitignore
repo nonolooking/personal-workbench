@@ -1,0 +1,12 @@
+# Session 临时产物（Trae 编辑器生成）
+.trae-html-share-packages/
+.uploads/
+
+# 系统
+.DS_Store
+Thumbs.db
+*.log
+
+# 编辑器
+.vscode/
+.idea/
