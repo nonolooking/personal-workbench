@@ -1,0 +1,28 @@
+README.md                # 项目介绍 / 功能 / 使用 / 部署 / 加桌面 / FAQ
+manifest.webmanifest      # PWA 清单
+sw.js                     # Service Worker
+.gitignore                # 忽略规则
+workbench-desktop.html    # 唯一核心文件（HTML+CSS+JS 全内嵌）
+assets/                   # 头像 + 横幅图片
+
+SHA256：dd667a4f3a5f4657c484dcbcca561fe87bd1c49857f10edbfc55f55b01678d1f
+
+这是一个单文件 PWA 工作台项目。读 README.md 了解项目结构和模块设计，所有代码在`workbench-desktop.html`
+
+我有一个个人工作台 PWA 项目。项目结构：
+
+- README.md：完整项目介绍、6 大模块、部署、加桌面、FAQ
+- workbench-desktop.html：核心文件，单文件包含 HTML+CSS+JS
+- manifest.webmanifest + sw.js：PWA 配置
+- assets/：头像和横幅
+
+【模块结构】导航 6 项：
+  todo（待办）/ habits（习惯·阅读·运动，子标签）
+  money（记账）/ notes（日记·收藏，子标签）
+  timetable（课表）/ portfolio（持仓·流水，子标签）
+
+【数据存储】localStorage + IndexedDB（本地优先）
+【云端同步】Supabase（可选，登录后启用）
+
+请先读 README.md 和 workbench-desktop.html 的 CONFIG.modules 部分
+理解架构后，帮我实现：___________（你的需求）
