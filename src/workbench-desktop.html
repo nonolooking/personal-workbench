@@ -883,22 +883,27 @@
      ============================================================ */
   @media (max-width: 860px){
     body { min-width: 0; }
-    /* 侧边栏 → 顶部横向导航条 */
+    /* 侧边栏 → 顶部紧凑导航条（品牌 + 横滑模块） */
     .sidebar { position: sticky; top: 0; left: 0; width: 100%; height: auto; flex-direction: row;
       align-items: center; z-index: 50; box-shadow: var(--shadow-card); overflow: visible; }
-    .sidebar .brand { padding: 10px 14px; flex: 0 0 auto; }
+    .sidebar .brand { padding: 8px 12px; gap: 9px; flex: 0 0 auto; }
+    .sidebar .brand .ava { width: 34px; height: 34px; border-radius: 10px; }
+    .sidebar .brand h1 { font-size: 14px; }
     .sidebar .brand p { display: none; }
-    .sidebar .brand h1 { font-size: 15px; }
-    .sidebar .nav { flex-direction: row; flex: 1; overflow-x: auto; padding: 8px 10px; gap: 4px; }
-    .sidebar .nav::-webkit-scrollbar { height: 0; }
-    .navi { margin-bottom: 0; padding: 9px 12px; white-space: nowrap; flex: 0 0 auto; }
+    /* 关键：nav 默认不是 flex，必须显式开启才能横排 */
+    .sidebar .nav { display: flex; flex-direction: row; flex: 1; min-width: 0; overflow-x: auto;
+      padding: 8px 10px; gap: 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .sidebar .nav::-webkit-scrollbar { display: none; }
+    .navi { margin-bottom: 0; padding: 8px 11px; white-space: nowrap; flex: 0 0 auto; font-size: 13px; }
     .nav-sep, .sidebar .foot { display: none; }
     .main { margin-left: 0; padding: 14px 14px 48px; }
     .main > #screen { max-width: 100%; }
-    /* 网格降列 / 堆叠 */
+    /* 固定 300px 侧栏列 → 堆叠 */
+    .mod-layout, .ov2-body { grid-template-columns: 1fr; }
+    /* 通用网格降列 */
     .grid.g-4, .grid.g-3, .grid.g-2, .grid.g-main { grid-template-columns: 1fr; }
     .modcard-grid { grid-template-columns: repeat(2, 1fr); }
-    .rings { grid-template-columns: repeat(2, 1fr); }
+    .rings { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .quick-grid { grid-template-columns: 1fr; }
     .bento { grid-template-columns: 1fr !important; }
     .bento > * { grid-column: 1 / -1 !important; }
@@ -907,6 +912,12 @@
     .hero-banner .hstats { gap: 16px; flex-wrap: wrap; }
     .header { flex-wrap: wrap; }
     .header h2 { font-size: 22px; }
+    .masthead .m-title { font-size: 30px; }
+    /* 投资看板：汇总卡降列 / 图表堆叠 / 持仓表横滚 */
+    .pf-summary { grid-template-columns: repeat(2, 1fr); }
+    .pf-charts { grid-template-columns: 1fr; }
+    .pf-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .pf-table { min-width: 640px; }
     /* 课表横向滚动 */
     .tt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .tt-grid { min-width: 680px; }
