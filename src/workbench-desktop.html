@@ -891,11 +891,20 @@
     .sidebar .brand h1 { font-size: 14px; }
     .sidebar .brand p { display: none; }
     /* 关键：nav 默认不是 flex，必须显式开启才能横排 */
-    .sidebar .nav { display: flex; flex-direction: row; flex: 1; min-width: 0; overflow-x: auto;
-      padding: 8px 10px; gap: 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-    .sidebar .nav::-webkit-scrollbar { display: none; }
-    .navi { margin-bottom: 0; padding: 8px 11px; white-space: nowrap; flex: 0 0 auto; font-size: 13px; }
-    .nav-sep, .sidebar .foot { display: none; }
+    /* 导航改为可换行的紧凑胶囊：全部入口一屏可见，无需左右滑动 */
+    .sidebar { flex-wrap: wrap; }
+    .sidebar .nav { display: flex; flex-direction: row; flex-wrap: wrap; flex: 1; min-width: 0;
+      padding: 6px 8px; gap: 4px 3px; }
+    .navi { margin-bottom: 0; padding: 5px 9px; white-space: nowrap; flex: 0 0 auto; font-size: 12px; gap: 4px; }
+    .navi svg { width: 13px; height: 13px; }
+    .nav-sep { display: none; }
+    /* 登录 / 同步状态 / 媒体备份：导航下的紧凑一行，手机端不再隐藏 */
+    .sidebar .foot { display: flex; width: 100%; order: 9; flex-wrap: wrap; align-items: center;
+      gap: 6px 10px; padding: 6px 12px 8px; font-size: 11px; opacity: 1;
+      border-top: 1px solid var(--drawer-hover); }
+    .sidebar .foot .backup-row { margin-top: 0; flex: 0 0 auto; }
+    .sidebar .foot .backup-btn { padding: 4px 9px; font-size: 11px; }
+    .sidebar .foot .auth-btn { display: inline-block; width: auto; padding: 4px 12px; font-size: 11.5px; }
     .main { margin-left: 0; padding: 14px 14px 48px; }
     .main > #screen { max-width: 100%; }
     /* 固定 300px 侧栏列 → 堆叠 */
@@ -903,7 +912,12 @@
     /* 通用网格降列 */
     .grid.g-4, .grid.g-3, .grid.g-2, .grid.g-main { grid-template-columns: 1fr; }
     .modcard-grid { grid-template-columns: repeat(2, 1fr); }
-    .rings { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .rings { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .ring { padding: 8px 2px; gap: 5px; }
+    .ring .dial { max-width: 92px; }
+    .ring .pct { font-size: 15px; }
+    .ring .lbl { font-size: 12.5px; }
+    .ring .sub { font-size: 10.5px; }
     .quick-grid { grid-template-columns: 1fr; }
     .bento { grid-template-columns: 1fr !important; }
     .bento > * { grid-column: 1 / -1 !important; }
@@ -921,7 +935,10 @@
     /* 课表横向滚动 */
     .tt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .tt-grid { min-width: 680px; }
-    .modal { width: auto; }
+    .modal { width: auto; padding: 18px 16px; border-radius: 16px; max-height: 88vh; }
+    .modal h3 { font-size: 17px; }
+    .frow { flex-direction: column; gap: 0; }
+    .seg .opt { padding: 8px 6px; font-size: 13px; }
   }
   @media (max-width: 480px){
     .modcard-grid { grid-template-columns: 1fr; }
@@ -948,11 +965,14 @@
     .rec .body .rname { flex: 1 1 100%; min-width: 0; }
     .rec .body .rdate { margin-left: 0; }
 
-    /* 课表卡片：缩小字号与内边距，课程名不再挤成多行 */
-    .tt-cell { padding: 6px 8px; min-height: 58px; gap: 2px; }
-    .tt-cell .tt-sub { font-size: 13.5px; letter-spacing: 0; }
-    .tt-cell .tt-loc, .tt-cell .tt-teacher { font-size: 10px; }
-    .tt-cell .tt-note, .tt-cell .tt-hw { font-size: 9.5px; }
+    /* 模块概况：内联 3 列改为整行列表，模块名不再截断 */
+    .pin-list { grid-template-columns: 1fr !important; gap: 8px; }
+
+    /* 课表卡片：进一步缩小字号与内边距 */
+    .tt-cell { padding: 5px 7px; min-height: 50px; gap: 2px; }
+    .tt-cell .tt-sub { font-size: 12px; letter-spacing: 0; }
+    .tt-cell .tt-loc, .tt-cell .tt-teacher { font-size: 9.5px; }
+    .tt-cell .tt-note, .tt-cell .tt-hw { font-size: 9px; }
     .tt-cell .tt-week-tag, .tt-cell .tt-tag { font-size: 8px; }
     .tt-hd { font-size: 11px; padding: 5px 2px; }
     .tt-pd { font-size: 9.5px; }
