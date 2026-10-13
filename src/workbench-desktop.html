@@ -913,11 +913,11 @@
     .header { flex-wrap: wrap; }
     .header h2 { font-size: 22px; }
     .masthead .m-title { font-size: 30px; }
-    /* 投资看板：汇总卡降列 / 图表堆叠 / 持仓表横滚 */
-    .pf-summary { grid-template-columns: repeat(2, 1fr); }
-    .pf-charts { grid-template-columns: 1fr; }
-    .pf-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .pf-table { min-width: 640px; }
+    /* 投资看板：汇总卡降列 / 图表堆叠 / 持仓表横滚（body 前缀覆盖 JS 注入的 PORTFOLIO_CSS） */
+    body .pf-summary { grid-template-columns: repeat(2, 1fr); }
+    body .pf-charts { grid-template-columns: 1fr; }
+    body .pf-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    body .pf-table { min-width: 640px; }
     /* 课表横向滚动 */
     .tt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .tt-grid { min-width: 680px; }
@@ -927,6 +927,38 @@
     .modcard-grid { grid-template-columns: 1fr; }
     .main { padding: 12px 10px 44px; }
     .hero-banner .hstats { gap: 12px; }
+  }
+
+  /* ============================================================
+     移动端细节优化（第二轮）
+     ============================================================ */
+  @media (max-width: 860px){
+    /* 防意外横向溢出（修复投资/复盘视图整页横移、sticky 顶栏偏移） */
+    body { overflow-x: hidden; }
+    body svg { max-width: 100%; }
+
+    /* 工具条：按钮不折行（修复"新建"竖排折行），搜索框弹性占位 */
+    .toolbar { flex-wrap: wrap; row-gap: 8px; }
+    body .btn { white-space: nowrap; padding: 9px 14px; }
+    .toolbar .search-box { flex: 1 1 150px; min-width: 0; }
+
+    /* 任务卡片：标题独占一行，日期/标签/备注统一左对齐换行（修复 margin-left:auto 乱飘） */
+    .rec .top { padding-right: 40px !important; }
+    .rec .body { gap: 6px 8px; }
+    .rec .body .rname { flex: 1 1 100%; min-width: 0; }
+    .rec .body .rdate { margin-left: 0; }
+
+    /* 课表卡片：缩小字号与内边距，课程名不再挤成多行 */
+    .tt-cell { padding: 6px 8px; min-height: 58px; gap: 2px; }
+    .tt-cell .tt-sub { font-size: 13.5px; letter-spacing: 0; }
+    .tt-cell .tt-loc, .tt-cell .tt-teacher { font-size: 10px; }
+    .tt-cell .tt-note, .tt-cell .tt-hw { font-size: 9.5px; }
+    .tt-cell .tt-week-tag, .tt-cell .tt-tag { font-size: 8px; }
+    .tt-hd { font-size: 11px; padding: 5px 2px; }
+    .tt-pd { font-size: 9.5px; }
+
+    /* 投资看板：持仓分布图允许换行，避免饼图+图例挤压 */
+    body .pf-pie-wrap { flex-wrap: wrap; }
   }
 
 </style>
