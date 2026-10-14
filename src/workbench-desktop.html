@@ -1098,16 +1098,11 @@ const CONFIG = {
     { key:"todo", label:"今日待办", icon:"list", color:"var(--accent)",
       calc: d => { const it=d.todo||[]; const done=it.filter(x=>x.done).length; return { value: it.length?Math.round(done/it.length*100):0, sub:`${done}/${it.length} 条` }; } },
     { key:"habits", label:"习惯打卡", icon:"leaf", color:"var(--module-1)",
-      // 习惯打卡组（今日完成度）：每日打卡率 + 阅读/运动/电影“今日是否打卡”
       calc: d => {
         const t=today();
         const chk=d.checkin||[]; const cDone=chk.filter(x=>x.log&&x.log[t]).length;
-        const cPct = chk.length?Math.round(cDone/chk.length*100):0;
-        const rOn = (d.readLog&&d.readLog[t])?100:0;
-        const sOn = (d.sportLog&&d.sportLog[t])?100:0;
-        const mOn = (d.movieLog&&d.movieLog[t])?100:0;
-        const avg = Math.round((cPct+rOn+sOn+mOn)/4);
-        return { value: avg, sub:`打卡${cDone}/${chk.length}·读${rOn?'✓':'–'}·动${sOn?'✓':'–'}·影${mOn?'✓':'–'}` };
+        const pct = chk.length?Math.round(cDone/chk.length*100):0;
+        return { value: pct, sub:`${cDone}/${chk.length} 打卡` };
       } },
     { key:"timetable", label:"今日课表", icon:"school", color:"var(--module-2)",
       calc: d => {
@@ -1140,32 +1135,11 @@ const CONFIG = {
              {id:12,title:"发布 1 篇笔记 / 视频",priority:"P1",done:false,note:"",date:isoToday()},
              {id:13,title:"整理今日工作纪要",priority:"P2",done:true,note:"",date:isoToday()} ] },
 
-    // 习惯系（合并 checkin+read+sport）
-    { key:"habits", name:"习惯打卡", icon:"leaf", tint:"#f0dcc0", color:"var(--module-1)", type:"group", desc:"打卡·阅读·运动·电影",
-      subKeys:["checkin","read","sport","movie"], defaultSub:"checkin" },
-    { key:"checkin", name:"习惯", icon:"leaf", tint:"#f0dcc0", color:"var(--module-1)", type:"checkin", desc:"每日小习惯打卡", parent:"habits",
+    // 习惯系（自由打卡，阅读 / 运动 / 电影 等由用户在打卡里自行新建）
+    { key:"habits", name:"习惯打卡", icon:"leaf", tint:"#f0dcc0", color:"var(--module-1)", type:"group", desc:"每日打卡·自由记录",
+      subKeys:["checkin"], defaultSub:"checkin" },
+    { key:"checkin", name:"打卡", icon:"leaf", tint:"#f0dcc0", color:"var(--module-1)", type:"checkin", desc:"每日小习惯打卡（可自由增删，如阅读 / 运动 / 电影）", parent:"habits",
       seed:[ {id:21,title:"喝够 8 杯水",log:{},monthGoal:25}, {id:22,title:"23:30 前睡觉",log:{},monthGoal:25}, {id:23,title:"维生素 / 补品",log:{},monthGoal:20} ] },
-    { key:"read", name:"阅读", icon:"book", tint:"#dde6de", color:"var(--module-2)", type:"progress", unit:"页", desc:"书籍进度·摘录·想法", parent:"habits",
-      seed:[
-        {id:31,title:"《认知觉醒》",current:168,target:300,unit:"页",note:"第 7 章：习惯的复利，早晚各读 30 分钟",
-         reflection:"全书最打动我的是'复利'的类比——每天进步 1%，一年后 37 倍。读到第 7 章后开始把晨读 30 分钟写进番茄钟。",
-         quotes:[
-           {page:45,text:"认知越清晰，行动越坚定。"},
-           {page:102,text:"复利的奇迹在'后期'爆发，前 80% 的时间几乎看不到效果。"}
-         ],
-         tags:["认知","习惯","复利"],monthGoal:200},
-        {id:32,title:"《原子习惯》",current:90,target:260,unit:"页",note:"聚焦身份认同的养成，做好读书笔记",
-         reflection:"",
-         quotes:[{page:32,text:"你不会上升到目标的高度，而会下沉到系统的高度。"}],
-         tags:["习惯","系统","身份认同"],monthGoal:260}
-      ] },
-    { key:"sport", name:"运动", icon:"activity", tint:"#f3e6cc", color:"var(--module-3)", type:"progress", unit:"分钟", desc:"运动·拉伸·散步", parent:"habits",
-      seed:[ {id:41,title:"力量训练",current:12,target:20,unit:"分钟",note:"核心 + 上肢，组间休息 60 秒",monthGoal:300},
-             {id:42,title:"跑步",current:30,target:40,unit:"分钟",note:"慢跑热身，配速 6 分半保持心率",monthGoal:400} ] },
-
-    { key:"movie", name:"电影", icon:"film", tint:"#e8dcef", color:"var(--module-7)", type:"movie", desc:"观影记录·评分·短评", parent:"habits", monthGoal:0,
-      seed:[ {id:91,title:"《奥本海默》",date:isoToday(),rating:5,comment:"节奏紧凑，三个小时不觉长。",tags:["传记","历史"]},
-             {id:92,title:"《心灵奇旅》",date:isoToday(),rating:4,comment:"关于活在当下的小确幸。",tags:["动画","治愈"]} ] },
 
     { key:"money", name:"记账本", icon:"wallet", tint:"#f0ddcf", color:"var(--module-4)", type:"finance", desc:"收入·支出·分类·占比",
       categories:["餐饮","交通","购物","居家","娱乐","工资","其他"],
@@ -1954,12 +1928,12 @@ function pomoTileHTML(){
   const r=64,c=2*Math.PI*r,off=c*(1-pomo.remain/pomo.total);
 
   // 关联项目下拉选项
-  const reads=data.read||[]; const sports=data.sport||[]; const habits=data.checkin||[];
+  const habits=data.checkin||[];
   const optGrp=(label,items,type,key)=>{
     if(!items.length) return "";
     return `<optgroup label="${label}">${items.map(x=>`<option value="${key}|${type}|${x.id}" ${pomo.linkedId===x.id&&pomo.linkedKey===key?'selected':''}>${esc(x.title||'未命名')}</option>`).join("")}</optgroup>`;
   };
-  const opts=optGrp("阅读",reads,"progress","read")+optGrp("锻炼",sports,"progress","sport")+optGrp("习惯打卡",habits,"checkin","checkin");
+  const opts=optGrp("习惯打卡",habits,"checkin","checkin");
 
   const linkedLabel=pomo.linkedTitle?`<span class="plink-cur">${esc(pomo.linkedTitle)}</span>`:`<span class="plink-none">未关联</span>`;
 
@@ -2004,45 +1978,7 @@ function spendTileHTML(){
     <div class="book-list">${rows}</div></div>`;
 }
 
-/* 在读好书：read (progress) 各书进度 */
-function booksTileHTML(){
-  const all=data.read||[]; const colors=["var(--module-2)","var(--module-1)","var(--module-3)","var(--module-4)","var(--module-5)"];
-  const rows=all.length? all.map((x,i)=>{ const pct=Math.min(100,Math.round((x.current/x.target)*100||0)); const col=colors[i%colors.length];
-    return `<div class="book-row js-open" data-open="read"><span class="spine" style="background:${col}">${icon("book",16)}</span>
-      <div class="bmid"><div class="btt">${esc(x.title)}</div><div class="bsub">${x.note?esc(x.note):`${x.current}/${x.target} ${x.unit||'页'}`}</div>
-        <div class="bbar"><i style="width:${pct}%;background:${col}"></i></div></div><span class="bpct" style="color:${col}">${pct}%</span></div>`; }).join("")
-    : `<div class="focus-empty">还没有在读书籍，去「阅读」添加吧</div>`;
-  return `<div class="tile b4"><div class="tile-h"><span class="tic">${icon("book",16)}</span><div class="tt"><span class="en">READING</span><span class="zh">阅读</span></div><span class="r">${all.length} 本</span></div>
-    <div class="book-list">${rows}</div></div>`;
-}
-
-/* 本周目标：sport (progress) 各项进度条 */
-function goalsTileHTML(){
-  const all=data.sport||[]; const colors=["var(--module-3)","var(--module-1)","var(--module-2)","var(--module-4)","var(--module-5)"];
-  const rows=all.length? all.map((x,i)=>{ const pct=Math.min(100,Math.round((x.current/x.target)*100||0)); const col=colors[i%colors.length];
-    return `<div class="book-row"><span class="spine" style="background:${col}">${icon("activity",16)}</span>
-      <div class="bmid"><div class="btt">${pct>=100?`<span style="color:var(--module-1);display:inline-flex;vertical-align:-2px;margin-right:3px">${icon("check",13,2.6)}</span>`:''}${esc(x.title)}</div>
-        <div class="bsub">${x.current}/${x.target} ${x.unit||'次'}</div>
-        <div class="bbar"><i style="width:${pct}%;background:${col}"></i></div></div><span class="bpct" style="color:${col}">${pct}%</span></div>`; }).join("")
-    : `<div class="focus-empty">还没有运动目标，去「运动」添加吧</div>`;
-  return `<div class="tile b4"><div class="tile-h"><span class="tic">${icon("activity",16)}</span><div class="tt"><span class="en">WORKOUT</span><span class="zh">运动</span></div><span class="r js-open" data-open="sport">${all.length} 项</span></div>
-    <div class="book-list">${rows}</div></div>`;
-}
-
-/* 观影：movie 各影片记录（本月计数 / 最近几部） */
-function moviesTileHTML(){
-  const all=data.movie||[]; const ym=curYM();
-  const thisMonth=all.filter(x=>(x.date||"").startsWith(ym));
-  const goal=movieGoal();
-  const colors=["var(--module-7)","var(--module-1)","var(--module-3)","var(--module-4)"];
-  const rows=all.length? all.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,4).map((x,i)=>{ const col=colors[i%colors.length];
-    return `<div class="book-row js-open" data-open="movie"><span class="spine" style="background:${col}">${icon("film",16)}</span>
-      <div class="bmid"><div class="btt">${esc(x.title)}</div><div class="bsub">${x.date||''}${x.rating?` · ${'★'.repeat(x.rating)}`:''}</div></div>
-      <span class="bpct" style="color:${col}">${x.rating||''}</span></div>`; }).join("")
-    : `<div class="focus-empty">还没有观影记录，去「电影」添加吧</div>`;
-  return `<div class="tile b4"><div class="tile-h"><span class="tic">${icon("film",16)}</span><div class="tt"><span class="en">MOVIES</span><span class="zh">电影</span></div><span class="r js-open" data-open="movie">本月 ${thisMonth.length}${goal?`/${goal}`:''} 部</span></div>
-    <div class="book-list">${rows}</div></div>`;
-}
+/* 阅读 / 运动 / 电影 已取消独立模块，统一在「习惯打卡」里作为自由打卡项新建 */
 
 function renderHome(){
   const now = new Date();
@@ -2083,7 +2019,7 @@ function renderHome(){
     </div>
 
     ${grp("习惯打卡","HABITS")}
-    <div class="bento">${habitTileHTML()}${booksTileHTML()}${goalsTileHTML()}${moviesTileHTML()}</div>
+    <div class="bento">${habitTileHTML()}</div>
 
     ${grp("今日待办","TODAY'S&nbsp;&nbsp;TASKS")}
     <div class="bento">${todoTileHTML()}</div>
@@ -2182,11 +2118,8 @@ function habitCalRow(name, on, cnt, color){
 }
 function habitCalendarHTML(ym){
   const days=monthDaysArr(ym); const rows=[];
-  [["read","阅读",modOf("read").color],["sport","运动",modOf("sport").color],["movie","电影",modOf("movie").color]].forEach(([k,label,color])=>{
-    const log=data[habitLogKey(k)]||{}; const on=days.map(d=>!!log[d]); const cnt=on.filter(Boolean).length;
-    rows.push(habitCalRow(label,on,cnt,color));
-  });
   (data.checkin||[]).forEach(x=>{ const log=x.log||{}; const on=days.map(d=>!!log[d]); const cnt=on.filter(Boolean).length; rows.push(habitCalRow(esc(x.title),on,cnt,"var(--module-1)")); });
+  if(!rows.length) return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历 · ${ym}</div><div class="focus-empty">还没有打卡项，去「习惯打卡」添加吧</div></div>`;
   return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历 · ${ym}</div>${rows.join("")}
     <div class="hc-legend"><span class="hc-dot on"></span>已打卡<span class="hc-dot"></span>未打卡</div></div>`;
 }
@@ -2279,7 +2212,7 @@ function renderInsight(){
   // 投资复盘 + 净资产聚合（月底自动写入资产快照）
   maybeSnapshotAsset();
   const investHTML=investmentReviewHTML();
-  const reviews=[progressReview("read","阅读进度","页"),progressReview("sport","锻炼累计","分钟"),checkinReview(),financeReview(),investHTML].filter(Boolean).join("");
+  const reviews=[checkinReview(),financeReview(),investHTML].filter(Boolean).join("");
   const hasReviews=!!reviews;
 
   const [cy,cm]=curYM().split("-").map(Number);
