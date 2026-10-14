@@ -607,15 +607,15 @@
   .cal-month-sub { font-size:11px; color:var(--text-secondary); }
   .cal-dow-row { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:4px; }
   .cal-dow { font-size:11px; font-weight:700; color:var(--text-secondary); text-align:center; padding:4px; }
-  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
-  .cal-day { min-height:84px; padding:4px 5px; background:var(--surface-card); border:1px solid var(--border);
-    border-radius:8px; cursor:pointer; transition:all .12s; display:flex; flex-direction:column; gap:3px; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; grid-auto-rows:96px; }
+  .cal-day { height:100%; min-height:0; padding:4px 5px; background:var(--surface-card); border:1px solid var(--border);
+    border-radius:8px; cursor:pointer; transition:all .12s; display:flex; flex-direction:column; gap:3px; overflow:hidden; }
   .cal-day:hover { border-color:var(--border-input); box-shadow:var(--shadow-card); }
   .cal-day.today { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-muted); }
   .cal-day.other-month { background:transparent; border-style:dashed; opacity:.5; }
   .cal-day-num { font-size:11px; font-weight:700; color:var(--text-secondary); text-align:right; padding-right:2px; }
   .cal-day.today .cal-day-num { color:var(--accent); }
-  .cal-items { display:flex; flex-direction:column; gap:2px; flex:1; }
+  .cal-items { display:flex; flex-direction:column; gap:2px; flex:1; min-height:0; overflow:hidden; }
   .cal-item { font-size:10px; color:var(--text); background:var(--surface-nested); border-radius:4px;
     padding:2px 4px; line-height:1.25; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; transition:all .1s; }
   .cal-item:hover { background:var(--border-input); }
@@ -766,8 +766,8 @@
   .tk-name { flex:1; min-width:0; font-size:13.5px; font-weight:600; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .tk-name.done { text-decoration:line-through; color:var(--text-secondary); }
 
-  /* 今日课表（横向卡片条） */
-  .tc-strip { display:flex; gap:12px; overflow-x:auto; padding:4px 2px 8px; }
+  /* 今日课表（自适应网格，一屏展示完，不横向滚动） */
+  .tc-strip { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; padding:4px 2px 8px; }
   .tt-tabs { flex:0 0 auto; display:inline-flex; gap:4px; background:var(--surface-nested); border-radius:8px; padding:3px; margin-left:auto; }
   .tt-tabs .opt { flex:0 0 auto; min-width:auto; padding:6px 10px; font-size:11.5px; border-radius:6px; cursor:pointer; color:var(--text-secondary); font-weight:600; }
   .tt-tabs .opt.on { background:var(--surface-card); color:var(--accent); box-shadow:var(--shadow-card); }
@@ -827,7 +827,7 @@
   .rv-budget .btn { padding:6px 12px; font-size:12px; }
   .tc-strip::-webkit-scrollbar { height:6px; }
   .tc-strip::-webkit-scrollbar-thumb { background:var(--border); border-radius:999px; }
-  .tc-card { flex:0 0 auto; min-width:140px; padding:12px 14px; background:var(--surface-nested);
+  .tc-card { padding:12px 14px; background:var(--surface-nested);
     border:1px solid var(--border); border-left:3px solid var(--module-2); border-radius:var(--radius-tile);
     cursor:pointer; transition:all .15s; }
   .tc-card:hover { border-color:var(--module-2); box-shadow:var(--shadow-card); transform:translateY(-1px); }
@@ -1147,15 +1147,12 @@ const CONFIG = {
              {id:52,title:"地铁",type:"expense",amount:6,category:"交通",date:isoToday()},
              {id:53,title:"稿费",type:"income",amount:400,category:"工资",date:isoToday()} ] },
 
-    // 笔记系（合并 note+hot）
-    { key:"notes", name:"笔记收藏", icon:"pen", tint:"#e6e0ef", color:"var(--module-5)", type:"group", desc:"日记·摘录·收藏",
-      subKeys:["note","hot"], defaultSub:"note" },
+    // 笔记系（收藏功能已取消，仅保留日记）
+    { key:"notes", name:"笔记", icon:"pen", tint:"#e6e0ef", color:"var(--module-5)", type:"group", desc:"日记·摘录·灵感",
+      subKeys:["note"], defaultSub:"note" },
     { key:"note", name:"日记", icon:"pen", tint:"#e6e0ef", color:"var(--module-5)", type:"note", desc:"日记·摘录·灵感", parent:"notes",
       moods:["开心","平静","低落","焦虑","疲惫"],
       seed:[ {id:61,title:"今天的小确幸",content:"阳台的多肉冒出了新芽，顺手拍了张照片。",mood:"开心",date:isoToday()} ] },
-    { key:"hot", name:"收藏", icon:"flame", tint:"#f0ddd4", color:"var(--danger)", type:"note", desc:"热点·收藏·稍后读", parent:"notes",
-      moods:["收藏","稍后读","已读"],
-      seed:[ {id:71,title:"AI 提示词技巧合集",content:"整理常用提示词模板，方便复用。",mood:"收藏",date:isoToday()} ] },
 
     { key:"timetable", name:"学校课表", icon:"school", tint:"#dde6de", color:"var(--module-2)", type:"timetable", desc:"一周课程安排·教室·教师",
       seed:[
@@ -2305,9 +2302,14 @@ function renderModule(key){
   if(m.type==="todo" && todoView==="calendar"){
     mainContent = renderTodoCalendar(key, all, q);
   } else {
-    const body = it.length ? it.map(x=>recHTML(m,x)).join("")
-      : `<div class="empty"><span class="e">${icon(m.icon,28)}</span><div>${q?'没有匹配的记录':'还没有记录，点右上角「新建」添加第一条吧'}</div></div>`;
-    mainContent = `<div class="sec-title">${m.type==="todo"?"全部任务":"全部记录"} <span id="rec-count" style="margin-left:auto;font-weight:500;color:var(--text-secondary);font-size:12px">${it.length} 条</span></div>
+    // 待办清单默认隐藏已完成，可点“显示已完成”临时展开
+    const listItems = (m.type==="todo" && !showDoneTodos) ? it.filter(x=>!x.done) : it;
+    const doneN = m.type==="todo" ? all.filter(x=>x.done).length : 0;
+    const doneToggle = (m.type==="todo" && doneN>0)
+      ? `<span id="toggle-done" style="cursor:pointer;margin-left:12px;font-size:12px;color:var(--text-secondary)">${showDoneTodos?'隐藏已完成':'显示已完成 '+doneN}</span>` : '';
+    const body = listItems.length ? listItems.map(x=>recHTML(m,x)).join("")
+      : `<div class="empty"><span class="e">${icon(m.icon,28)}</span><div>${q?'没有匹配的记录':(m.type==="todo"&&doneN>0&&!showDoneTodos?'所有任务已完成':'还没有记录，点右上角「新建」添加第一条吧')}</div></div>`;
+    mainContent = `<div class="sec-title">${m.type==="todo"?"全部任务":"全部记录"} <span id="rec-count" style="margin-left:auto;font-weight:500;color:var(--text-secondary);font-size:12px">${listItems.length} 条</span>${doneToggle}</div>
       <div class="rec-grid">${body}</div>`;
   }
 
@@ -2328,6 +2330,7 @@ function renderModule(key){
   s.addEventListener("compositionstart",()=>{ composing=true; });
   s.addEventListener("compositionend",()=>{ composing=false; refresh(); });
   s.addEventListener("input",()=>{ if(!composing) refresh(); });
+  const tgl=$("#toggle-done"); if(tgl) tgl.onclick=()=>{ showDoneTodos=!showDoneTodos; renderModule(key); };
   // 视图切换
   if(m.type==="todo"){
     $("#screen").querySelectorAll("#todo-view .opt").forEach(o=>o.onclick=()=>{
@@ -2353,6 +2356,7 @@ function renderModule(key){
 
 /* 待办日历视图（月历） */
 let todoViewMode="list"; // list | calendar
+let showDoneTodos=false; // 待办清单是否显示已完成
 function renderTodoCalendar(key, all, q){
   const todayStr=isoToday();
   const now=new Date();
