@@ -2040,7 +2040,7 @@ function moviesTileHTML(){
       <div class="bmid"><div class="btt">${esc(x.title)}</div><div class="bsub">${x.date||''}${x.rating?` · ${'★'.repeat(x.rating)}`:''}</div></div>
       <span class="bpct" style="color:${col}">${x.rating||''}</span></div>`; }).join("")
     : `<div class="focus-empty">还没有观影记录，去「电影」添加吧</div>`;
-  return `<div class="tile b4"><div class="tile-h"><span class="tic">${icon("film",16)}</span><div class="tt"><span class="en">MOVIES</span><span class="zh">观影</span></div><span class="r js-open" data-open="movie">本月 ${thisMonth.length}${goal?`/${goal}`:''} 部</span></div>
+  return `<div class="tile b4"><div class="tile-h"><span class="tic">${icon("film",16)}</span><div class="tt"><span class="en">MOVIES</span><span class="zh">电影</span></div><span class="r js-open" data-open="movie">本月 ${thisMonth.length}${goal?`/${goal}`:''} 部</span></div>
     <div class="book-list">${rows}</div></div>`;
 }
 
@@ -2082,8 +2082,11 @@ function renderHome(){
       ${hero}
     </div>
 
-    ${grp("习惯与待办","HABITS&nbsp;&nbsp;&&nbsp;&nbsp;TASKS")}
-    <div class="bento">${habitTileHTML()}${todoTileHTML()}</div>
+    ${grp("习惯打卡","HABITS")}
+    <div class="bento">${habitTileHTML()}${booksTileHTML()}${goalsTileHTML()}${moviesTileHTML()}</div>
+
+    ${grp("今日待办","TODAY'S&nbsp;&nbsp;TASKS")}
+    <div class="bento">${todoTileHTML()}</div>
 
     ${grp("今日课表","TODAY&nbsp;&nbsp;·&nbsp;&nbsp;CLASSES")}
     <div class="bento">${todayClassesTileHTML()}</div>
@@ -2094,8 +2097,8 @@ function renderHome(){
     ${grp("投资行情","PORTFOLIO&nbsp;&nbsp;·&nbsp;&nbsp;MARKET")}
     <div class="bento">${portfolioTileHTML()}</div>
 
-    ${grp("收支与成长","MONEY&nbsp;&nbsp;&&nbsp;&nbsp;GROWTH")}
-    <div class="bento">${spendTileHTML()}${booksTileHTML()}${goalsTileHTML()}${moviesTileHTML()}</div>`;
+    ${grp("记账本","MONEY&nbsp;&nbsp;&&nbsp;&nbsp;GROWTH")}
+    <div class="bento">${spendTileHTML()}</div>`;
   wireHome();
   startClock();
   // 首页访问时若投资缓存过期则后台刷新（延时到 quotes 初始化后）
@@ -2193,8 +2196,9 @@ function renderInsight(){
   const [vy,vm]=insightMonth.split("-").map(Number);
   const monthName=`${vy}年${vm}月`;
 
-  const cards=CONFIG.modules.map(m=>{ const it=data[m.key]||[]; let main="", pct=0;
-    if(m.type==="todo"){ main=`${it.filter(x=>x.done).length}/${it.length} 已完成`; pct=it.length?Math.round(it.filter(x=>x.done).length/it.length*100):0; }
+  const cards=CONFIG.modules.filter(m=>!m.parent).map(m=>{ const it=data[m.key]||[]; let main="", pct=0;
+    if(m.type==="group"){ main=`${m.subKeys.length} 个子项 · 聚合页`; pct=0; }
+    else if(m.type==="todo"){ main=`${it.filter(x=>x.done).length}/${it.length} 已完成`; pct=it.length?Math.round(it.filter(x=>x.done).length/it.length*100):0; }
     else if(m.type==="checkin"){ const t=today(); main=`今日 ${it.filter(x=>x.log&&x.log[t]).length}/${it.length} 打卡`; pct=it.length?Math.round(it.filter(x=>x.log&&x.log[t]).length/it.length*100):0; }
     else if(m.type==="progress"){ pct=avgProgress(it).value; main=`平均进度 ${pct}%`; }
     else if(m.type==="finance"){ const e=it.filter(x=>x.type==="expense").reduce((a,x)=>a+ +x.amount,0); const inc=it.filter(x=>x.type==="income").reduce((a,x)=>a+ +x.amount,0); main=`收 ¥${inc} · 支 ¥${e}`; }
