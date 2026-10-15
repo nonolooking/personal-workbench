@@ -3848,7 +3848,12 @@ quotes = {
     }
     return map;
   },
-  toJjCode(code){ return "jj"+code; },  // code 为 6 位纯数字基金代码
+  toJjCode(code){
+    let c = String(code||"").split(/[.\s]/)[0];   // 去掉 .SZ/.SH 等交易所后缀（基金无后缀）
+    c = c.replace(/\D/g, "");                      // 仅保留数字
+    if(c.length && c.length < 6) c = c.padStart(6, "0");  // 补齐到 6 位基金代码
+    return "jj" + c;
+  },  // 归一化任意形式的基金代码（00008.SZ / 000008.SZ / 000008 → jj000008）
 
   // ===== 加密货币（CoinGecko 免费接口，免 token、CORS 放行） =====
   // code 填 CoinGecko id（小写，如 bitcoin / ethereum / solana）。
