@@ -4345,7 +4345,7 @@ function bindPortfolioEvents(){
   const ptb=$("#pf-trash"); if(ptb) ptb.onclick=()=>openTrash();
   const vt=$("#pf-view-trades"); if(vt) vt.onclick=()=>go("trades");
 
-  document.querySelectorAll(".js-pf-edit").forEach(b=>b.onclick=()=>openEditor("portfolio", +b.dataset.id));
+  document.querySelectorAll(".js-pf-edit").forEach(b=>b.onclick=()=>openEditor("portfolio", (data.portfolio||[]).find(x=>x.id==b.dataset.id)));
   document.querySelectorAll(".js-pf-trade").forEach(b=>b.onclick=()=>{
     const h=(data.portfolio||[]).find(x=>x.id==b.dataset.id);
     openEditor("trades", null);
