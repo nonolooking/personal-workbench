@@ -1033,6 +1033,19 @@
   .rc-t { font-weight:700; font-size:13.5px; color:var(--text); }
   .rc-s { font-size:11.5px; color:var(--text-secondary); margin-top:2px; }
   .rc-amt { margin-left:auto; font-weight:700; font-size:14px; }
+  .req { color:var(--danger); margin-left:2px; font-weight:700; }
+  .btn.xs { padding:4px 10px; font-size:12px; }
+  .rec-card.rec-paused { opacity:.58; }
+  .rc-off { color:var(--text-secondary); }
+
+  /* 投资账户联动（记账本内） */
+  .invest-accounts { background:linear-gradient(135deg,var(--surface-card),var(--surface-nested)); border:1px solid var(--border); border-radius:var(--radius-tile); box-shadow:var(--shadow-card); padding:14px 16px; margin-bottom:14px; }
+  .ia-h { display:flex; align-items:center; font-weight:700; font-size:14px; color:var(--text); margin-bottom:10px; }
+  .ia-h .ia-total { margin-left:auto; color:var(--accent); font-size:15px; font-variant-numeric:tabular-nums; }
+  .ia-list { display:flex; flex-direction:column; gap:6px; }
+  .ia-row { display:flex; align-items:center; font-size:13px; color:var(--text); }
+  .ia-row b { margin-left:auto; font-variant-numeric:tabular-nums; }
+  .ia-note { font-size:11.5px; color:var(--text-secondary); margin-top:10px; }
 
 </style>
 </head>
@@ -2143,8 +2156,10 @@ function applyRecurring(){
   const rec=data.recurring||[]; if(!rec.length) return;
   const fin=data.finance||[]; let changed=false;
   rec.forEach(r=>{
+    if(r.active===false) return;                       // 已暂停：不再自动计入
     let ym=r.sinceYM||curYM(); const end=curYM();
     while(ym<=end){
+      if(r.endYM && ym>r.endYM) break;                 // 已到结束月：停止
       if(!fin.some(x=>x.recId===r.id && x.recYM===ym)){
         const d=Math.min(r.day==="L"?ymLastDay(ym):(+r.day||1), ymLastDay(ym));
         fin.push({id:Date.now()+Math.random(), title:r.title, type:r.type, amount:+r.amount||0, category:r.category||"其他", date:`${ym}-${String(d).padStart(2,"0")}`, recId:r.id, recYM:ym});
@@ -2160,9 +2175,15 @@ function applyRecurring(){
 function recurringHTML(){
   const rules=data.recurring||[]; const items=rules.length? rules.map(r=>{
     const inc=r.type==="income"; const col=inc?"var(--module-1)":"var(--danger)";
-    return `<div class="rec-card js-rec" data-id="${r.id}" style="cursor:pointer">
-      <div><div class="rc-t">${esc(r.title)}</div><div class="rc-s">${esc(r.category||"其他")} · 每月 ${r.day==="L"?"末":(r.day+"号")}</div></div>
-      <div class="rc-amt" style="color:${col}">${inc?"+":"-"}¥${r.amount}${inc?"/月收":"/月支"}</div></div>`;
+    const paused = r.active===false || (r.endYM && curYM()>r.endYM);
+    const status = r.active===false ? "已暂停" : (r.endYM && curYM()>r.endYM ? `已于 ${r.endYM} 结束` : "生效中");
+    return `<div class="rec-card ${paused?'rec-paused':''}" data-id="${r.id}">
+      <div class="js-rec" style="cursor:pointer;flex:1">
+        <div class="rc-t">${esc(r.title)}</div>
+        <div class="rc-s">${esc(r.category||"其他")} · 每月 ${r.day==="L"?"末":(r.day+"号")} · <span class="${paused?'rc-off':''}">${status}</span></div>
+      </div>
+      <div class="rc-amt" style="color:${col}">${inc?"+":"-"}¥${r.amount}${inc?"/月收":"/月支"}</div>
+      <button class="btn ghost xs js-pause" data-id="${r.id}">${paused?"恢复":"暂停"}</button></div>`;
   }).join("") : `<div class="focus-empty">还没有每月固定项，点「+ 添加固定收支」新增（如管理费、工资）。</div>`;
   return `<div class="recurring-box">
     <div class="rb-h">每月固定收支 <button class="btn ghost sm" id="rb-add">+ 添加固定收支</button></div>
@@ -2172,7 +2193,7 @@ function recurringHTML(){
 // 新增/编辑固定收支的弹窗
 function openRecurringModal(r){
   const money=modOf("money"); const cats=money.categories||[];
-  r = r || {id:Date.now(), title:"", type:"expense", amount:"", category:cats[0]||"其他", day:1, sinceYM:curYM()};
+  r = r || {id:Date.now(), title:"", type:"expense", amount:"", category:cats[0]||"其他", day:1, sinceYM:curYM(), active:true, endYM:null};
   const ov=document.createElement("div"); ov.className="overlay";
   ov.innerHTML=`<div class="modal">
     <div class="modal-h"><h3>每月固定收支</h3><button class="modal-x" id="rm-x">&times;</button></div>
@@ -2185,6 +2206,10 @@ function openRecurringModal(r){
       <div class="field"><label>每月几号</label><div class="seg" id="rm-day">
         ${[1,5,10,15,20,25].map(d=>`<div class="opt ${r.day===d?'on':''}" data-v="${d}" style="flex:0 0 auto;min-width:auto">${d}号</div>`).join("")}
         <div class="opt ${r.day==='L'?'on':''}" data-v="L" style="flex:0 0 auto;min-width:auto">月末</div></div></div>
+      <div class="field"><label>状态</label><div class="seg" id="rm-active">
+        <div class="opt ${r.active!==false?'on':''}" data-v="on">生效</div><div class="opt ${r.active===false?'on':''}" data-v="off">暂停</div></div>
+        <p class="sub" style="margin:4px 0 0">失业或变动时可「暂停」，已计入的历史月份保留。</p></div>
+      <div class="field"><label>结束月份（可选）</label><input id="rm-end" type="month" value="${r.endYM||''}" placeholder="留空=长期有效"/></div>
       <p class="sub" style="margin:2px 0 0">自 ${r.sinceYM} 起，每月自动计入一笔；可在记账本里照常编辑或删除该月记录。</p>
     </div>
     <div class="modal-f"><button class="btn ghost" id="rm-del">删除</button><div class="spacer"></div><button class="btn" id="rm-save">保存</button></div>
@@ -2199,8 +2224,10 @@ function openRecurringModal(r){
     const amount=Math.max(0,+ov.querySelector("#rm-amt").value||0);
     const category=ov.querySelector("#rm-cat .opt.on").dataset.v;
     const day=ov.querySelector("#rm-day .opt.on").dataset.v;
+    const active=ov.querySelector("#rm-active .opt.on").dataset.v==="on";
+    const endYM=ov.querySelector("#rm-end").value.trim()||null;
     if(!title||!amount){ toast("请填写名称和金额"); return; }
-    const rules=data.recurring||[]; const obj={id:r.id,title,type,amount,category,day:day==="L"?"L":+day,sinceYM:r.sinceYM};
+    const rules=data.recurring||[]; const obj={id:r.id,title,type,amount,category,day:day==="L"?"L":+day,sinceYM:r.sinceYM,active,endYM};
     const i=rules.findIndex(x=>x.id===r.id); if(i>=0) rules[i]=obj; else rules.push(obj);
     data.recurring=rules; applyRecurring(); persist(); ov.remove(); renderModule("money");
   };
@@ -2208,6 +2235,20 @@ function openRecurringModal(r){
     data.recurring=(data.recurring||[]).filter(x=>x.id!==r.id); persist(); ov.remove(); renderModule("money");
   };
 }
+
+// 记账本联动：从投资看板汇总各账户当前市值
+function investAccountsHTML(){
+  const hs=data.portfolio||[]; if(!hs.length) return "";
+  let total=0; const g={};
+  hs.forEach(h=>{ const c=portfolioCalc(h); const mv=c.marketValue||0; total+=mv; const k=h.kind||"other"; g[k]=(g[k]||0)+mv; });
+  const L={stock:"股票账户",fund:"基金账户",gold:"黄金账户",index:"指数账户",bond:"债券账户",crypto:"加密账户",cash:"现金账户",other:"其它账户"};
+  const rows=Object.keys(g).sort((a,b)=>g[b]-g[a]).map(k=>`<div class="ia-row"><span>${L[k]||k}</span><b>¥${fmtY(g[k])}</b></div>`).join("");
+  return `<div class="invest-accounts">
+    <div class="ia-h">投资账户市值<span class="ia-total">¥${fmtY(total)}</span></div>
+    <div class="ia-list">${rows}</div>
+    <div class="ia-note">同步自「投资看板」· 按实时行情估算（无行情时按成本）</div></div>`;
+}
+function fmtY(n){ return (Math.round((n||0)*100)/100).toLocaleString('zh-CN',{minimumFractionDigits:0,maximumFractionDigits:2}); }
 function habitCalRow(name, on, cnt, color){
   const cells=on.map(v=>`<i class="hc-cell ${v?'on':''}" style="${v&&color?`background:${color}`:''}"></i>`).join("");
   return `<div class="hc-row"><span class="hc-name">${name}</span><div class="hc-grid">${cells}</div><span class="hc-stat">${cnt}天</span></div>`;
@@ -2411,7 +2452,7 @@ function renderModule(key){
     mainContent = `<div class="sec-title">${m.type==="todo"?"全部任务":"全部记录"} <span id="rec-count" style="margin-left:auto;font-weight:500;color:var(--text-secondary);font-size:12px">${listItems.length} 条</span>${doneToggle}</div>
       <div class="rec-grid">${body}</div>`;
   }
-  if(m.type==="finance"){ mainContent = recurringHTML() + mainContent; }
+  if(m.type==="finance"){ mainContent = investAccountsHTML() + recurringHTML() + mainContent; }
 
   $("#screen").innerHTML=`<div class="header"><div><h2>${m.name}</h2><p>${m.desc}</p></div><div class="spacer"></div><span class="date-chip">${icon("calendar",14)} ${dateStr()}</span></div>
     <div class="toolbar">
@@ -2433,6 +2474,7 @@ function renderModule(key){
   const tgl=$("#toggle-done"); if(tgl) tgl.onclick=()=>{ showDoneTodos=!showDoneTodos; renderModule(key); };
   const rbAdd=$("#rb-add"); if(rbAdd) rbAdd.onclick=()=>openRecurringModal(null);
   $("#screen").querySelectorAll(".js-rec").forEach(el=>el.onclick=()=>openRecurringModal((data.recurring||[]).find(x=>x.id==el.dataset.id)));
+  $("#screen").querySelectorAll(".js-pause").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const id=b.dataset.id; const rules=data.recurring||[]; const x=rules.find(r=>r.id==id); if(x){ x.active=!(x.active===false); persist(); renderModule("money"); } });
   // 视图切换
   if(m.type==="todo"){
     $("#screen").querySelectorAll("#todo-view .opt").forEach(o=>o.onclick=()=>{
@@ -3297,6 +3339,7 @@ function openEditor(key,item){
       d.note=(val("#f-note")||"").trim();
       d.title=d.name;
     }
+    if(m.type==="portfolio" && !d.code){ toast("标的代码为必填项（已标 *）"); return; }
     else if(m.type==="trades"){
       d.code=normCode(val("#f-code"));
       d.name=(val("#f-name")||"").trim()||d.code;
@@ -4187,7 +4230,7 @@ function openTokenDialog(){
 function renderPortfolioEditor(m, d){
   const tags = d.tags || [];
   return `
-    <div class="field"><label>${icon("hash",13)} 标的代码</label><input id="f-code" value="${attr(d.code||'')}" placeholder="600519 / 510300 / 00700（可只填数字）"/></div>
+    <div class="field"><label>${icon("hash",13)} 标的代码<span class="req">*</span></label><input id="f-code" value="${attr(d.code||'')}" placeholder="600519 / 510300 / 00700（可只填数字）"/></div>
     <p class="sub" style="margin:-2px 0 10px">自动识别后缀：600519 → 600519.SH（茅台）；510300 → .SH（沪深300ETF）；00700 → 00700.HK（腾讯）；也可直接填 AU9999、600519.SH。</p>
     <div class="field"><label>${icon("user",13)} 标的名称</label><input id="f-name" value="${attr(d.name||'')}" placeholder="贵州茅台 / 沪深300ETF"/></div>
     <div class="field-row">
@@ -4197,9 +4240,11 @@ function renderPortfolioEditor(m, d){
       <div class="field"><label>${icon("box",13)} 板块</label><input id="f-sector" value="${attr(d.sector||'')}" placeholder="白酒/新能源/宽基"/></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>${icon("box",13)} 持仓数量</label><input id="f-qty" type="number" step="any" value="${d.qty??''}" placeholder="20"/></div>
-      <div class="field"><label>${icon("wallet",13)} 持仓成本</label><input id="f-cost" type="number" step="any" value="${d.costPrice??''}" placeholder="1550"/></div>
+      <div class="field"><label>${icon("box",13)} 持仓数量<span class="req">*</span></label><input id="f-qty" type="number" step="any" value="${d.qty??''}" placeholder="20"/></div>
+      <div class="field"><label>${icon("wallet",13)} 持仓成本<span class="req">*</span></label><input id="f-cost" type="number" step="any" value="${d.costPrice??''}" placeholder="1550"/></div>
     </div>
+    <p class="sub" style="margin:-4px 0 6px">建仓必填「持仓数量 + 综合成本价」；也可点下方「一键建仓」一次性填入，或只用「记一笔交易」自动累计（二者取其一即可）。</p>
+    <button class="btn ghost" id="bp-btn" style="margin-bottom:8px">${icon("plus",13)} 一键建仓（填当前持仓与综合成本价）</button>
     <div class="field-row">
       <div class="field"><label>${icon("target",13)} 目标价（止盈）</label><input id="f-target" type="number" step="any" value="${d.targetPrice??''}" placeholder="1900"/></div>
       <div class="field"><label>${icon("alert",13)} 止损价</label><input id="f-stop" type="number" step="any" value="${d.stopLossPrice??''}" placeholder="1450"/></div>
@@ -4261,6 +4306,33 @@ function bindPortfolioEditorEvents(m, d, onSave){
     $("#f-qty").value = agg ? agg.qty : qty;
     $("#f-cost").value = agg ? agg.avgCost.toFixed(4) : price;
   };
+
+  // 一键建仓：填入当前持仓数量 + 综合成本价（期初建仓基础），保存后生效
+  const bpBtn = $("#bp-btn");
+  if(bpBtn){
+    bpBtn.onclick = ()=>{
+      const ov=document.createElement("div"); ov.className="overlay";
+      ov.innerHTML=`<div class="modal"><div class="modal-h"><h3>一键建仓（期初持仓）</h3><button class="modal-x" id="bp-x">&times;</button></div>
+        <div class="modal-b">
+          <p class="sub">适用于已有多年持仓、不想逐笔补录的情况：填入当前持仓数量与综合成本价作为「期初建仓」基础，之后只在「记一笔交易」里记录新操作即可。</p>
+          <div class="field-row">
+            <div class="field"><label>当前持仓数量</label><input id="bp-qty" type="number" step="any" value="${(+$("#f-qty").value||0)}" placeholder="20"/></div>
+            <div class="field"><label>综合成本价</label><input id="bp-cost" type="number" step="any" value="${(+$("#f-cost").value||0)}" placeholder="1550"/></div>
+          </div>
+          <div class="field"><label>建仓日期（可选）</label><input id="bp-date" type="date" value="${$("#f-buydate").value||isoToday()}"/></div>
+        </div>
+        <div class="modal-f"><div class="spacer"></div><button class="btn" id="bp-save">确认建仓</button></div></div>`;
+      document.body.appendChild(ov);
+      ov.querySelector("#bp-x").onclick=()=>ov.remove();
+      ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
+      ov.querySelector("#bp-save").onclick=()=>{
+        const q=+ov.querySelector("#bp-qty").value||0; const c=+ov.querySelector("#bp-cost").value||0; const dt=ov.querySelector("#bp-date").value||isoToday();
+        if(!q||!c){ toast("请填写持仓数量与综合成本价"); return; }
+        $("#f-qty").value=q; $("#f-cost").value=c; $("#f-buydate").value=dt;
+        toast("已填入期初建仓，点「保存」生效"); ov.remove();
+      };
+    };
+  }
 }
 
 /* ============================================================
