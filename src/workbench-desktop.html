@@ -1023,6 +1023,17 @@
     body .pf-pie-wrap { flex-wrap: wrap; }
   }
 
+  /* 每月固定收支 */
+  .recurring-box { background:var(--surface-card); border:1px solid var(--border); border-radius:var(--radius-tile); box-shadow:var(--shadow-card); padding:14px 16px; margin-bottom:14px; }
+  .rb-h { display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; color:var(--text); margin-bottom:10px; }
+  .rb-h .btn { margin-left:auto; }
+  .rb-list { display:flex; flex-direction:column; gap:8px; }
+  .rec-card { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface-nested); border:1px solid var(--border); border-radius:10px; }
+  .rec-card:hover { border-color:var(--border-input); }
+  .rc-t { font-weight:700; font-size:13.5px; color:var(--text); }
+  .rc-s { font-size:11.5px; color:var(--text-secondary); margin-top:2px; }
+  .rc-amt { margin-left:auto; font-weight:700; font-size:14px; }
+
 </style>
 </head>
 <body>
@@ -2109,6 +2120,94 @@ function wireHome(){
 
 /* ---------- INSIGHT ---------- */
 function monthDaysArr(ym){ const [y,m]=ym.split("-").map(Number); const n=new Date(y,m,0).getDate(); const out=[]; for(let d=1;d<=n;d++) out.push(`${ym}-${String(d).padStart(2,"0")}`); return out; }
+
+// 标的代码归一化：6 位 A 股自动补后缀，4-5 位视作港股；已带后缀保持不变
+function normCode(raw){
+  if(!raw) return "";
+  let s=raw.trim().toUpperCase();
+  if(/\.(SH|SZ|HK|BJ|US)$/.test(s)) return s;
+  if(/^\d{6}$/.test(s)){
+    const p=s[0];
+    if(p==="6"||p==="5"||p==="9") return s+".SH";
+    if(p==="8") return s+".BJ";
+    return s+".SZ";            // 0/3/4 开头为深市
+  }
+  if(/^\d{4,5}$/.test(s)) return s+".HK";   // 港股代码 4-5 位
+  return s;
+}
+function ymLastDay(ym){ const [y,m]=ym.split("-").map(Number); return new Date(y,m,0).getDate(); }
+function ymAddMonth(ym,n){ const [y,m]=ym.split("-").map(Number); const t=new Date(y,m-1+n,1); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}`; }
+
+// 每月固定收支：自动补录到对应月份（幂等，靠 recId+recYM 去重）
+function applyRecurring(){
+  const rec=data.recurring||[]; if(!rec.length) return;
+  const fin=data.finance||[]; let changed=false;
+  rec.forEach(r=>{
+    let ym=r.sinceYM||curYM(); const end=curYM();
+    while(ym<=end){
+      if(!fin.some(x=>x.recId===r.id && x.recYM===ym)){
+        const d=Math.min(r.day==="L"?ymLastDay(ym):(+r.day||1), ymLastDay(ym));
+        fin.push({id:Date.now()+Math.random(), title:r.title, type:r.type, amount:+r.amount||0, category:r.category||"其他", date:`${ym}-${String(d).padStart(2,"0")}`, recId:r.id, recYM:ym});
+        changed=true;
+      }
+      ym=ymAddMonth(ym,1);
+    }
+  });
+  if(changed){ data.finance=fin; }
+}
+
+// 记账本里的「每月固定收支」管理卡片
+function recurringHTML(){
+  const rules=data.recurring||[]; const items=rules.length? rules.map(r=>{
+    const inc=r.type==="income"; const col=inc?"var(--module-1)":"var(--danger)";
+    return `<div class="rec-card js-rec" data-id="${r.id}" style="cursor:pointer">
+      <div><div class="rc-t">${esc(r.title)}</div><div class="rc-s">${esc(r.category||"其他")} · 每月 ${r.day==="L"?"末":(r.day+"号")}</div></div>
+      <div class="rc-amt" style="color:${col}">${inc?"+":"-"}¥${r.amount}${inc?"/月收":"/月支"}</div></div>`;
+  }).join("") : `<div class="focus-empty">还没有每月固定项，点「+ 添加固定收支」新增（如管理费、工资）。</div>`;
+  return `<div class="recurring-box">
+    <div class="rb-h">每月固定收支 <button class="btn ghost sm" id="rb-add">+ 添加固定收支</button></div>
+    <div class="rb-list">${items}</div></div>`;
+}
+
+// 新增/编辑固定收支的弹窗
+function openRecurringModal(r){
+  const money=modOf("money"); const cats=money.categories||[];
+  r = r || {id:Date.now(), title:"", type:"expense", amount:"", category:cats[0]||"其他", day:1, sinceYM:curYM()};
+  const ov=document.createElement("div"); ov.className="overlay";
+  ov.innerHTML=`<div class="modal">
+    <div class="modal-h"><h3>每月固定收支</h3><button class="modal-x" id="rm-x">&times;</button></div>
+    <div class="modal-b">
+      <div class="field"><label>名称</label><input id="rm-title" value="${attr(r.title)}" placeholder="管理费 / 工资 / 房租"/></div>
+      <div class="field"><label>类型</label><div class="seg" id="rm-type">
+        <div class="opt ${r.type!=='income'?'on':''}" data-v="expense">支出</div><div class="opt ${r.type==='income'?'on':''}" data-v="income">收入</div></div></div>
+      <div class="frow"><div class="field"><label>金额 ¥</label><input id="rm-amt" type="number" value="${r.amount??''}" placeholder="0"/></div>
+      <div class="field"><label>分类</label><div class="seg" id="rm-cat">${cats.map(c=>`<div class="opt ${c===r.category?'on':''}" data-v="${attr(c)}" style="flex:0 0 auto;min-width:auto">${esc(c)}</div>`).join("")}</div></div></div>
+      <div class="field"><label>每月几号</label><div class="seg" id="rm-day">
+        ${[1,5,10,15,20,25].map(d=>`<div class="opt ${r.day===d?'on':''}" data-v="${d}" style="flex:0 0 auto;min-width:auto">${d}号</div>`).join("")}
+        <div class="opt ${r.day==='L'?'on':''}" data-v="L" style="flex:0 0 auto;min-width:auto">月末</div></div></div>
+      <p class="sub" style="margin:2px 0 0">自 ${r.sinceYM} 起，每月自动计入一笔；可在记账本里照常编辑或删除该月记录。</p>
+    </div>
+    <div class="modal-f"><button class="btn ghost" id="rm-del">删除</button><div class="spacer"></div><button class="btn" id="rm-save">保存</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.querySelectorAll(".seg").forEach(seg=>seg.querySelectorAll(".opt").forEach(o=>o.onclick=()=>{ seg.querySelectorAll(".opt").forEach(x=>x.classList.remove("on")); o.classList.add("on"); }));
+  ov.querySelector("#rm-x").onclick=()=>ov.remove();
+  ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
+  ov.querySelector("#rm-save").onclick=()=>{
+    const title=ov.querySelector("#rm-title").value.trim();
+    const type=ov.querySelector("#rm-type .opt.on").dataset.v;
+    const amount=Math.max(0,+ov.querySelector("#rm-amt").value||0);
+    const category=ov.querySelector("#rm-cat .opt.on").dataset.v;
+    const day=ov.querySelector("#rm-day .opt.on").dataset.v;
+    if(!title||!amount){ toast("请填写名称和金额"); return; }
+    const rules=data.recurring||[]; const obj={id:r.id,title,type,amount,category,day:day==="L"?"L":+day,sinceYM:r.sinceYM};
+    const i=rules.findIndex(x=>x.id===r.id); if(i>=0) rules[i]=obj; else rules.push(obj);
+    data.recurring=rules; applyRecurring(); persist(); ov.remove(); renderModule("money");
+  };
+  ov.querySelector("#rm-del").onclick=()=>{
+    data.recurring=(data.recurring||[]).filter(x=>x.id!==r.id); persist(); ov.remove(); renderModule("money");
+  };
+}
 function habitCalRow(name, on, cnt, color){
   const cells=on.map(v=>`<i class="hc-cell ${v?'on':''}" style="${v&&color?`background:${color}`:''}"></i>`).join("");
   return `<div class="hc-row"><span class="hc-name">${name}</span><div class="hc-grid">${cells}</div><span class="hc-stat">${cnt}天</span></div>`;
@@ -2312,6 +2411,7 @@ function renderModule(key){
     mainContent = `<div class="sec-title">${m.type==="todo"?"全部任务":"全部记录"} <span id="rec-count" style="margin-left:auto;font-weight:500;color:var(--text-secondary);font-size:12px">${listItems.length} 条</span>${doneToggle}</div>
       <div class="rec-grid">${body}</div>`;
   }
+  if(m.type==="finance"){ mainContent = recurringHTML() + mainContent; }
 
   $("#screen").innerHTML=`<div class="header"><div><h2>${m.name}</h2><p>${m.desc}</p></div><div class="spacer"></div><span class="date-chip">${icon("calendar",14)} ${dateStr()}</span></div>
     <div class="toolbar">
@@ -2331,6 +2431,8 @@ function renderModule(key){
   s.addEventListener("compositionend",()=>{ composing=false; refresh(); });
   s.addEventListener("input",()=>{ if(!composing) refresh(); });
   const tgl=$("#toggle-done"); if(tgl) tgl.onclick=()=>{ showDoneTodos=!showDoneTodos; renderModule(key); };
+  const rbAdd=$("#rb-add"); if(rbAdd) rbAdd.onclick=()=>openRecurringModal(null);
+  $("#screen").querySelectorAll(".js-rec").forEach(el=>el.onclick=()=>openRecurringModal((data.recurring||[]).find(x=>x.id==el.dataset.id)));
   // 视图切换
   if(m.type==="todo"){
     $("#screen").querySelectorAll("#todo-view .opt").forEach(o=>o.onclick=()=>{
@@ -2736,7 +2838,7 @@ function recHTML(m,x){
   if(m.type==="finance"){ const inc=x.type==="income";
     return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:60px">${thumb}<div class="body" data-edit="${x.id}">
       <span class="rname">${esc(x.title)}</span>
-      <span class="badge" style="background:var(--surface-nested);color:var(--text-secondary)">${esc(x.category||'其他')}</span>
+      <span class="badge" style="background:var(--surface-nested);color:var(--text-secondary)">${esc(x.category||'其他')}</span>${x.recId?`<span class="badge" style="background:var(--accent-muted);color:var(--accent)">固定</span>`:''}
       <span class="rdate">${x.date||''}</span>${customBlock}</div>
       <div class="amt ${inc?'inc':'exp'}">${inc?'+':'-'}¥${x.amount}</div></div></div>`; }
   // note
@@ -3181,7 +3283,7 @@ function openEditor(key,item){
       if(conflictIdx>=0) arr.splice(conflictIdx,1);
     }
     else if(m.type==="portfolio"){
-      d.code=(val("#f-code")||"").trim().toUpperCase();
+      d.code=normCode(val("#f-code"));
       d.name=(val("#f-name")||"").trim()||d.code||"未命名";
       d.kind=val("#f-kind")||"stock";
       d.sector=(val("#f-sector")||"").trim();
@@ -3196,7 +3298,7 @@ function openEditor(key,item){
       d.title=d.name;
     }
     else if(m.type==="trades"){
-      d.code=(val("#f-code")||"").trim().toUpperCase();
+      d.code=normCode(val("#f-code"));
       d.name=(val("#f-name")||"").trim()||d.code;
       d.action=val("#f-action")||"buy";
       d.qty=Math.max(0,+val("#f-qty")||0);
@@ -3231,7 +3333,7 @@ function openEditor(key,item){
         const price = +overlay.querySelector("#t-price").value || 0;
         const fee = +overlay.querySelector("#t-fee").value || 0;
         if(!qty || !price){ toast("请填写数量和价格"); return; }
-        const code = overlay.querySelector("#f-code").value.trim().toUpperCase();
+        const code = normCode(overlay.querySelector("#f-code").value);
         const name = overlay.querySelector("#f-name").value.trim() || code;
         data.trades = data.trades || [];
         const newTrade = {id:Date.now(), code, name, action, qty, price, fee, date:isoToday(),
@@ -3242,22 +3344,14 @@ function openEditor(key,item){
           h = {id:Date.now(), code, name, kind:"stock", qty:0, costPrice:0, buyDate:isoToday(), tags:[]};
           data.portfolio = data.portfolio||[]; data.portfolio.push(h);
         }
-        if(h){
-          if(action==="buy"){
-            const nq=(+h.qty||0)+qty;
-            h.costPrice = +(((+h.qty||0)*(+h.costPrice||0) + qty*price)/Math.max(1,nq)).toFixed(4);
-            h.qty = nq;
-          } else if(action==="sell"){ h.qty = Math.max(0,(+h.qty||0)-qty); }
-          else if(action==="fee"){ const q=Math.max(1,+h.qty); h.costPrice = +(+h.costPrice + fee/q).toFixed(4); }
-        }
         store.save();
         toast(`已记录${action==="buy"?"买入":action==="sell"?"卖出":action==="dividend"?"分红":"费用"} ${qty} @ ¥${price}`);
-        // 同步表单
+        // 同步表单（持仓数量/成本由交易流水聚合得出，不在此重复维护）
+        const agg = tradeAgg(code);
         const qtyEl = overlay.querySelector("#f-qty");
         const costEl = overlay.querySelector("#f-cost");
-        if(qtyEl && h) qtyEl.value = h.qty;
-        if(costEl && h) costEl.value = h.costPrice;
-        // 清空交易输入
+        if(qtyEl) qtyEl.value = agg ? agg.qty : qty;
+        if(costEl) costEl.value = agg ? agg.avgCost.toFixed(4) : price;
         overlay.querySelector("#t-qty").value = "";
         overlay.querySelector("#t-price").value = "";
         overlay.querySelector("#t-fee").value = "";
@@ -3425,6 +3519,7 @@ function esc(s){ return String(s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&l
 function attr(s){ return esc(s).replace(/"/g,'&quot;'); }
 
 buildNav();
+applyRecurring();
 render();
 // 初始化云同步（检查是否已登录，自动拉取云端数据）
 sync.init();
@@ -3755,9 +3850,11 @@ quotes = {
 // 若无该代码的任何交易，返回 null，由调用方回退到持仓自身 qty/costPrice。
 function tradeAgg(code){
   const list = (data.trades||[]).filter(t=>t.code===code && t.action);
-  if(!list.length) return null;
+  const holding = (data.portfolio||[]).find(x=>x.code===code);
+  // 以“持仓”字段作为期初建仓基础（支持多年历史持仓 + 后续逐笔累加），之后的交易在其上滚动
+  let qty=+(holding&&holding.qty)||0, avgCost=+(holding&&holding.costPrice)||0, realized=0, dividends=0, soldCost=0, invested=avgCost*qty;
+  if(!list.length && !(qty||avgCost)) return null;
   list.sort((a,b)=> (a.date||"").localeCompare(b.date||"")); // 按日期升序，保证成本流转正确
-  let qty=0, avgCost=0, realized=0, dividends=0, soldCost=0, invested=0;
   list.forEach(t=>{
     const q=+t.qty||0, p=+t.price||0, f=+t.fee||0;
     if(t.action==="buy"){
@@ -3769,13 +3866,12 @@ function tradeAgg(code){
       soldCost += avgCost*q;                             // 已卖出部分的成本基础
       qty = Math.max(0, qty-q);
     } else if(t.action==="dividend"){
-      // 分红金额：填了股数按 股数×每股，否则按 price 视作一次性金额；fee 为税/费
       dividends += Math.max(0, (q>0 ? q*p : p) - f);
     } else if(t.action==="fee"){
-      if(qty>0) avgCost += f/qty;                        // 费用摊入剩余成本
+      if(qty>0) avgCost += f/qty;
     }
   });
-  return {qty, avgCost, realized, dividends, soldCost, invested, hasTrades:true};
+  return {qty, avgCost, realized, dividends, soldCost, invested, hasTrades:list.length>0};
 }
 
 // 持仓计算辅助（融合交易流水会计；无交易则回退持仓字段）
@@ -4091,7 +4187,8 @@ function openTokenDialog(){
 function renderPortfolioEditor(m, d){
   const tags = d.tags || [];
   return `
-    <div class="field"><label>${icon("hash",13)} 标的代码</label><input id="f-code" value="${attr(d.code||'')}" placeholder="如 600519.SH / 510300.SH / AU9999 / 00700.HK"/></div>
+    <div class="field"><label>${icon("hash",13)} 标的代码</label><input id="f-code" value="${attr(d.code||'')}" placeholder="600519 / 510300 / 00700（可只填数字）"/></div>
+    <p class="sub" style="margin:-2px 0 10px">自动识别后缀：600519 → 600519.SH（茅台）；510300 → .SH（沪深300ETF）；00700 → 00700.HK（腾讯）；也可直接填 AU9999、600519.SH。</p>
     <div class="field"><label>${icon("user",13)} 标的名称</label><input id="f-name" value="${attr(d.name||'')}" placeholder="贵州茅台 / 沪深300ETF"/></div>
     <div class="field-row">
       <div class="field"><label>${icon("tag",13)} 类型</label><select id="f-kind">
@@ -4143,41 +4240,26 @@ function bindPortfolioEditorEvents(m, d, onSave){
     data.trades = data.trades || [];
     const newTrade = {
       id: Date.now(),
-      code: $("#f-code").value.trim(),
+      code: normCode($("#f-code").value),
       name: $("#f-name").value.trim(),
       action, qty, price, fee,
       date: isoToday(),
       note: action==="buy"?"买入":action==="sell"?"卖出":action==="dividend"?"分红":"费用"
     };
     data.trades.push(newTrade);
-    // 2) 同步持仓
+    // 2) 确保持仓记录存在（数量/成本交由交易流水聚合，不在此重复维护）
     const code = newTrade.code;
     let h = data.portfolio.find(x=>x.code===code);
     if(!h && action==="buy"){
       h = {id:Date.now(), code, name:newTrade.name, kind:"stock", qty:0, costPrice:0, buyDate:isoToday(), tags:[]};
       data.portfolio.push(h);
     }
-    if(h){
-      if(action==="buy"){
-        const newQty = (+h.qty||0) + qty;
-        const newCost = ((+h.qty||0)*(+h.costPrice||0) + qty*price) / newQty;
-        h.qty = newQty; h.costPrice = +newCost.toFixed(4);
-      } else if(action==="sell"){
-        h.qty = Math.max(0, (+h.qty||0) - qty);
-        // 不改变成本价（卖出后剩余成本基础不变）
-      } else if(action==="dividend"){
-        // 分红：现金入账，不改变持仓数量
-      } else if(action==="fee"){
-        // 费用：累加到成本
-        const q = +h.qty || 1;
-        h.costPrice = +(+h.costPrice + fee/q).toFixed(4);
-      }
-    }
     store.save();
     toast(`已记录${action==="buy"?"买入":action==="sell"?"卖出":action==="dividend"?"分红":"费用"} ${qty} @ ¥${price}`);
     // 同步表单显示
-    $("#f-qty").value = h ? h.qty : qty;
-    $("#f-cost").value = h ? h.costPrice : price;
+    const agg = tradeAgg(code);
+    $("#f-qty").value = agg ? agg.qty : qty;
+    $("#f-cost").value = agg ? agg.avgCost.toFixed(4) : price;
   };
 }
 
