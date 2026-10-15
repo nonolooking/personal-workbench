@@ -3421,13 +3421,18 @@ function newItem(m){ const base={id:Date.now()}; let item;
 /* ---------- delete confirm ---------- */
 function confirmDelete(key,id){ const item=(data[key]||[]).find(i=>i.id==id); if(!item) return;
   const overlay=document.createElement("div"); overlay.className="overlay";
-  overlay.innerHTML=`<div class="modal" style="width:400px"><h3>删除记录</h3><div class="sub">确定删除「${esc(item.title||'这条记录')}」？此操作不可撤销。</div>
+  const sub = key==="portfolio"
+    ? `确定删除持仓「${esc(item.name||item.code||'这条记录')}」？其下的交易流水也会一并删除，此操作不可撤销。`
+    : `确定删除「${esc(item.title||'这条记录')}」？此操作不可撤销。`;
+  overlay.innerHTML=`<div class="modal" style="width:400px"><h3>删除记录</h3><div class="sub">${sub}</div>
     <div class="modal-actions"><div class="spacer"></div><button class="btn ghost" id="c-cancel">取消</button><button class="btn danger" id="c-ok">删除</button></div></div>`;
   document.body.appendChild(overlay);
   const close=()=>overlay.remove();
   overlay.onclick=e=>{ if(e.target===overlay) close(); };
   overlay.querySelector("#c-cancel").onclick=close;
-  overlay.querySelector("#c-ok").onclick=()=>{ data[key]=data[key].filter(i=>i.id!=id); persist(); close(); };
+  overlay.querySelector("#c-ok").onclick=()=>{ data[key]=data[key].filter(i=>i.id!=id);
+    if(key==="portfolio" && item.code){ data.trades=(data.trades||[]).filter(t=>t.code!==item.code); }
+    persist(); close(); render(); };
 }
 
 /* ---------- router / sidebar ---------- */
@@ -3999,8 +4004,9 @@ async function renderPortfolio(){
       <td class="num">${c.marketValue.toFixed(2)}</td>
       <td class="num ${cls}">${c.pnl>=0?'+':''}${c.pnl.toFixed(2)}<span class="sub">${c.pnlPct>=0?'+':''}${c.pnlPct.toFixed(2)}%</span>${extra}</td>
       <td class="pf-act">
-        <button class="btn ghost sm js-pf-edit" data-id="${h.id}">${icon("edit",12)} 改</button>
+        <button class="btn ghost sm js-pf-edit" data-id="${h.id}">${icon("edit",12)} 调整</button>
         <button class="btn ghost sm js-pf-trade" data-id="${h.id}">${icon("plus",12)} 记账</button>
+        <button class="btn ghost sm js-pf-del" data-id="${h.id}">${icon("trash",12)} 删除</button>
         ${alertTag}
       </td>
     </tr>`;
@@ -4161,6 +4167,7 @@ function bindPortfolioEvents(){
 
   document.querySelectorAll(".js-pf-edit").forEach(b=>b.onclick=()=>openEditor("portfolio", +b.dataset.id));
   document.querySelectorAll(".js-pf-trade").forEach(b=>b.onclick=()=>openEditor("portfolio", +b.dataset.id, {tab:"trade"}));
+  document.querySelectorAll(".js-pf-del").forEach(b=>b.onclick=e=>{ e.stopPropagation(); confirmDelete("portfolio", +b.dataset.id); });
 
   // 自动刷新切换
   const autoEl = $("#pf-auto");
