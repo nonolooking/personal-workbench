@@ -3350,6 +3350,11 @@ function openEditor(key,item){
       d.date=val("#f-date")||isoToday();
       d.note=(val("#f-note")||"").trim();
       d.title=`${d.action==="buy"?"买入":d.action==="sell"?"卖出":d.action==="dividend"?"分红":"费用"} ${d.name}`;
+      // 买入时确保持仓记录存在（持仓数量/成本由交易流水聚合得出，不在此重复维护）
+      if(d.action==="buy"){
+        let h=(data.portfolio||[]).find(x=>x.code===d.code);
+        if(!h){ h={id:Date.now(), code:d.code, name:d.name, kind:"stock", qty:0, costPrice:0, buyDate:d.date||isoToday(), tags:[]}; data.portfolio=data.portfolio||[]; data.portfolio.push(h); }
+      }
     }
     else if(m.type==="movie"){ d.rating=Math.max(0,Math.min(5,+seg("#f-rating")||0)); d.date=val("#f-date")||isoToday(); d.note=(val("#f-note")||"").trim(); d.tags=(val("#f-tags")||"").split(/[、,，]/).map(s=>s.trim()).filter(Boolean); if(d.date===today()){ data.movieLog=data.movieLog||{}; data.movieLog[today()]=true; } }
     // save custom fields
@@ -3368,36 +3373,30 @@ function openEditor(key,item){
 
   // portfolio 编辑器内的"记一笔交易"按钮绑定
   if(m.type==="portfolio"){
-    const tAddBtn = overlay.querySelector("#t-add");
-    if(tAddBtn){
-      tAddBtn.onclick = ()=>{
-        const action = overlay.querySelector("#t-action").value;
-        const qty = +overlay.querySelector("#t-qty").value || 0;
-        const price = +overlay.querySelector("#t-price").value || 0;
-        const fee = +overlay.querySelector("#t-fee").value || 0;
-        if(!qty || !price){ toast("请填写数量和价格"); return; }
-        const code = normCode(overlay.querySelector("#f-code").value);
-        const name = overlay.querySelector("#f-name").value.trim() || code;
-        data.trades = data.trades || [];
-        const newTrade = {id:Date.now(), code, name, action, qty, price, fee, date:isoToday(),
-          note: action==="buy"?"买入":action==="sell"?"卖出":action==="dividend"?"分红":"费用"};
-        data.trades.push(newTrade);
-        let h = (data.portfolio||[]).find(x=>x.code===code);
-        if(!h && action==="buy"){
-          h = {id:Date.now(), code, name, kind:"stock", qty:0, costPrice:0, buyDate:isoToday(), tags:[]};
-          data.portfolio = data.portfolio||[]; data.portfolio.push(h);
-        }
-        store.save();
-        toast(`已记录${action==="buy"?"买入":action==="sell"?"卖出":action==="dividend"?"分红":"费用"} ${qty} @ ¥${price}`);
-        // 同步表单（持仓数量/成本由交易流水聚合得出，不在此重复维护）
-        const agg = tradeAgg(code);
-        const qtyEl = overlay.querySelector("#f-qty");
-        const costEl = overlay.querySelector("#f-cost");
-        if(qtyEl) qtyEl.value = agg ? agg.qty : qty;
-        if(costEl) costEl.value = agg ? agg.avgCost.toFixed(4) : price;
-        overlay.querySelector("#t-qty").value = "";
-        overlay.querySelector("#t-price").value = "";
-        overlay.querySelector("#t-fee").value = "";
+    // 一键建仓：填入当前持仓数量 + 综合成本价（期初建仓基础），保存后生效
+    const bpBtn = overlay.querySelector("#bp-btn");
+    if(bpBtn){
+      bpBtn.onclick = ()=>{
+        const ov=document.createElement("div"); ov.className="overlay";
+        ov.innerHTML=`<div class="modal"><div class="modal-h"><h3>一键建仓（期初持仓）</h3><button class="modal-x" id="bp-x">&times;</button></div>
+          <div class="modal-b">
+            <p class="sub">适用于已有多年持仓、不想逐笔补录的情况：填入当前持仓数量与综合成本价作为「期初建仓」基础，之后只在「交易流水」里记录新操作即可。</p>
+            <div class="field-row">
+              <div class="field"><label>当前持仓数量</label><input id="bp-qty" type="number" step="any" value="${(+overlay.querySelector("#f-qty").value||0)}" placeholder="20"/></div>
+              <div class="field"><label>综合成本价</label><input id="bp-cost" type="number" step="any" value="${(+overlay.querySelector("#f-cost").value||0)}" placeholder="1550"/></div>
+            </div>
+            <div class="field"><label>建仓日期（可选）</label><input id="bp-date" type="date" value="${overlay.querySelector("#f-buydate").value||isoToday()}"/></div>
+          </div>
+          <div class="modal-f"><div class="spacer"></div><button class="btn" id="bp-save">确认建仓</button></div></div>`;
+        document.body.appendChild(ov);
+        ov.querySelector("#bp-x").onclick=()=>ov.remove();
+        ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
+        ov.querySelector("#bp-save").onclick=()=>{
+          const q=+ov.querySelector("#bp-qty").value||0; const c=+ov.querySelector("#bp-cost").value||0; const dt=ov.querySelector("#bp-date").value||isoToday();
+          if(!q||!c){ toast("请填写持仓数量与综合成本价"); return; }
+          overlay.querySelector("#f-qty").value=q; overlay.querySelector("#f-cost").value=c; overlay.querySelector("#f-buydate").value=dt;
+          toast("已填入期初建仓，点「保存」生效"); ov.remove();
+        };
       };
     }
   }
@@ -4056,6 +4055,7 @@ async function renderPortfolio(){
 
   $("#screen").innerHTML = `<div class="header"><div><h2>${m.name}</h2><p>${m.desc}</p></div><div class="spacer"></div>
     <button class="btn" id="pf-refresh">${icon("refresh",14)} 刷新行情</button>
+    <button class="btn" id="pf-trade-add">${icon("exchange",14)} 记一笔交易</button>
     <button class="btn primary" id="pf-add">${icon("plus",14)} 新增持仓</button></div>
 
     ${settingsPanel}
@@ -4094,7 +4094,7 @@ async function renderPortfolio(){
       </div>
     </div>
 
-    <div class="sec-title">${icon("exchange",15)} 交易流水 <span class="pf-update">${trades.length} 条</span></div>
+    <div class="sec-title">${icon("exchange",15)} 交易流水 <span class="pf-update">${trades.length} 条</span><span class="pf-link" id="pf-view-trades" style="margin-left:auto;cursor:pointer;font-size:12px;color:var(--accent)">查看全部 ›</span></div>
     <div class="pf-trades">
       ${trades.slice(-10).reverse().map(t=>`<div class="tr-row ${t.action}">
         <span class="tr-date">${esc(t.date||'')}</span>
@@ -4164,9 +4164,15 @@ function bindPortfolioEvents(){
     finally { btn.disabled=false; btn.innerHTML=`${icon("refresh",14)} 刷新行情`; }
   };
   $("#pf-add").onclick = ()=>openEditor("portfolio", null);
+  $("#pf-trade-add").onclick = ()=>openEditor("trades", null);
+  const vt=$("#pf-view-trades"); if(vt) vt.onclick=()=>go("trades");
 
   document.querySelectorAll(".js-pf-edit").forEach(b=>b.onclick=()=>openEditor("portfolio", +b.dataset.id));
-  document.querySelectorAll(".js-pf-trade").forEach(b=>b.onclick=()=>openEditor("portfolio", +b.dataset.id, {tab:"trade"}));
+  document.querySelectorAll(".js-pf-trade").forEach(b=>b.onclick=()=>{
+    const h=(data.portfolio||[]).find(x=>x.id==b.dataset.id);
+    openEditor("trades", null);
+    const ce=document.getElementById("f-code"); if(ce && h) ce.value=normCode(h.code);
+  });
   document.querySelectorAll(".js-pf-del").forEach(b=>b.onclick=e=>{ e.stopPropagation(); confirmDelete("portfolio", +b.dataset.id); });
 
   // 自动刷新切换
@@ -4250,7 +4256,7 @@ function renderPortfolioEditor(m, d){
       <div class="field"><label>${icon("box",13)} 持仓数量<span class="req">*</span></label><input id="f-qty" type="number" step="any" value="${d.qty??''}" placeholder="20"/></div>
       <div class="field"><label>${icon("wallet",13)} 持仓成本<span class="req">*</span></label><input id="f-cost" type="number" step="any" value="${d.costPrice??''}" placeholder="1550"/></div>
     </div>
-    <p class="sub" style="margin:-4px 0 6px">建仓必填「持仓数量 + 综合成本价」；也可点下方「一键建仓」一次性填入，或只用「记一笔交易」自动累计（二者取其一即可）。</p>
+    <p class="sub" style="margin:-4px 0 6px">建仓必填「持仓数量 + 综合成本价」；也可点「一键建仓」一次性填入。建仓后的买入/卖出请在投资看板用「记一笔交易」记录。</p>
     <button class="btn ghost" id="bp-btn" style="margin-bottom:8px">${icon("plus",13)} 一键建仓（填当前持仓与综合成本价）</button>
     <div class="field-row">
       <div class="field"><label>${icon("target",13)} 目标价（止盈）</label><input id="f-target" type="number" step="any" value="${d.targetPrice??''}" placeholder="1900"/></div>
@@ -4261,85 +4267,7 @@ function renderPortfolioEditor(m, d){
       <div class="field"><label>${icon("trophy",13)} 月目标收益率 %</label><input id="f-monthgoal" type="number" step="any" value="${d.monthGoal??''}" placeholder="8"/></div>
     </div>
     <div class="field"><label>${icon("tag",13)} 标签关键词</label><input id="f-tags" value="${attr(tags.join('、'))}" placeholder="用、分隔，如：核心资产、定投"/></div>
-    <div class="field"><label>${icon("edit",13)} 备注</label><textarea id="f-note" placeholder="策略、持有理由…">${esc(d.note||'')}</textarea></div>
-
-    <div class="pf-trade-section">
-      <div class="pf-trade-h">${icon("exchange",14)} 记一笔交易（自动更新持仓）</div>
-      <div class="field-row">
-        <div class="field"><label>类型</label><select id="t-action">
-          <option value="buy">买入</option><option value="sell">卖出</option>
-          <option value="dividend">分红</option><option value="fee">费用</option>
-        </select></div>
-        <div class="field"><label>数量</label><input id="t-qty" type="number" step="any" placeholder="10"/></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>价格</label><input id="t-price" type="number" step="any" placeholder="1560"/></div>
-        <div class="field"><label>费用</label><input id="t-fee" type="number" step="any" placeholder="5"/></div>
-      </div>
-      <button class="btn ghost" id="t-add">${icon("plus",13)} 记入流水并更新持仓</button>
-    </div>`;
-}
-
-function bindPortfolioEditorEvents(m, d, onSave){
-  // 记账按钮：生成一条 trade，并同步更新持仓数量与成本
-  $("#t-add").onclick = ()=>{
-    const action = $("#t-action").value;
-    const qty = +$("#t-qty").value || 0;
-    const price = +$("#t-price").value || 0;
-    const fee = +$("#t-fee").value || 0;
-    if(!qty || !price){ toast("请填写数量和价格"); return; }
-    // 1) 添加流水
-    data.trades = data.trades || [];
-    const newTrade = {
-      id: Date.now(),
-      code: normCode($("#f-code").value),
-      name: $("#f-name").value.trim(),
-      action, qty, price, fee,
-      date: isoToday(),
-      note: action==="buy"?"买入":action==="sell"?"卖出":action==="dividend"?"分红":"费用"
-    };
-    data.trades.push(newTrade);
-    // 2) 确保持仓记录存在（数量/成本交由交易流水聚合，不在此重复维护）
-    const code = newTrade.code;
-    let h = data.portfolio.find(x=>x.code===code);
-    if(!h && action==="buy"){
-      h = {id:Date.now(), code, name:newTrade.name, kind:"stock", qty:0, costPrice:0, buyDate:isoToday(), tags:[]};
-      data.portfolio.push(h);
-    }
-    store.save();
-    toast(`已记录${action==="buy"?"买入":action==="sell"?"卖出":action==="dividend"?"分红":"费用"} ${qty} @ ¥${price}`);
-    // 同步表单显示
-    const agg = tradeAgg(code);
-    $("#f-qty").value = agg ? agg.qty : qty;
-    $("#f-cost").value = agg ? agg.avgCost.toFixed(4) : price;
-  };
-
-  // 一键建仓：填入当前持仓数量 + 综合成本价（期初建仓基础），保存后生效
-  const bpBtn = $("#bp-btn");
-  if(bpBtn){
-    bpBtn.onclick = ()=>{
-      const ov=document.createElement("div"); ov.className="overlay";
-      ov.innerHTML=`<div class="modal"><div class="modal-h"><h3>一键建仓（期初持仓）</h3><button class="modal-x" id="bp-x">&times;</button></div>
-        <div class="modal-b">
-          <p class="sub">适用于已有多年持仓、不想逐笔补录的情况：填入当前持仓数量与综合成本价作为「期初建仓」基础，之后只在「记一笔交易」里记录新操作即可。</p>
-          <div class="field-row">
-            <div class="field"><label>当前持仓数量</label><input id="bp-qty" type="number" step="any" value="${(+$("#f-qty").value||0)}" placeholder="20"/></div>
-            <div class="field"><label>综合成本价</label><input id="bp-cost" type="number" step="any" value="${(+$("#f-cost").value||0)}" placeholder="1550"/></div>
-          </div>
-          <div class="field"><label>建仓日期（可选）</label><input id="bp-date" type="date" value="${$("#f-buydate").value||isoToday()}"/></div>
-        </div>
-        <div class="modal-f"><div class="spacer"></div><button class="btn" id="bp-save">确认建仓</button></div></div>`;
-      document.body.appendChild(ov);
-      ov.querySelector("#bp-x").onclick=()=>ov.remove();
-      ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
-      ov.querySelector("#bp-save").onclick=()=>{
-        const q=+ov.querySelector("#bp-qty").value||0; const c=+ov.querySelector("#bp-cost").value||0; const dt=ov.querySelector("#bp-date").value||isoToday();
-        if(!q||!c){ toast("请填写持仓数量与综合成本价"); return; }
-        $("#f-qty").value=q; $("#f-cost").value=c; $("#f-buydate").value=dt;
-        toast("已填入期初建仓，点「保存」生效"); ov.remove();
-      };
-    };
-  }
+    <div class="field"><label>${icon("edit",13)} 备注</label><textarea id="f-note" placeholder="策略、持有理由…">${esc(d.note||'')}</textarea></div>`;
 }
 
 /* ============================================================
@@ -4628,6 +4556,7 @@ const PORTFOLIO_CSS = `
 .lg-p{color:var(--text-tertiary)}
 
 .pf-trades{background:var(--surface-card);border-radius:12px;padding:8px 4px;border:1px solid var(--border)}
+.pf-link{user-select:none}
 .tr-row{display:flex;align-items:center;gap:12px;padding:8px 14px;font-size:12px;border-bottom:1px solid var(--border)}
 .tr-row:last-child{border-bottom:none}
 .tr-action{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700}
@@ -4660,8 +4589,6 @@ const PORTFOLIO_CSS = `
 .pf-empty-mini{color:var(--text-tertiary);font-size:12px;padding:24px 8px;text-align:center}
 
 /* 持仓编辑器 */
-.pf-trade-section{margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)}
-.pf-trade-h{font-weight:600;font-size:13px;color:var(--text-secondary);margin-bottom:8px}
 
 /* 洞察页净资产 */
 .rv-invest-overview .rv-net-worth{padding:14px 16px}
