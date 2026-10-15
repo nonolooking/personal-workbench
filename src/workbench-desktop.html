@@ -2458,7 +2458,7 @@ function renderModule(key){
     <div class="toolbar">
       <div class="search-box">${icon("search",15,2.2)}<input id="search" placeholder="搜索…" value="${attr(searchQ)}"/></div>
       ${viewSwitcher}
-      <div class="spacer"></div><button class="btn" id="btn-new">${icon("plus",16,2.2)}新建</button></div>
+      <div class="spacer"></div>${(data.__trash||[]).length?`<button class="btn ghost" id="btn-trash">${icon("trash",14,2.2)}回收站 <span class="badge">${(data.__trash||[]).length}</span></button>`:''}<button class="btn" id="btn-new">${icon("plus",16,2.2)}新建</button></div>
     ${head}
     ${FIXED_HABITS.includes(key)?habitBarHTML(key):''}
     <div class="mod-layout">
@@ -2493,6 +2493,7 @@ function renderModule(key){
     });
   }
   $("#btn-new").onclick=()=>openEditor(key,null);
+  const tb=$("#btn-trash"); if(tb) tb.onclick=()=>openTrash();
   $("#screen").querySelectorAll(".js-habit-chk").forEach(el=>el.onclick=()=>{ toggleHabitToday(el.dataset.key); store.save(); render(); });
   const mvGoalEl=$("#mv-goal"); if(mvGoalEl) mvGoalEl.onchange=()=>{ data.__movieGoal=Math.max(0,+mvGoalEl.value||0); store.save(); render(); };
   wireModule(key);
@@ -3419,19 +3420,75 @@ function newItem(m){ const base={id:Date.now()}; let item;
 
 /* ---------- delete confirm ---------- */
 function confirmDelete(key,id){ const item=(data[key]||[]).find(i=>i.id==id); if(!item) return;
+  const label = key==="portfolio" ? (item.name||item.code||'这条持仓') : (item.title||'这条记录');
+  const extra = key==="portfolio" ? "其下的交易流水也会一并移入回收站。" : "";
   const overlay=document.createElement("div"); overlay.className="overlay";
-  const sub = key==="portfolio"
-    ? `确定删除持仓「${esc(item.name||item.code||'这条记录')}」？其下的交易流水也会一并删除，此操作不可撤销。`
-    : `确定删除「${esc(item.title||'这条记录')}」？此操作不可撤销。`;
-  overlay.innerHTML=`<div class="modal" style="width:400px"><h3>删除记录</h3><div class="sub">${sub}</div>
+  overlay.innerHTML=`<div class="modal" style="width:400px"><h3>删除记录</h3><div class="sub">确定删除「${esc(label)}」？${extra}将先移入回收站，24 小时内可恢复。</div>
     <div class="modal-actions"><div class="spacer"></div><button class="btn ghost" id="c-cancel">取消</button><button class="btn danger" id="c-ok">删除</button></div></div>`;
   document.body.appendChild(overlay);
   const close=()=>overlay.remove();
   overlay.onclick=e=>{ if(e.target===overlay) close(); };
   overlay.querySelector("#c-cancel").onclick=close;
-  overlay.querySelector("#c-ok").onclick=()=>{ data[key]=data[key].filter(i=>i.id!=id);
-    if(key==="portfolio" && item.code){ data.trades=(data.trades||[]).filter(t=>t.code!==item.code); }
-    persist(); close(); render(); };
+  overlay.querySelector("#c-ok").onclick=()=>{ const gid=softDelete(key,id); close();
+    if(gid!=null) toastAction(`已删除「${esc(label)}」`, "撤销", ()=>restoreTrash(gid)); };
+}
+
+// ---------- 回收站：软删除 + 24 小时可恢复 ----------
+function trashLabel(key,item){ return item.title || item.name || item.code || "记录"; }
+function purgeExpiredTrash(){
+  if(!data.__trash || !data.__trash.length) return;
+  const now=Date.now(); const before=data.__trash.length;
+  data.__trash=data.__trash.filter(e=> now-e.deletedAt < 24*3600*1000);
+  if(data.__trash.length!==before) persist();
+}
+function softDelete(key,id){
+  const arr=data[key]||[]; const idx=arr.findIndex(i=>i.id==id); if(idx<0) return null;
+  const item=arr[idx];
+  const groupId=Date.now()+"-"+Math.random().toString(36).slice(2);
+  const now=Date.now();
+  const entries=[{groupId,key,item,deletedAt:now,label:trashLabel(key,item)}];
+  // 删除持仓时，其下交易流水一并移入回收站（同组，便于整体恢复）
+  if(key==="portfolio" && item.code){
+    (data.trades||[]).forEach(t=>{ if(t.code===item.code){ entries.push({groupId,key:"trades",item:t,deletedAt:now,label:trashLabel("trades",t)}); } });
+    data.trades=(data.trades||[]).filter(t=>t.code!==item.code);
+  }
+  data[key]=arr.filter(i=>i.id!=id);
+  data.__trash=(data.__trash||[]).concat(entries);
+  persist(); render();
+  return groupId;
+}
+function restoreTrash(groupId){
+  const entries=(data.__trash||[]).filter(e=>e.groupId===groupId);
+  if(!entries.length) return;
+  entries.forEach(e=>{ const arr=data[e.key]||[]; if(!arr.some(x=>x.id===e.item.id)){ arr.push(e.item); data[e.key]=arr; } });
+  data.__trash=(data.__trash||[]).filter(e=>e.groupId!==groupId);
+  persist(); render();
+}
+function purgeGroup(groupId){ data.__trash=(data.__trash||[]).filter(e=>e.groupId!==groupId); persist(); }
+function openTrash(){
+  purgeExpiredTrash();
+  const list=(data.__trash||[]);
+  const ov=document.createElement("div"); ov.className="overlay";
+  const rows = list.length ? list.map(e=>{
+    const left=Math.max(0, 24*3600*1000 - (Date.now()-e.deletedAt));
+    const hh=Math.floor(left/3600000), mm=Math.floor((left%3600000)/60000);
+    return `<div class="trash-row">
+      <div class="trash-info"><div class="trash-name">${esc(e.label)}</div><div class="trash-time">${hh}小时${mm}分后自动清除</div></div>
+      <div class="trash-actions">
+        <button class="btn ghost sm js-restore" data-g="${e.groupId}">恢复</button>
+        <button class="btn ghost sm js-purge" data-g="${e.groupId}">彻底删除</button>
+      </div></div>`;
+  }).join("") : `<div class="focus-empty">回收站是空的。删除的记录会先存到这里，保留 24 小时，期间可随时恢复。</div>`;
+  ov.innerHTML=`<div class="modal" style="width:460px;max-width:94vw"><div class="modal-h"><h3>回收站 <span class="sub" style="font-weight:400">24 小时内可恢复</span></h3><button class="modal-x" id="tr-x">&times;</button></div>
+    <div class="modal-b"><div class="trash-list">${rows}</div></div>
+    <div class="modal-f"><button class="btn ghost" id="tr-empty" ${list.length?'':'disabled'}>清空回收站</button><div class="spacer"></div><button class="btn" id="tr-close">关闭</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.querySelector("#tr-x").onclick=()=>ov.remove();
+  ov.querySelector("#tr-close").onclick=()=>ov.remove();
+  ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
+  ov.querySelectorAll(".js-restore").forEach(b=>b.onclick=()=>{ restoreTrash(b.dataset.g); ov.remove(); openTrash(); });
+  ov.querySelectorAll(".js-purge").forEach(b=>b.onclick=()=>{ purgeGroup(b.dataset.g); ov.remove(); openTrash(); });
+  const te=ov.querySelector("#tr-empty"); if(te) te.onclick=()=>{ data.__trash=[]; persist(); ov.remove(); openTrash(); };
 }
 
 /* ---------- router / sidebar ---------- */
@@ -3567,6 +3624,7 @@ function attr(s){ return esc(s).replace(/"/g,'&quot;'); }
 
 buildNav();
 applyRecurring();
+purgeExpiredTrash();
 render();
 // 初始化云同步（检查是否已登录，自动拉取云端数据）
 sync.init();
@@ -4056,6 +4114,7 @@ async function renderPortfolio(){
   $("#screen").innerHTML = `<div class="header"><div><h2>${m.name}</h2><p>${m.desc}</p></div><div class="spacer"></div>
     <button class="btn" id="pf-refresh">${icon("refresh",14)} 刷新行情</button>
     <button class="btn" id="pf-trade-add">${icon("exchange",14)} 记一笔交易</button>
+    ${(data.__trash||[]).length?`<button class="btn ghost" id="pf-trash">${icon("trash",14)} 回收站 <span class="badge">${data.__trash.length}</span></button>`:''}
     <button class="btn primary" id="pf-add">${icon("plus",14)} 新增持仓</button></div>
 
     ${settingsPanel}
@@ -4165,6 +4224,7 @@ function bindPortfolioEvents(){
   };
   $("#pf-add").onclick = ()=>openEditor("portfolio", null);
   $("#pf-trade-add").onclick = ()=>openEditor("trades", null);
+  const ptb=$("#pf-trash"); if(ptb) ptb.onclick=()=>openTrash();
   const vt=$("#pf-view-trades"); if(vt) vt.onclick=()=>go("trades");
 
   document.querySelectorAll(".js-pf-edit").forEach(b=>b.onclick=()=>openEditor("portfolio", +b.dataset.id));
@@ -4425,6 +4485,22 @@ function toast(msg){
   clearTimeout(t._timer);
   t._timer = setTimeout(()=>t.classList.remove("show"), 2400);
 }
+function toastAction(msg, actionLabel, onAction){
+  let t = document.getElementById("toast-el");
+  if(!t){
+    t = document.createElement("div");
+    t.id = "toast-el"; t.className = "toast";
+    document.body.appendChild(t);
+  }
+  t.innerHTML = `${esc(msg)} ${onAction?`<button class="toast-undo" id="toast-undo">${esc(actionLabel||"撤销")}</button>`:''}`;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  if(onAction){
+    const ub=t.querySelector("#toast-undo");
+    if(ub) ub.onclick=()=>{ clearTimeout(t._timer); t.classList.remove("show"); onAction(); };
+  }
+  t._timer = setTimeout(()=>t.classList.remove("show"), 5000);
+}
 
 function showModal(html){
   let m = document.getElementById("modal-root");
@@ -4613,8 +4689,19 @@ const PORTFOLIO_CSS = `
 .modal-tip{font-size:11px;color:var(--text-tertiary);margin-top:8px}
 .modal-tip a{color:var(--module-6)}
 .modal-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.85);color:#fff;padding:10px 18px;border-radius:24px;font-size:13px;z-index:10000;opacity:0;transition:all .25s}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.85);color:#fff;padding:10px 18px;border-radius:24px;font-size:13px;z-index:10000;opacity:0;transition:all .25s;display:flex;align-items:center;gap:12px;max-width:92vw}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast-undo{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:16px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer}
+.toast-undo:hover{background:rgba(255,255,255,.15)}
+.badge{display:inline-block;min-width:18px;padding:0 5px;height:18px;line-height:18px;text-align:center;background:var(--danger);color:#fff;border-radius:9px;font-size:11px;font-weight:700;margin-left:4px}
+
+/* 回收站 */
+.trash-list{display:flex;flex-direction:column;gap:8px;max-height:56vh;overflow:auto}
+.trash-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-nested);border:1px solid var(--border);border-radius:10px}
+.trash-info{flex:1;min-width:0}
+.trash-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trash-time{font-size:11.5px;color:var(--text-secondary);margin-top:2px}
+.trash-actions{display:flex;gap:6px;flex-shrink:0}
 .btn.sm{padding:4px 10px;font-size:11px}
 `;
 document.head.appendChild(Object.assign(document.createElement('style'),{textContent:PORTFOLIO_CSS}));
