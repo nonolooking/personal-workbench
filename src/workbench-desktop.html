@@ -3943,14 +3943,14 @@ quotes = {
   },
 
   // 单个 code 取行情：东财优先 → 腾讯 → 腾讯基金 → Tushare fallback（全程免 token 可用）
-  async fetchOne(code){
+  async fetchOne(code, kind){
     if(!code) return null;
     // 加密货币 → CoinGecko（免 token）
     if(this.isCrypto(code)){
       try { const v = await this.cgFetch(code); if(v && v.ok) return v; } catch(e){}
     }
-    // 开放式基金 6 位数字（无后缀）→ 腾讯 jj 净值
-    if(/^\d{6}$/.test(code) && !code.match(/^(000|399|51|15|50|56)/)){
+      // 开放式基金：按 kind 走腾讯 jj 净值（避免 000xxx 基金被误判为指数）
+    if(kind === "fund" || (/^\d{6}$/.test(code) && !code.match(/^(000|399|51|15|50|56)/))){
       try { const k=this.toJjCode(code); const m = await this.jjBatch([k]); if(m[k]&&m[k].ok) return m[k]; } catch(e){}
     }
     // 优先东财（JSON、干净），失败回退腾讯
@@ -3996,18 +3996,23 @@ quotes = {
     const all = Object.assign({}, data.__quotesCache || {});
     const list = data.portfolio || [];
     const mk = CONFIG.modules.find(m=>m.key==="portfolio")?.marketIndex || [];
+    const kindOf = {};
+    list.forEach(x=>{ if(x.code) kindOf[x.code] = x.kind || "stock"; });
+    mk.forEach(x=>{ if(x.code) kindOf[x.code] = x.kind || "index"; });
     const codes = Array.from(new Set([
       ...list.map(x=>x.code).filter(Boolean),
       ...mk.map(x=>x.code)
     ]));
 
-    // 分类：加密、开放式基金、可转东财/腾讯的、TuShare 兜底
+    // 分类：加密、开放式基金（按 kind 走净值，避免 000xxx 基金被误判为指数）、可转东财/腾讯的、TuShare 兜底
     const emQt = [];      // [{em, qt, origin}]
     const jjCodes = [];   // 开放式基金 code
     const cgCodes = [];   // 加密货币 code（CoinGecko id）
     const others = [];    // TuShare 兜底
     codes.forEach(code=>{
+      const kind = kindOf[code] || "stock";
       if(this.isCrypto(code)){ cgCodes.push(code); return; }
+      if(kind === "fund"){ jjCodes.push(code); return; }   // 基金统一取净值，不再受代码前缀影响
       if(/^\d{6}$/.test(code) && !code.match(/^(000|399|51|15|50|56)/)){ jjCodes.push(code); return; }
       const em = this.toEmSecid(code);
       const qt = this.toQtCode(code);
