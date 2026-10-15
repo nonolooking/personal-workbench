@@ -2237,18 +2237,110 @@ function openRecurringModal(r){
 }
 
 // 记账本联动：从投资看板汇总各账户当前市值
-function investAccountsHTML(){
-  const hs=data.portfolio||[]; if(!hs.length) return "";
-  let total=0; const g={};
-  hs.forEach(h=>{ const c=portfolioCalc(h); const mv=c.marketValue||0; total+=mv; const k=h.kind||"other"; g[k]=(g[k]||0)+mv; });
-  const L={stock:"股票账户",fund:"基金账户",gold:"黄金账户",index:"指数账户",bond:"债券账户",crypto:"加密账户",cash:"现金账户",other:"其它账户"};
-  const rows=Object.keys(g).sort((a,b)=>g[b]-g[a]).map(k=>`<div class="ia-row"><span>${L[k]||k}</span><b>¥${fmtY(g[k])}</b></div>`).join("");
-  return `<div class="invest-accounts">
-    <div class="ia-h">投资账户市值<span class="ia-total">¥${fmtY(total)}</span></div>
-    <div class="ia-list">${rows}</div>
-    <div class="ia-note">同步自「投资看板」· 按实时行情估算（无行情时按成本）</div></div>`;
-}
 function fmtY(n){ return (Math.round((n||0)*100)/100).toLocaleString('zh-CN',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+function portfolioInvestTotal(){ return (data.portfolio||[]).reduce((s,h)=>s+(portfolioCalc(h).marketValue||0),0); }
+function computeCash(){
+  const opening=+(data.__cashOpening||0);
+  const fin=data.finance||[];
+  const inc=fin.filter(x=>x.type==="income").reduce((a,x)=>a+ +x.amount,0);
+  const exp=fin.filter(x=>x.type==="expense").reduce((a,x)=>a+ +x.amount,0);
+  return opening+inc-exp;
+}
+// 财务总览：总资产 = 现金 + 投资市值；并展示净资产（扣负债）
+function financeOverviewHTML(){
+  const cash=computeCash();
+  const invest=portfolioInvestTotal();
+  const assets=cash+invest;
+  const liab=(data.liabilities||[]).reduce((a,x)=>a+ +x.amount,0);
+  const net=assets-liab;
+  return `<div class="fin-overview">
+    <div class="fo-h">财务总览 <span class="fo-sub">总资产 = 现金 + 投资市值</span></div>
+    <div class="fo-grid">
+      <div class="fo-cell"><div class="l">总资产</div><div class="v big">¥${fmtY(assets)}</div></div>
+      <div class="fo-cell"><div class="l">净资产</div><div class="v">¥${fmtY(net)}</div></div>
+      <div class="fo-cell"><div class="l">现金</div><div class="v">¥${fmtY(cash)}</div></div>
+      <div class="fo-cell"><div class="l">投资市值</div><div class="v">¥${fmtY(invest)}</div></div>
+      <div class="fo-cell"><div class="l">负债</div><div class="v down">¥${fmtY(liab)}</div></div>
+    </div>
+    <div class="fo-set">
+      <label class="fo-opening">期初现金 ¥<input id="fo-opening" type="number" step="any" value="${(+(data.__cashOpening||0))}" placeholder="0"/></label>
+      <label class="fo-toggle"><input type="checkbox" id="fo-link" ${data.__linkTradeToLedger!==false?'checked':''}/> 投资买卖自动回写记账本</label>
+    </div>
+    <div class="fo-note">现金随投资买卖同步增减，总资产不会重复计入。修改期初现金或开关后自动重算。</div>
+  </div>`;
+}
+const ALLOC_COLOR={cash:"#7a8a99",stock:"#5a8db8",fund:"#5da88e",gold:"#e6b877",index:"#9a7bb8",bond:"#c98a5a",crypto:"#d98b4a",other:"#8a9bb0"};
+function assetAllocationHTML(){
+  const cash=Math.max(0,computeCash());
+  const g={cash};
+  (data.portfolio||[]).forEach(h=>{ const c=portfolioCalc(h); const k=h.kind||"other"; g[k]=(g[k]||0)+(c.marketValue||0); });
+  const entries=Object.keys(g).filter(k=>g[k]>0).sort((a,b)=>g[b]-g[a]);
+  const total=entries.reduce((a,k)=>a+g[k],0);
+  const L={cash:"现金",stock:"股票",fund:"基金",gold:"黄金",index:"指数",bond:"债券",crypto:"加密",other:"其它"};
+  const pieData=entries.map(k=>({name:L[k]||k, value:g[k], color:ALLOC_COLOR[k]||"#5a8db8"}));
+  const list=entries.map(k=>`<div class="al-row"><span class="al-dot" style="background:${ALLOC_COLOR[k]||'#5a8db8'}"></span><span class="al-n">${L[k]||k}</span><b>¥${fmtY(g[k])}</b><span class="al-p">${total?((g[k]/total)*100).toFixed(1):0}%</span></div>`).join("");
+  return `<div class="asset-alloc">
+    <div class="aa-h">资产分布</div>
+    <div class="aa-body">${pieData.length?pieSVG(pieData):'<div class="pf-empty">暂无资产</div>'}<div class="aa-list">${list}</div></div>
+  </div>`;
+}
+function liabilitiesHTML(){
+  const list=data.liabilities||[];
+  const total=list.reduce((a,x)=>a+ +x.amount,0);
+  const rows=list.length? list.map(l=>`<div class="lb-row"><span><span class="lb-name">${esc(l.title)}</span><span class="lb-type">${esc(l.type||"其它")}</span></span><b>¥${fmtY(l.amount)}</b><button class="btn ghost xs js-lb-del" data-id="${l.id}">删除</button></div>`).join("") : `<div class="focus-empty">还没有负债记录（信用卡/贷款/房贷等）。</div>`;
+  return `<div class="liabilities-box">
+    <div class="lb-h">负债 <span class="lb-total">¥${fmtY(total)}</span><button class="btn ghost sm" id="lb-add">+ 添加负债</button></div>
+    <div class="lb-list">${rows}</div></div>`;
+}
+// 资金划转联动：投资买卖/分红/费用 → 记账本流水（避免总资产重复计入）
+function tradeToFinanceEntry(t){
+  let type, amount, cat;
+  if(t.action==="buy"){ type="expense"; amount=(+(t.price||0))*(+(t.qty||0))+(+(t.fee||0)); cat="投资支出"; }
+  else if(t.action==="sell"){ type="income"; amount=(+(t.price||0))*(+(t.qty||0))-(+(t.fee||0)); cat="投资收入"; }
+  else if(t.action==="dividend"){ type="income"; amount=(+(t.price||0))*(+(t.qty||0)); cat="投资收入"; }
+  else if(t.action==="fee"){ type="expense"; amount=+(t.fee||0); cat="投资支出"; }
+  else return null;
+  if(!(amount>0)) return null;
+  return {id:Date.now()+Math.random(), title:`${cat}·${t.name||t.code||""}`, type, amount:Math.round(amount*100)/100, category:cat, date:t.date||isoToday(), tradeId:t.id, note:`自动同步自交易流水（${t.code||""}）`};
+}
+// 补齐/清理：让记账本流水与交易流水一致（开启联动时）
+function syncTradeLedger(){
+  if(data.__linkTradeToLedger===false) return;
+  const fin=data.finance||[]; const trades=data.trades||[];
+  const tradeIds=new Set(trades.map(t=>t.id));
+  let changed=false;
+  const after=fin.filter(f=>{ if(f.tradeId!=null && !tradeIds.has(f.tradeId)){ changed=true; return false; } return true; });
+  trades.forEach(t=>{ if(!after.some(f=>f.tradeId===t.id)){ const e=tradeToFinanceEntry(t); if(e){ e.tradeId=t.id; after.push(e); changed=true; } } });
+  if(changed){ data.finance=after; persist(); }
+}
+function openLiabilityModal(l){
+  l=l||{id:null,title:"",type:"信用卡",amount:""};
+  const exists=l.id && (data.liabilities||[]).some(x=>x.id===l.id);
+  const ov=document.createElement("div"); ov.className="overlay";
+  ov.innerHTML=`<div class="modal"><div class="modal-h"><h3>${exists?"编辑负债":"添加负债"}</h3><button class="modal-x" id="lb-x">&times;</button></div>
+    <div class="modal-b">
+      <div class="field"><label>名称</label><input id="lb-title" value="${attr(l.title||'')}" placeholder="招商信用卡 / 房贷 / 车贷"/></div>
+      <div class="field"><label>类型</label><div class="seg" id="lb-type">
+        ${["信用卡","贷款","房贷","其它"].map(t=>`<div class="opt ${t===(l.type||'信用卡')?'on':''}" data-v="${t}" style="flex:0 0 auto;min-width:auto">${t}</div>`).join("")}</div></div>
+      <div class="field"><label>当前欠款 ¥</label><input id="lb-amt" type="number" value="${l.amount??''}" placeholder="0"/></div>
+    </div>
+    <div class="modal-f"><button class="btn ghost" id="lb-del2" ${exists?'':'style="visibility:hidden"'}>删除</button><div class="spacer"></div><button class="btn" id="lb-save">保存</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.querySelectorAll(".seg").forEach(seg=>seg.querySelectorAll(".opt").forEach(o=>o.onclick=()=>{ seg.querySelectorAll(".opt").forEach(x=>x.classList.remove("on")); o.classList.add("on"); }));
+  ov.querySelector("#lb-x").onclick=()=>ov.remove();
+  ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
+  ov.querySelector("#lb-save").onclick=()=>{
+    const title=ov.querySelector("#lb-title").value.trim();
+    const type=ov.querySelector("#lb-type .opt.on").dataset.v;
+    const amount=Math.max(0,+ov.querySelector("#lb-amt").value||0);
+    if(!title||!amount){ toast("请填写名称和金额"); return; }
+    data.liabilities=data.liabilities||[];
+    if(exists){ const i=data.liabilities.findIndex(x=>x.id===l.id); if(i>=0) data.liabilities[i]={id:l.id,title,type,amount}; }
+    else data.liabilities.push({id:Date.now(),title,type,amount});
+    persist(); ov.remove(); renderModule("money");
+  };
+  ov.querySelector("#lb-del2").onclick=()=>{ data.liabilities=(data.liabilities||[]).filter(x=>x.id!==l.id); persist(); ov.remove(); renderModule("money"); };
+}
 function habitCalRow(name, on, cnt, color){
   const cells=on.map(v=>`<i class="hc-cell ${v?'on':''}" style="${v&&color?`background:${color}`:''}"></i>`).join("");
   return `<div class="hc-row"><span class="hc-name">${name}</span><div class="hc-grid">${cells}</div><span class="hc-stat">${cnt}天</span></div>`;
@@ -2452,7 +2544,7 @@ function renderModule(key){
     mainContent = `<div class="sec-title">${m.type==="todo"?"全部任务":"全部记录"} <span id="rec-count" style="margin-left:auto;font-weight:500;color:var(--text-secondary);font-size:12px">${listItems.length} 条</span>${doneToggle}</div>
       <div class="rec-grid">${body}</div>`;
   }
-  if(m.type==="finance"){ mainContent = investAccountsHTML() + recurringHTML() + mainContent; }
+  if(m.type==="finance"){ mainContent = financeOverviewHTML() + assetAllocationHTML() + liabilitiesHTML() + recurringHTML() + mainContent; }
 
   $("#screen").innerHTML=`<div class="header"><div><h2>${m.name}</h2><p>${m.desc}</p></div><div class="spacer"></div><span class="date-chip">${icon("calendar",14)} ${dateStr()}</span></div>
     <div class="toolbar">
@@ -2475,6 +2567,11 @@ function renderModule(key){
   const rbAdd=$("#rb-add"); if(rbAdd) rbAdd.onclick=()=>openRecurringModal(null);
   $("#screen").querySelectorAll(".js-rec").forEach(el=>el.onclick=()=>openRecurringModal((data.recurring||[]).find(x=>x.id==el.dataset.id)));
   $("#screen").querySelectorAll(".js-pause").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const id=b.dataset.id; const rules=data.recurring||[]; const x=rules.find(r=>r.id==id); if(x){ x.active=!(x.active===false); persist(); renderModule("money"); } });
+  // 财务总览 / 负债 接线（仅记账本存在这些元素）
+  const foOpen=$("#fo-opening"); if(foOpen) foOpen.onchange=()=>{ data.__cashOpening=Math.max(0,+foOpen.value||0); persist(); renderModule("money"); };
+  const foLink=$("#fo-link"); if(foLink) foLink.onchange=()=>{ data.__linkTradeToLedger=foLink.checked; if(foLink.checked) syncTradeLedger(); persist(); renderModule("money"); };
+  const lbAdd=$("#lb-add"); if(lbAdd) lbAdd.onclick=()=>openLiabilityModal(null);
+  $("#screen").querySelectorAll(".js-lb-del").forEach(b=>b.onclick=()=>{ data.liabilities=(data.liabilities||[]).filter(x=>x.id!=b.dataset.id); persist(); renderModule("money"); });
   // 视图切换
   if(m.type==="todo"){
     $("#screen").querySelectorAll("#todo-view .opt").forEach(o=>o.onclick=()=>{
@@ -3356,6 +3453,13 @@ function openEditor(key,item){
         let h=(data.portfolio||[]).find(x=>x.code===d.code);
         if(!h){ h={id:Date.now(), code:d.code, name:d.name, kind:"stock", qty:0, costPrice:0, buyDate:d.date||isoToday(), tags:[]}; data.portfolio=data.portfolio||[]; data.portfolio.push(h); }
       }
+      // 资金划转联动：投资买卖/分红/费用 自动回写记账本（避免总资产重复计入）
+      d.id = d.id || Date.now();
+      if(data.__linkTradeToLedger!==false){
+        data.finance=(data.finance||[]).filter(f=>f.tradeId!==d.id);   // 清掉该交易旧的同步项（编辑时刷新）
+        const e=tradeToFinanceEntry(d);
+        if(e){ e.tradeId=d.id; data.finance.push(e); }
+      }
     }
     else if(m.type==="movie"){ d.rating=Math.max(0,Math.min(5,+seg("#f-rating")||0)); d.date=val("#f-date")||isoToday(); d.note=(val("#f-note")||"").trim(); d.tags=(val("#f-tags")||"").split(/[、,，]/).map(s=>s.trim()).filter(Boolean); if(d.date===today()){ data.movieLog=data.movieLog||{}; data.movieLog[today()]=true; } }
     // save custom fields
@@ -3447,10 +3551,18 @@ function softDelete(key,id){
   const groupId=Date.now()+"-"+Math.random().toString(36).slice(2);
   const now=Date.now();
   const entries=[{groupId,key,item,deletedAt:now,label:trashLabel(key,item)}];
-  // 删除持仓时，其下交易流水一并移入回收站（同组，便于整体恢复）
+  // 删除持仓时，其下交易流水 + 对应记账本流水一并移入回收站（同组，便于整体恢复）
   if(key==="portfolio" && item.code){
-    (data.trades||[]).forEach(t=>{ if(t.code===item.code){ entries.push({groupId,key:"trades",item:t,deletedAt:now,label:trashLabel("trades",t)}); } });
+    const movedTradeIds=[];
+    (data.trades||[]).forEach(t=>{ if(t.code===item.code){ entries.push({groupId,key:"trades",item:t,deletedAt:now,label:trashLabel("trades",t)}); movedTradeIds.push(t.id); } });
     data.trades=(data.trades||[]).filter(t=>t.code!==item.code);
+    (data.finance||[]).forEach(f=>{ if(f.tradeId!=null && movedTradeIds.includes(f.tradeId)){ entries.push({groupId,key:"finance",item:f,deletedAt:now,label:"记账流水·"+trashLabel("finance",f)}); } });
+    data.finance=(data.finance||[]).filter(f=>!(f.tradeId!=null && movedTradeIds.includes(f.tradeId)));
+  }
+  // 删除单条交易时，其对应记账本流水也一并移入回收站
+  if(key==="trades"){
+    (data.finance||[]).forEach(f=>{ if(f.tradeId!=null && f.tradeId===item.id){ entries.push({groupId,key:"finance",item:f,deletedAt:now,label:"记账流水·"+trashLabel("finance",f)}); } });
+    data.finance=(data.finance||[]).filter(f=>!(f.tradeId!=null && f.tradeId===item.id));
   }
   data[key]=arr.filter(i=>i.id!=id);
   data.__trash=(data.__trash||[]).concat(entries);
@@ -3625,6 +3737,7 @@ function attr(s){ return esc(s).replace(/"/g,'&quot;'); }
 buildNav();
 applyRecurring();
 purgeExpiredTrash();
+syncTradeLedger();
 render();
 // 初始化云同步（检查是否已登录，自动拉取云端数据）
 sync.init();
@@ -4702,6 +4815,39 @@ const PORTFOLIO_CSS = `
 .trash-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .trash-time{font-size:11.5px;color:var(--text-secondary);margin-top:2px}
 .trash-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* 财务总览 */
+.fin-overview{background:linear-gradient(135deg,var(--surface-card),var(--surface-nested));border:1px solid var(--border);border-radius:var(--radius-tile);box-shadow:var(--shadow-card);padding:16px;margin-bottom:14px}
+.fo-h{font-weight:700;font-size:15px;color:var(--text);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.fo-sub{font-size:11.5px;color:var(--text-secondary);font-weight:400}
+.fo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0 12px}
+.fo-cell{background:var(--surface-nested);border:1px solid var(--border);border-radius:10px;padding:10px}
+.fo-cell .l{font-size:11.5px;color:var(--text-secondary)}
+.fo-cell .v{font-size:16px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.fo-cell .v.big{font-size:20px;color:var(--accent)}
+.fo-cell .v.down{color:var(--danger)}
+.fo-set{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:13px;color:var(--text)}
+.fo-opening input{width:120px}
+.fo-note{font-size:11.5px;color:var(--text-secondary);margin-top:8px}
+/* 资产分布 */
+.asset-alloc{background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-tile);box-shadow:var(--shadow-card);padding:14px 16px;margin-bottom:14px}
+.aa-h{font-weight:700;font-size:14px;margin-bottom:10px}
+.aa-body{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.aa-list{flex:1;min-width:200px;display:flex;flex-direction:column;gap:6px}
+.al-row{display:flex;align-items:center;font-size:13px;gap:8px}
+.al-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.al-n{flex:1}
+.al-p{color:var(--text-secondary);font-variant-numeric:tabular-nums}
+/* 负债 */
+.liabilities-box{background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-tile);box-shadow:var(--shadow-card);padding:14px 16px;margin-bottom:14px}
+.lb-h{display:flex;align-items:center;font-weight:700;font-size:14px;margin-bottom:10px}
+.lb-total{margin-left:6px;color:var(--danger)}
+.lb-list{display:flex;flex-direction:column;gap:6px}
+.lb-row{display:flex;align-items:center;gap:10px;font-size:13px}
+.lb-name{font-weight:600}
+.lb-type{font-size:11px;color:var(--text-secondary);margin-left:6px;background:var(--surface-nested);padding:1px 6px;border-radius:6px}
+.lb-row b{margin-left:auto;font-variant-numeric:tabular-nums}
+@media(max-width:560px){ .fo-grid{grid-template-columns:repeat(2,1fr)} }
 .btn.sm{padding:4px 10px;font-size:11px}
 `;
 document.head.appendChild(Object.assign(document.createElement('style'),{textContent:PORTFOLIO_CSS}));
