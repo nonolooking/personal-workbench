@@ -1423,6 +1423,33 @@ const sync = {
     this.updateUI();
   },
 
+  // 合并两份数据：数组按 id/groupId/code 并集（同键本地优先，避免整库覆盖造成互相删除）；
+  // 普通对象浅合并（本地优先）；标量本地有值优先；设备级临时字段（头像/番茄钟/趋势）始终以本地为准。
+  mergeData(local, cloud){
+    if(!cloud) return local;
+    if(!local) return cloud;
+    const key = x => x && x.id!=null ? "id:"+x.id
+                 : x && x.groupId!=null ? "g:"+x.groupId
+                 : x && x.code!=null ? "c:"+x.code
+                 : "j:"+JSON.stringify(x);
+    const out = {...cloud};
+    for(const k of Object.keys(local)){
+      const lv = local[k], cv = cloud[k];
+      if(k==="__avatar" || k==="__pomo" || k==="__trend"){ out[k] = (lv!==undefined ? lv : cv); continue; }
+      if(Array.isArray(lv) && Array.isArray(cv)){
+        const m = new Map();
+        cv.forEach(x=>m.set(key(x), x));
+        lv.forEach(x=>{ m.set(key(x), x); });   // 同键本地优先（其余并入）
+        out[k] = Array.from(m.values());
+      } else if(lv && cv && typeof lv==="object" && typeof cv==="object"){
+        out[k] = {...cv, ...lv};
+      } else {
+        out[k] = (lv!==undefined && lv!==null && lv!=="") ? lv : cv;
+      }
+    }
+    return out;
+  },
+
   async pull() {
     if (!this.user) return;
     const { data: row, error } = await sb
@@ -1436,19 +1463,20 @@ const sync = {
       return;
     }
     if (row && row.data) {
-      // 云端数据为主，但保留本地临时字段（头像、番茄钟统计）
-      const cloud = row.data;
-      if (data.__avatar) cloud.__avatar = data.__avatar;
-      if (data.__pomo) cloud.__pomo = data.__pomo;
-      if (data.__trend) cloud.__trend = data.__trend;
-      data = cloud;
-      store.save();
+      const before = JSON.stringify(data);
+      data = this.mergeData(data, row.data);   // 合并而非覆盖：保留本机数据，并入云端新增
+      if (JSON.stringify(data) !== before) {
+        store.save();
+        this.debouncedPush();   // 合并结果稍后写回云端，避免其他设备再拉到旧数据
+      }
       render();
     }
   },
 
   async push() {
     if (!this.user) return;
+    // 先拉取并合并云端最新数据，避免“整库覆盖”把其他设备的新增冲掉
+    await this.pull();
     this.setStatus("syncing");
     const { error } = await sb
       .from("workbench_data")
