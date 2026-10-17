@@ -840,17 +840,17 @@
 
   /* 番茄钟（暗色炫酷卡） */
   .pomo { position:relative; overflow:hidden; border-radius:var(--radius-card); text-align:center;
-    background:linear-gradient(155deg,#302f2c,#1e1d1b); color:#f4f3f0; padding:22px 20px; box-shadow:var(--shadow-overlay);
+    background:linear-gradient(155deg,#302f2c,#1e1d1b); color:#f4f3f0; padding:16px 14px; box-shadow:var(--shadow-overlay);
     display:flex; flex-direction:column; }
   .pomo::before { content:""; position:absolute; width:180px; height:180px; border-radius:50%; left:50%; top:-60px; transform:translateX(-50%);
     background:radial-gradient(circle,rgba(197,93,79,.28),transparent 70%); }
   .pomo > * { position:relative; z-index:1; }
   .pomo .pen { font-size:9.5px; font-weight:800; letter-spacing:.16em; opacity:.55; }
   .pomo .pzh { font-size:13px; font-weight:800; margin-top:3px; }
-  .pomo .ring-wrap { position:relative; width:150px; height:150px; margin:14px auto 12px; }
+  .pomo .ring-wrap { position:relative; width:92px; height:92px; margin:8px auto 8px; }
   .pomo .ring-wrap svg { transform:rotate(-90deg); }
   .pomo .ptime { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
-  .pomo .ptime .t { font-size:32px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:.01em; }
+  .pomo .ptime .t { font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:.01em; }
   .pomo .ptime .s { font-size:11px; opacity:.6; }
   .pomo .pctl { display:flex; gap:8px; justify-content:center; margin-bottom:14px; }
   .pomo .plink { display:flex; flex-direction:column; gap:5px; margin:6px 0 12px; text-align:left; }
@@ -952,7 +952,10 @@
     body .pf-summary { grid-template-columns: repeat(2, 1fr); }
     body .pf-charts { grid-template-columns: 1fr; }
     body .pf-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    body .pf-table { min-width: 640px; }
+    body .pf-table { min-width: 460px; }
+    /* 专注与状态：手机端仍并排展示，不再纵向堆叠占空间 */
+    body .bento-focus { grid-template-columns: 1fr 1fr !important; }
+    body .bento-focus > * { grid-column: auto !important; }
     /* 课表横向滚动 */
     .tt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .tt-grid { min-width: 680px; }
@@ -1772,7 +1775,7 @@ function heartbeat(){
 }
 function pomoUpdate(){
   const t=$("#pomo-time"); if(t){ t.textContent=`${pad2(Math.floor(pomo.remain/60))}:${pad2(pomo.remain%60)}`; }
-  const fg=$("#pomo-fg"); if(fg){ const r=64,c=2*Math.PI*r; fg.style.strokeDashoffset=c*(1-pomo.remain/pomo.total); }
+  const fg=$("#pomo-fg"); if(fg){ const r=38,c=2*Math.PI*r; fg.style.strokeDashoffset=c*(1-pomo.remain/pomo.total); }
   const st=$("#pomo-status"); if(st) st.textContent=pomo.running?"专注中":"已暂停";
   const b=$("#pomo-toggle"); if(b) b.textContent=pomo.running?"暂停":"开始";
 }
@@ -1974,7 +1977,7 @@ function todayClassesTileHTML(){ return classesTileHTML(); }
 /* 专注番茄钟（暗色炫酷卡 · 实时倒计时 · 可关联项目） */
 function pomoTileHTML(){
   const p=data.__pomo||{count:0,min:0};
-  const r=64,c=2*Math.PI*r,off=c*(1-pomo.remain/pomo.total);
+  const r=38,c=2*Math.PI*r,off=c*(1-pomo.remain/pomo.total);
 
   // 关联项目下拉选项
   const habits=data.checkin||[];
@@ -1987,9 +1990,9 @@ function pomoTileHTML(){
   const linkedLabel=pomo.linkedTitle?`<span class="plink-cur">${esc(pomo.linkedTitle)}</span>`:`<span class="plink-none">未关联</span>`;
 
   return `<div class="pomo b4"><div><div class="pen">POMODORO · 25 / 5</div><div class="pzh">专注番茄钟</div></div>
-    <div class="ring-wrap"><svg width="150" height="150" viewBox="0 0 150 150">
-      <circle cx="75" cy="75" r="${r}" fill="none" stroke="rgba(244,243,240,.14)" stroke-width="7"/>
-      <circle id="pomo-fg" cx="75" cy="75" r="${r}" fill="none" stroke="#e6b877" stroke-width="7" stroke-linecap="round"
+    <div class="ring-wrap"><svg width="92" height="92" viewBox="0 0 92 92">
+      <circle cx="46" cy="46" r="${r}" fill="none" stroke="rgba(244,243,240,.14)" stroke-width="6"/>
+      <circle id="pomo-fg" cx="46" cy="46" r="${r}" fill="none" stroke="#e6b877" stroke-width="6" stroke-linecap="round"
         stroke-dasharray="${c}" stroke-dashoffset="${off}"/></svg>
       <div class="ptime"><span class="t" id="pomo-time">${pad2(Math.floor(pomo.remain/60))}:${pad2(pomo.remain%60)}</span><span class="s" id="pomo-status">${pomo.running?'专注中':'保持专注'}</span></div></div>
     <div class="plink"><label class="plink-l">${icon("link",13)} 关联项目</label>
@@ -2077,7 +2080,7 @@ function renderHome(){
     <div class="bento">${todayClassesTileHTML()}</div>
 
     ${grp("专注与状态","FOCUS&nbsp;&nbsp;&&nbsp;&nbsp;MOOD")}
-    <div class="bento">${pomoTileHTML()}${trendTileHTML()}</div>
+    <div class="bento bento-focus">${pomoTileHTML()}${trendTileHTML()}</div>
 
     ${grp("投资行情","PORTFOLIO&nbsp;&nbsp;·&nbsp;&nbsp;MARKET")}
     <div class="bento">${portfolioTileHTML()}</div>
@@ -4207,8 +4210,6 @@ async function renderPortfolio(){
       <td class="pf-code"><div class="pf-name">${esc(h.name||h.code)}</div><div class="pf-cd">${esc(h.code)} · ${esc(h.kind||"")}${h.sector?` / ${esc(h.sector)}`:''}</div></td>
       <td class="num ${c.ok?'':'na'}">${c.ok?c.last.toFixed(3):'<span class="na">无行情</span>'}</td>
       <td class="num ${c.dayPct>=0?'up':'down'}">${c.ok?`${c.dayPct>=0?'+':''}${c.dayPct.toFixed(2)}%`:''}</td>
-      <td class="num">${c.qty}</td>
-      <td class="num">${c.cost.toFixed(3)}</td>
       <td class="num">${c.marketValue.toFixed(2)}</td>
       <td class="num ${cls}">${c.pnl>=0?'+':''}${c.pnl.toFixed(2)}<span class="sub">${c.pnlPct>=0?'+':''}${c.pnlPct.toFixed(2)}%</span>${extra}</td>
       <td class="pf-act">
@@ -4287,9 +4288,9 @@ async function renderPortfolio(){
     <div class="pf-table-wrap">
       <table class="pf-table">
         <thead><tr>
-          <th>标的</th><th>现价</th><th>涨跌</th><th>持仓</th><th>成本</th><th>市值</th><th>盈亏</th><th>操作</th>
+          <th>标的</th><th>现价</th><th>涨跌</th><th>市值</th><th>盈亏</th><th>操作</th>
         </tr></thead>
-        <tbody>${rows || `<tr><td colspan="8" class="empty-cell">还没有持仓，点右上角「新增持仓」</td></tr>`}</tbody>
+        <tbody>${rows || `<tr><td colspan="6" class="empty-cell">还没有持仓，点右上角「新增持仓」</td></tr>`}</tbody>
       </table>
     </div>
 
@@ -4765,7 +4766,9 @@ const PORTFOLIO_CSS = `
 .num.down{color:var(--module-2)}
 .num.na{color:var(--text-tertiary)}
 .num .sub{display:block;font-size:10px;margin-top:2px;font-weight:600}
-.pf-act{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.pf-act{display:flex;flex-direction:column;align-items:stretch;gap:5px;justify-content:flex-start}
+.pf-act .btn{width:100%;justify-content:center;padding:6px 8px}
+.pf-act .alert-tag{align-self:flex-start}
 .alert-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700}
 .alert-tag.target{background:color-mix(in srgb, var(--module-2) 18%, transparent);color:var(--module-2)}
 .alert-tag.stop{background:color-mix(in srgb, var(--danger) 18%, transparent);color:var(--danger)}
