@@ -1068,15 +1068,10 @@
       <div class="sync-indicator"><span class="sync-dot offline" id="syncDot"></span><span id="syncStatus">未登录·仅本地</span></div>
       <button class="auth-btn" id="authBtn">登录 / 注册</button>
       <div class="backup-row">
-        <button class="backup-btn" id="btnBackupDL">下载媒体备份</button>
-        <button class="backup-btn" id="btnBackupUL">上传媒体备份</button>
+        <button class="backup-btn" id="btnFullExport">导出全量</button>
+        <button class="backup-btn" id="btnFullImport">导入全量</button>
       </div>
-      <div class="backup-row">
-        <button class="backup-btn" id="btnDataExport">导出数据</button>
-        <button class="backup-btn" id="btnDataImport">导入数据</button>
-      </div>
-      <input type="file" id="backupInput" accept=".zip" style="display:none" />
-      <input type="file" id="dataInput" accept=".json,application/json" style="display:none" />
+      <input type="file" id="fullInput" accept=".zip" style="display:none" />
     </div>
   </aside>
   <!-- 登录弹窗 -->
@@ -1662,143 +1657,92 @@ async function compressImage(file) {
 }
 
 /* ============================================================
-   媒体备份：下载（IndexedDB → ZIP）/ 上传（ZIP → IndexedDB）
+   全量备份：单个 ZIP = data.json（业务数据）+ media/（照片/音频）
    ============================================================ */
 const backup = {
-  // 遍历 IndexedDB 所有媒体，打包成 ZIP 下载
-  async download() {
-    const btn = document.getElementById("btnBackupDL");
+  // 导出：业务数据 + IndexedDB 媒体 → 单个 ZIP 下载
+  async exportFull() {
+    const btn = document.getElementById("btnFullExport");
     btn.disabled = true; btn.textContent = "打包中…";
     try {
+      const zip = new JSZip();
+      zip.file("data.json", JSON.stringify(data, null, 2));
       const db = await mediaDB.init();
-      const tx = db.transaction("media", "readonly");
-      const storeObj = tx.objectStore("media");
       const allKeys = await new Promise(resolve => {
-        const req = storeObj.getAllKeys();
+        const req = db.transaction("media", "readonly").objectStore("media").getAllKeys();
         req.onsuccess = () => resolve(req.result || []);
         req.onerror = () => resolve([]);
       });
-      if (allKeys.length === 0) {
-        alert("没有可备份的媒体文件（照片/音频）。");
-        return;
-      }
-      const zip = new JSZip();
-      const meta = { version: 1, count: allKeys.length, date: new Date().toISOString(), ids: [] };
       for (const id of allKeys) {
         const blob = await mediaDB.get(id);
-        if (blob) {
-          const ext = blob.type.includes("image") ? ".jpg" : blob.type.includes("audio") ? ".webm" : ".bin";
-          zip.file(id + ext, blob);
-          meta.ids.push(id);
-        }
+        if (!blob) continue;
+        const ext = blob.type.includes("image") ? ".jpg" : blob.type.includes("audio") ? ".webm" : ".bin";
+        zip.file("media/" + id + ext, blob);
       }
-      zip.file("_manifest.json", JSON.stringify(meta, null, 2));
       const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
       const url = URL.createObjectURL(zipBlob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `workbench-media-backup-${new Date().toISOString().slice(0,10)}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      a.download = `workbench-full-backup-${new Date().toISOString().slice(0,10)}.zip`;
+      document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(url);
     } catch (e) {
       alert("备份失败：" + (e.message || e));
     } finally {
-      btn.disabled = false; btn.textContent = "下载媒体备份";
+      btn.disabled = false; btn.textContent = "导出全量";
     }
   },
 
-  // 选择 ZIP 文件，解包后按 ID 存入 IndexedDB
-  async upload(file) {
-    const btn = document.getElementById("btnBackupUL");
+  // 导入：ZIP 内 data.json → 覆盖 data；media/* → 写回 IndexedDB（先清空再还原，保证全量）
+  async importFull(file) {
+    const btn = document.getElementById("btnFullImport");
+    if (!confirm("导入会用备份覆盖当前全部本地数据（含照片/音频）。\n建议先点「导出全量」备份当前状态，确定继续？")) return;
     btn.disabled = true; btn.textContent = "恢复中…";
     try {
       const zip = await JSZip.loadAsync(file);
+      const dataFile = zip.file("data.json");
+      if (!dataFile) throw new Error("备份文件缺少 data.json");
+      const parsed = JSON.parse(await dataFile.async("string"));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("data.json 格式不正确");
+      data = parsed;
+      store.save();
+      const db = await mediaDB.init();
+      await new Promise((resolve, reject) => {
+        const t = db.transaction("media", "readwrite");
+        const r = t.objectStore("media").clear();
+        r.onsuccess = () => resolve();
+        r.onerror = () => reject(r.error);
+      });
       let count = 0;
-      const manifestFile = zip.file("_manifest.json");
-      let manifestIds = null;
-      if (manifestFile) {
-        try {
-          const m = JSON.parse(await manifestFile.async("string"));
-          manifestIds = m.ids || null;
-        } catch(e) {}
-      }
-      // 从 manifest 顺序恢复，或从文件名解析
-      const ids = manifestIds || Object.keys(zip.files).filter(n => !n.startsWith("_")).map(n => n.replace(/\.(jpg|webm|bin)$/, ""));
-      for (const id of ids) {
-        // 找对应的 zip 文件（可能带扩展名）
-        let entry = zip.file(id + ".jpg") || zip.file(id + ".webm") || zip.file(id + ".bin");
-        if (!entry) {
-          // 尝试直接用 ID 作为文件名
-          entry = zip.file(id);
-        }
-        if (!entry) continue;
-        const blob = await entry.async("blob");
-        // 推断 MIME 类型
+      const mediaEntries = zip.file(/^media\/.+/);
+      for (const entry of mediaEntries) {
+        const name = entry.name.replace(/^media\//, "");
+        const id = name.replace(/\.(jpg|webm|bin)$/, "");
+        if (!id) continue;
+        const buf = await entry.async("blob");
         let type = "application/octet-stream";
-        if (entry.name.endsWith(".jpg")) type = "image/jpeg";
-        else if (entry.name.endsWith(".webm")) type = "audio/webm";
-        const typedBlob = new Blob([blob], { type });
-        await mediaDB.put(id, typedBlob);
+        if (name.endsWith(".jpg")) type = "image/jpeg";
+        else if (name.endsWith(".webm")) type = "audio/webm";
+        await mediaDB.put(id, new Blob([buf], { type }));
         count++;
       }
-      alert(`媒体恢复完成，共恢复 ${count} 个文件。刷新页面后生效。`);
       render();
+      if (sync.user) { try { await sync.push(); } catch(e){ console.warn("同步云端失败:", e); } }
+      alert(`全量恢复完成：数据已还原，媒体 ${count} 个。` + (sync.user ? "已同步到云端。" : ""));
     } catch (e) {
       alert("恢复失败：" + (e.message || e));
     } finally {
-      btn.disabled = false; btn.textContent = "上传媒体备份";
-    }
-  },
-
-  // 数据全量导出：把本地 data 序列化为 JSON 下载（独立于媒体备份，覆盖所有模块）
-  exportData() {
-    const safe = JSON.stringify(data, null, 2);
-    const blob = new Blob([safe], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `workbench-data-${new Date().toISOString().slice(0,10)}.json`;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-  },
-
-  // 数据全量导入：用 JSON 备份覆盖本地数据（导入前建议先导出当前状态）
-  async importData(file) {
-    const btn = document.getElementById("btnDataImport");
-    if (!confirm("导入会用备份文件覆盖当前所有本地数据（待办/记账/持仓等）。\n建议先点「导出数据」备份当前状态，确定继续？")) return;
-    btn.disabled = true; btn.textContent = "导入中…";
-    try {
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("文件格式不正确");
-      data = parsed;
-      store.save();
-      render();
-      if (sync.user) { try { await sync.push(); } catch(e){ console.warn("同步云端失败:", e); } }
-      alert("数据导入完成。" + (sync.user ? "已同步到云端。" : ""));
-    } catch (e) {
-      alert("导入失败：" + (e.message || e));
-    } finally {
-      btn.disabled = false; btn.textContent = "导入数据";
+      btn.disabled = false; btn.textContent = "导入全量";
     }
   },
 };
 
 // 绑定备份按钮事件
-document.getElementById("btnBackupDL").onclick = () => backup.download();
-document.getElementById("btnBackupUL").onclick = () => document.getElementById("backupInput").click();
-document.getElementById("backupInput").onchange = (e) => {
+document.getElementById("btnFullExport").onclick = () => backup.exportFull();
+document.getElementById("btnFullImport").onclick = () => document.getElementById("fullInput").click();
+document.getElementById("fullInput").onchange = (e) => {
   const file = e.target.files[0];
-  if (file) backup.upload(file);
-  e.target.value = "";
-};
-document.getElementById("btnDataExport").onclick = () => backup.exportData();
-document.getElementById("btnDataImport").onclick = () => document.getElementById("dataInput").click();
-document.getElementById("dataInput").onchange = (e) => {
-  const file = e.target.files[0];
-  if (file) backup.importData(file);
+  if (file) backup.importFull(file);
   e.target.value = "";
 };
 
