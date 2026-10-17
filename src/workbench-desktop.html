@@ -911,7 +911,7 @@
     .sidebar .brand h1 { font-size: 14px; }
     .sidebar .brand p { display: none; }
     /* 同步 / 登录 / 备份：与品牌同处顶栏右侧 */
-    .sidebar .foot { display: flex; flex: 1 1 auto; order: 2; align-items: center; justify-content: flex-end;
+    .sidebar .foot { display: flex; flex-wrap: wrap; flex: 1 1 auto; order: 2; align-items: center; justify-content: flex-end;
       gap: 8px; padding: 6px 12px; font-size: 11px; opacity: 1; min-width: 0; border-top: none; }
     .sidebar .foot > * { line-height: 1.3; }
     .sidebar .foot .sync-indicator { padding: 0; }
@@ -1071,7 +1071,12 @@
         <button class="backup-btn" id="btnBackupDL">下载媒体备份</button>
         <button class="backup-btn" id="btnBackupUL">上传媒体备份</button>
       </div>
+      <div class="backup-row">
+        <button class="backup-btn" id="btnDataExport">导出数据</button>
+        <button class="backup-btn" id="btnDataImport">导入数据</button>
+      </div>
       <input type="file" id="backupInput" accept=".zip" style="display:none" />
+      <input type="file" id="dataInput" accept=".json,application/json" style="display:none" />
     </div>
   </aside>
   <!-- 登录弹窗 -->
@@ -1746,6 +1751,39 @@ const backup = {
       btn.disabled = false; btn.textContent = "上传媒体备份";
     }
   },
+
+  // 数据全量导出：把本地 data 序列化为 JSON 下载（独立于媒体备份，覆盖所有模块）
+  exportData() {
+    const safe = JSON.stringify(data, null, 2);
+    const blob = new Blob([safe], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `workbench-data-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  },
+
+  // 数据全量导入：用 JSON 备份覆盖本地数据（导入前建议先导出当前状态）
+  async importData(file) {
+    const btn = document.getElementById("btnDataImport");
+    if (!confirm("导入会用备份文件覆盖当前所有本地数据（待办/记账/持仓等）。\n建议先点「导出数据」备份当前状态，确定继续？")) return;
+    btn.disabled = true; btn.textContent = "导入中…";
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("文件格式不正确");
+      data = parsed;
+      store.save();
+      render();
+      if (sync.user) { try { await sync.push(); } catch(e){ console.warn("同步云端失败:", e); } }
+      alert("数据导入完成。" + (sync.user ? "已同步到云端。" : ""));
+    } catch (e) {
+      alert("导入失败：" + (e.message || e));
+    } finally {
+      btn.disabled = false; btn.textContent = "导入数据";
+    }
+  },
 };
 
 // 绑定备份按钮事件
@@ -1754,6 +1792,13 @@ document.getElementById("btnBackupUL").onclick = () => document.getElementById("
 document.getElementById("backupInput").onchange = (e) => {
   const file = e.target.files[0];
   if (file) backup.upload(file);
+  e.target.value = "";
+};
+document.getElementById("btnDataExport").onclick = () => backup.exportData();
+document.getElementById("btnDataImport").onclick = () => document.getElementById("dataInput").click();
+document.getElementById("dataInput").onchange = (e) => {
+  const file = e.target.files[0];
+  if (file) backup.importData(file);
   e.target.value = "";
 };
 
