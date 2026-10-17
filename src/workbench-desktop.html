@@ -127,6 +127,9 @@
   .masthead .m-meta { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-secondary);
     margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
   .masthead .m-meta .price { color:var(--accent); font-weight:700; }
+  /* 精简版报头：去掉大标题，仅保留日期/周数信息条 */
+  .masthead.masthead-slim { padding: 12px 0 10px; border-bottom: 2px solid var(--text); }
+  .masthead.masthead-slim .m-meta { margin-top: 0; padding-top: 0; border-top: none; font-size: 12px; }
 
   /* 报纸分栏竖线（双细线） */
   .col-rule { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
@@ -918,7 +921,7 @@
     .sidebar .foot .auth-btn, .sidebar .foot .backup-btn { display: inline-flex; align-items: center; padding: 5px 10px; }
     .sidebar .foot .backup-row { margin-top: 0; flex: 0 0 auto; align-items: center; }
     .sidebar .foot .backup-btn { padding: 5px 10px; font-size: 11px; }
-    .sidebar .foot .auth-btn { display: inline-block; width: auto; padding: 4px 12px; font-size: 11.5px; }
+    .sidebar .foot .auth-btn { display: inline-flex; align-items: center; width: auto; padding: 5px 10px; font-size: 11px; }
     /* 导航：单行横向滑动胶囊，不折行、不挤压内容 */
     .sidebar .nav { display: flex; flex-direction: row; flex-wrap: nowrap; overflow-x: auto;
       -webkit-overflow-scrolling: touch; flex: 1 1 100%; order: 3; padding: 7px 8px; gap: 6px;
@@ -2030,12 +2033,10 @@ function renderHome(){
   const hour = now.getHours();
   const hi = hour<5?"夜深了":hour<11?"早上好":hour<13?"中午好":hour<18?"下午好":"晚上好";
 
-  // 报头（masthead）
-  const masthead = `<div class="masthead">
-    <div class="m-title">个人看板</div>
-    <div class="m-sub">PERSONAL&nbsp;&nbsp;DASHBOARD · 每日更新</div>
+  // 报头（精简版）：仅日期与周数，避免与侧栏品牌、问候语三重标题
+  const masthead = `<div class="masthead masthead-slim">
     <div class="m-meta">
-      <span>${dateStr()} · 星期${["日","一","二","三","四","五","六"][now.getDay()]}</span>
+      <span>${dateStr()}</span>
       <span class="price">第 ${weekNum()} 周</span>
     </div>
   </div>`;
