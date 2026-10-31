@@ -428,10 +428,12 @@
   .btn.ghost { background:var(--surface-card); color:var(--text-secondary); border:1px solid var(--border-input); box-shadow:none; font-weight:500; }
   .btn.ghost:hover { color:var(--text); }
   .btn.danger { background:var(--danger); }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
   .spacer { flex:1; }
   input, textarea { font-family:var(--font); font-size:14px; border:1px solid var(--border-input); border-radius:10px;
     padding:9px 12px; background:var(--surface-card); color:var(--text); outline:none; transition: border-color .15s, box-shadow .15s; width:100%; }
   input:focus, textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-muted); }
+  input[type="checkbox"], input[type="radio"] { width:auto; accent-color:var(--accent); }
   textarea { resize:vertical; min-height:80px; }
   .search-box { position:relative; width: 240px; }
   .search-box svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--text-tertiary); pointer-events:none; }
@@ -523,9 +525,6 @@
   .rec:hover .acts { opacity:1; }
   .rec .acts button { border:none; background:transparent; color:var(--text-tertiary); cursor:pointer;
     width:28px; height:28px; border-radius:7px; display:grid; place-items:center; transition: all .15s; }
-  .rec .pin-btn:hover { background:var(--surface-nested); color:var(--module-3); }
-  .rec .pin-btn.on { color:var(--module-3); opacity:1; } .rec .pin-btn.on svg { fill: var(--module-3); }
-  .rec:has(.pin-btn.on) .acts { opacity:1; }
   .rec .del:hover { background:var(--danger-muted); color:var(--danger); }
   .rec .pbar { flex:1; min-width:80px; height:6px; border-radius:999px; background:var(--border); overflow:hidden; }
   .rec .pbar i { display:block; height:100%; border-radius:999px; }
@@ -920,11 +919,13 @@
     .sidebar .foot { display: flex; flex-wrap: nowrap; flex: 1 1 auto; order: 2; align-items: center; justify-content: flex-end;
       gap: 10px; padding: 9px 14px; font-size: 11px; opacity: 1; min-width: 0; border-top: none; }
     .sidebar .foot > * { line-height: 1.3; white-space: nowrap; }
-    .sidebar .foot .sync-indicator { padding: 0; gap: 5px; }
-    .sidebar .foot .auth-btn, .sidebar .foot .backup-btn { display: inline-flex; align-items: center; width: auto; padding: 5px 9px; font-size: 11px; }
-    .sidebar .foot .backup-row { margin-top: 0; flex: 0 0 auto; align-items: center; gap: 6px; }
+    /* 顶栏右侧控件统一高度，保证同一水平线 */
+    .sidebar .foot .sync-indicator { padding: 0; gap: 5px; height: 28px; display: inline-flex; align-items: center; }
+    .sidebar .foot .auth-btn, .sidebar .foot .backup-btn { display: inline-flex; align-items: center; justify-content: center;
+      width: auto; height: 28px; padding: 0 10px; font-size: 11px; }
+    .sidebar .foot .backup-row { margin-top: 0; flex: 0 0 auto; align-items: center; gap: 6px; height: 28px; }
     /* 备份按钮改为图标（↓导出 / ↑导入），tooltip 由 title 提供 */
-    .sidebar .foot .backup-btn { font-size: 0; padding: 6px 8px; }
+    .sidebar .foot .backup-btn { font-size: 0; padding: 0 9px; }
     .sidebar .foot .backup-btn::before { font-size: 15px; line-height: 1; }
     #btnFullExport::before { content: "\2193"; }
     #btnFullImport::before { content: "\2191"; }
@@ -992,10 +993,18 @@
     .mini, .side-card { padding: 11px 13px; }
     /* 触屏无 hover：记录行操作（编辑/删除/置顶）常驻可见，保留右侧空间避免遮挡文字 */
     .rec .acts { opacity: 1; }
-    .rec .body { padding-right: 68px; }
+    .rec .body { padding-right: 40px; }
     .rec .acts button { width: 26px; height: 26px; }
     /* 习惯追踪表手机端横向滚动，避免 9 列被截断 */
     .hbt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* 页头操作按钮：标题独占一行，按钮两列等宽（投资看板等） */
+    .header { gap: 8px; }
+    .header .spacer { display: none; }
+    .header .btn { flex: 1 1 calc(50% - 6px); justify-content: center; }
+    /* 投资设置卡：勾选项不再被全局 input 宽度撑爆 */
+    .pf-settings { gap: 8px 12px; padding: 10px 12px; }
+    /* 财务总览/统计小卡：手机端降两列，避免挤压 */
+    .fo-grid, .mod-summary { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 480px){
     .modcard-grid { grid-template-columns: 1fr; }
@@ -1393,6 +1402,15 @@ const store = {
 let data = store.load();
 // 固定习惯（阅读/运动/电影）的“今日打卡”日志，按模块级存储，避免与子项数据混淆
 ["readLog","sportLog","movieLog"].forEach(k=>{ if(data[k]==null) data[k]={}; });
+// 数据修复：历史上「固定收支补录/交易联动」误写入幽灵数组 data.finance（记账本实际使用 data.money），合并回正
+if(Array.isArray(data.finance)){
+  const led=Array.isArray(data.money)?data.money:[];
+  const ids=new Set(led.map(x=>String(x.id)));
+  const moved=data.finance.filter(x=>!ids.has(String(x.id)));
+  if(moved.length) data.money=led.concat(moved);
+  delete data.finance;
+  store.save();
+}
 let view = "home";
 let searchQ = "";
 let pomo = { running:false, remain:25*60, total:25*60, linkedKey:"", linkedType:"", linkedId:0, linkedTitle:"" };
@@ -2205,7 +2223,7 @@ function ymAddMonth(ym,n){ const [y,m]=ym.split("-").map(Number); const t=new Da
 // 每月固定收支：自动补录到对应月份（幂等，靠 recId+recYM 去重）
 function applyRecurring(){
   const rec=data.recurring||[]; if(!rec.length) return;
-  const fin=data.finance||[]; let changed=false;
+  const fin=data.money||[]; let changed=false;
   rec.forEach(r=>{
     if(r.active===false) return;                       // 已暂停：不再自动计入
     let ym=r.sinceYM||curYM(); const end=curYM();
@@ -2219,7 +2237,7 @@ function applyRecurring(){
       ym=ymAddMonth(ym,1);
     }
   });
-  if(changed){ data.finance=fin; }
+  if(changed){ data.money=fin; }
 }
 
 // 记账本里的「每月固定收支」管理卡片
@@ -2292,7 +2310,7 @@ function fmtY(n){ return (Math.round((n||0)*100)/100).toLocaleString('zh-CN',{mi
 function portfolioInvestTotal(){ return (data.portfolio||[]).reduce((s,h)=>s+(portfolioCalc(h).marketValue||0),0); }
 function computeCash(){
   const opening=+(data.__cashOpening||0);
-  const fin=data.finance||[];
+  const fin=data.money||[];
   const inc=fin.filter(x=>x.type==="income").reduce((a,x)=>a+ +x.amount,0);
   const exp=fin.filter(x=>x.type==="expense").reduce((a,x)=>a+ +x.amount,0);
   return opening+inc-exp;
@@ -2357,12 +2375,12 @@ function tradeToFinanceEntry(t){
 // 补齐/清理：让记账本流水与交易流水一致（开启联动时）
 function syncTradeLedger(){
   if(data.__linkTradeToLedger===false) return;
-  const fin=data.finance||[]; const trades=data.trades||[];
+  const fin=data.money||[]; const trades=data.trades||[];
   const tradeIds=new Set(trades.map(t=>t.id));
   let changed=false;
   const after=fin.filter(f=>{ if(f.tradeId!=null && !tradeIds.has(f.tradeId)){ changed=true; return false; } return true; });
   trades.forEach(t=>{ if(!after.some(f=>f.tradeId===t.id)){ const e=tradeToFinanceEntry(t); if(e){ e.tradeId=t.id; after.push(e); changed=true; } } });
-  if(changed){ data.finance=after; persist(); }
+  if(changed){ data.money=after; persist(); }
 }
 function openLiabilityModal(l){
   l=l||{id:null,title:"",type:"信用卡",amount:""};
@@ -2949,9 +2967,8 @@ function headHero(m, big, label){
 }
 
 function recHTML(m,x){
-  const pin=`<button class="pin-btn js-pin ${x.pinned?'on':''}" data-id="${x.id}" title="置顶">${icon("star",15)}</button>`;
   const del=`<button class="del js-del" data-id="${x.id}" title="删除">${icon("trash",15)}</button>`;
-  const acts=`<div class="acts">${pin}${del}</div>`;
+  const acts=`<div class="acts">${del}</div>`;
   const chkMark=icon("check",13,2.4);
   const thumb=x.image?`<img class="thumb" src="${attr(x.image)}" alt="">`:'';
   const customMeta=(m.fields||[]).filter(f=>x[f.key]).map(f=>`<span class="meta-tag">${esc(x[f.key])}</span>`).join("");
@@ -2981,7 +2998,7 @@ function recHTML(m,x){
   if(m.type==="todo"){ const p=(m.priorities||[]).find(p=>p.key===x.priority);
     const overdue = !x.done && x.date && x.date < today();
     const st=x.subtasks||[]; const sd=st.filter(s=>s.done).length;
-    return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:60px"><div class="chk js-chk ${x.done?'on':''}" data-id="${x.id}">${chkMark}</div>
+    return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:44px"><div class="chk js-chk ${x.done?'on':''}" data-id="${x.id}">${chkMark}</div>
       ${thumb}
       <div class="body" data-edit="${x.id}"><span class="rname ${x.done?'done':''}">${esc(x.title)}</span>
       ${p?`<span class="badge" style="background:${p.color};color:${p.text}"><span class="dot"></span>${p.label}</span>`:''}
@@ -2990,7 +3007,7 @@ function recHTML(m,x){
       ${x.note?`<span class="rdate" style="margin-left:0;color:var(--text-tertiary)">${esc(x.note).slice(0,40)}</span>`:''}${customBlock}</div></div></div>`; }
   if(m.type==="checkin"){ const on=!!(x.log&&x.log[today()]); const st=streak(x.log); const lst=longestStreak(x.log);
     const ym=curYM(); const mc=Object.keys(x.log||{}).filter(k=>k.startsWith(ym)&&x.log[k]).length; const goal=x.monthGoal||0;
-    return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:60px"><div class="chk js-chk ${on?'on':''}" data-id="${x.id}">${chkMark}</div>
+    return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:44px"><div class="chk js-chk ${on?'on':''}" data-id="${x.id}">${chkMark}</div>
       ${thumb}
       <div class="body" data-edit="${x.id}"><span class="rname">${esc(x.title)}</span>
       <span class="streak">${icon("flame",13)} 连续 ${st} 天</span>
@@ -3012,14 +3029,14 @@ function recHTML(m,x){
         </div>`;
       }
     }
-    return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:60px">${thumb}<div class="body" data-edit="${x.id}">
+    return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:44px">${thumb}<div class="body" data-edit="${x.id}">
       <span class="rname">${esc(x.title)}</span>
       <div class="pbar"><i style="width:${pct}%;background:${m.color}"></i></div>
       <span class="rdate" style="margin-left:0;color:var(--text-secondary)">${x.current}/${x.target} ${x.unit||m.unit||''} · ${pct}%</span>
       ${x.note?`<div class="rnote">${esc(x.note)}</div>`:''}${readBlock}${customBlock}</div></div></div>`; }
   if(m.type==="movie"){ const rating=x.rating||0;
     const stars=`<span class="mv-stars">${[1,2,3,4,5].map(i=>`<i class="${i<=rating?'on':''}">${icon("star",11,2)}</i>`).join("")}</span>`;
-    return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:60px">${thumb}<div class="body" data-edit="${x.id}">
+    return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:44px">${thumb}<div class="body" data-edit="${x.id}">
       <span class="rname">${esc(x.title)}</span>
       ${stars}
       <span class="rdate" style="margin-left:0;color:var(--text-secondary)">${x.date||''}</span>
@@ -3027,7 +3044,7 @@ function recHTML(m,x){
       ${(x.tags||[]).length?`<div class="rm-tags">${(x.tags||[]).map(tg=>`<span class="rm-tag">${icon("tag",9)} ${esc(tg)}</span>`).join("")}</div>`:''}
       ${customBlock}</div></div></div>`; }
   if(m.type==="finance"){ const inc=x.type==="income";
-    return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:60px">${thumb}<div class="body" data-edit="${x.id}">
+    return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:44px">${thumb}<div class="body" data-edit="${x.id}">
       <span class="rname">${esc(x.title)}</span>
       <span class="badge" style="background:var(--surface-nested);color:var(--text-secondary)">${esc(x.category||'其他')}</span>${x.recId?`<span class="badge" style="background:var(--accent-muted);color:var(--accent)">固定</span>`:''}
       <span class="rdate">${x.date||''}</span>${customBlock}</div>
@@ -3035,7 +3052,7 @@ function recHTML(m,x){
   // note
   const photoCount=(x.photos&&x.photos.length)||0;
   const hasAudio=!!x.audio;
-  return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:60px;flex-direction:column;align-items:stretch">
+  return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:44px;flex-direction:column;align-items:stretch">
     <div class="body" data-edit="${x.id}" style="padding-bottom:4px">
       <span class="rname">${esc(x.title||'无标题')}</span>
       ${x.mood?`<span class="badge" style="background:var(--accent-muted);color:var(--accent)">${esc(x.mood)}</span>`:''}
@@ -3074,7 +3091,6 @@ function wireModule(key){ const m=modOf(key);
     persist(); });
   $("#screen").querySelectorAll("[data-edit]").forEach(el=>el.onclick=()=>openEditor(key,(data[key]).find(i=>i.id==el.dataset.edit)));
   $("#screen").querySelectorAll(".js-del").forEach(el=>el.onclick=e=>{ e.stopPropagation(); confirmDelete(key, el.dataset.id); });
-  $("#screen").querySelectorAll(".js-pin").forEach(el=>el.onclick=e=>{ e.stopPropagation(); const x=(data[key]).find(i=>i.id==el.dataset.id); x.pinned=!x.pinned; persist(); });
 
   // 异步加载心情日记的照片和音频（从 IndexedDB）
   if (m.type === "note") {
@@ -3507,9 +3523,9 @@ function openEditor(key,item){
       // 资金划转联动：投资买卖/分红/费用 自动回写记账本（避免总资产重复计入）
       d.id = d.id || Date.now();
       if(data.__linkTradeToLedger!==false){
-        data.finance=(data.finance||[]).filter(f=>f.tradeId!==d.id);   // 清掉该交易旧的同步项（编辑时刷新）
+        data.money=(data.money||[]).filter(f=>f.tradeId!==d.id);   // 清掉该交易旧的同步项（编辑时刷新）
         const e=tradeToFinanceEntry(d);
-        if(e){ e.tradeId=d.id; data.finance.push(e); }
+        if(e){ e.tradeId=d.id; data.money.push(e); }
       }
     }
     else if(m.type==="movie"){ d.rating=Math.max(0,Math.min(5,+seg("#f-rating")||0)); d.date=val("#f-date")||isoToday(); d.note=(val("#f-note")||"").trim(); d.tags=(val("#f-tags")||"").split(/[、,，]/).map(s=>s.trim()).filter(Boolean); if(d.date===today()){ data.movieLog=data.movieLog||{}; data.movieLog[today()]=true; } }
@@ -3593,7 +3609,7 @@ function trashLabel(key,item){ return item.title || item.name || item.code || "�
 function purgeExpiredTrash(){
   if(!data.__trash || !data.__trash.length) return;
   const now=Date.now(); const before=data.__trash.length;
-  data.__trash=data.__trash.filter(e=> now-e.deletedAt < 24*3600*1000);
+  data.__trash=data.__trash.filter(e=> now-(+e.deletedAt||now) < 24*3600*1000);
   if(data.__trash.length!==before) persist();
 }
 function softDelete(key,id){
@@ -3607,13 +3623,13 @@ function softDelete(key,id){
     const movedTradeIds=[];
     (data.trades||[]).forEach(t=>{ if(t.code===item.code){ entries.push({groupId,key:"trades",item:t,deletedAt:now,label:trashLabel("trades",t)}); movedTradeIds.push(t.id); } });
     data.trades=(data.trades||[]).filter(t=>t.code!==item.code);
-    (data.finance||[]).forEach(f=>{ if(f.tradeId!=null && movedTradeIds.includes(f.tradeId)){ entries.push({groupId,key:"finance",item:f,deletedAt:now,label:"记账流水·"+trashLabel("finance",f)}); } });
-    data.finance=(data.finance||[]).filter(f=>!(f.tradeId!=null && movedTradeIds.includes(f.tradeId)));
+    (data.money||[]).forEach(f=>{ if(f.tradeId!=null && movedTradeIds.includes(f.tradeId)){ entries.push({groupId,key:"money",item:f,deletedAt:now,label:"记账流水·"+trashLabel("money",f)}); } });
+    data.money=(data.money||[]).filter(f=>!(f.tradeId!=null && movedTradeIds.includes(f.tradeId)));
   }
   // 删除单条交易时，其对应记账本流水也一并移入回收站
   if(key==="trades"){
-    (data.finance||[]).forEach(f=>{ if(f.tradeId!=null && f.tradeId===item.id){ entries.push({groupId,key:"finance",item:f,deletedAt:now,label:"记账流水·"+trashLabel("finance",f)}); } });
-    data.finance=(data.finance||[]).filter(f=>!(f.tradeId!=null && f.tradeId===item.id));
+    (data.money||[]).forEach(f=>{ if(f.tradeId!=null && f.tradeId===item.id){ entries.push({groupId,key:"money",item:f,deletedAt:now,label:"记账流水·"+trashLabel("money",f)}); } });
+    data.money=(data.money||[]).filter(f=>!(f.tradeId!=null && f.tradeId===item.id));
   }
   data[key]=arr.filter(i=>i.id!=id);
   data.__trash=(data.__trash||[]).concat(entries);
@@ -4853,7 +4869,12 @@ const PORTFOLIO_CSS = `
 .modal-root{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:9999}
 .modal-root.show{display:flex}
 .modal-card{background:var(--surface-card);border:1px solid var(--border);border-radius:14px;width:90%;max-width:480px;max-height:85vh;overflow:auto}
-.modal-h{padding:14px 18px;border-bottom:1px solid var(--border);font-weight:700;font-size:15px}
+.modal-h{padding:14px 18px;border-bottom:1px solid var(--border);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.modal-h h3{margin:0}
+.modal-x{border:none;background:transparent;color:var(--text-tertiary);font-size:22px;line-height:1;cursor:pointer;padding:2px 8px;border-radius:8px;flex:0 0 auto}
+.modal-x:hover{background:var(--surface-nested);color:var(--text)}
+.modal-b{padding:16px 18px}
+.modal-f{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
 .modal-body{padding:16px 18px}
 .modal-body .field{margin-bottom:10px}
 .modal-body .field label{display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;font-weight:600}
