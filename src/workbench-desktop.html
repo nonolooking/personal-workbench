@@ -71,8 +71,8 @@
     /* ---- 圆角 ---- */
     --radius-control: 6px;
     --radius-tile: 10px;
-    --radius-card: 14px;
-    --radius-sheet: 18px;
+    --radius-card: 12px;
+    --radius-sheet: 16px;
 
     /* ---- 阴影（报纸油墨感） ---- */
     --shadow-card: 0 1px 2px rgba(58,47,31,.05), 0 6px 18px rgba(58,47,31,.07);
@@ -737,7 +737,8 @@
   .prog-line i { display:block; height:100%; border-radius:999px; }
 
   /* 习惯追踪周网格表 */
-  .habit-tb { width:100%; border-collapse:collapse; }
+  .habit-tb { width:100%; border-collapse:collapse; min-width: 440px; }
+  .hbt-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .habit-tb th { font-size:10.5px; font-weight:700; color:var(--text-tertiary); padding:0 0 9px; text-align:center; }
   .habit-tb th.hh { text-align:left; }
   .habit-tb th.hr { text-align:right; }
@@ -975,10 +976,30 @@
     .modal h3 { font-size: 17px; }
     .frow { flex-direction: column; gap: 0; }
     .seg .opt { padding: 8px 6px; font-size: 13px; }
+    /* 列表页更贴近主流 App：收紧间距、统一更细的圆角观感 */
+    .main { padding: 12px 12px calc(78px + env(safe-area-inset-bottom)); }
+    .grid, .modcard-grid { gap: 12px; }
+    .bento { gap: 12px; }
+    .tile { padding: 14px 15px; }
+    .tile-h { margin-bottom: 12px; }
+    .modcard { padding: 13px 14px; }
+    .sec-title { margin: 14px 2px 8px; }
+    .toolbar { margin: 10px 0 10px; }
+    .rec { padding: 12px 14px; }
+    .rec-grid { gap: 8px; }
+    .pin { padding: 13px 14px; }
+    .qbtn { padding: 12px 13px; }
+    .mini, .side-card { padding: 11px 13px; }
+    /* 触屏无 hover：记录行操作（编辑/删除/置顶）常驻可见，保留右侧空间避免遮挡文字 */
+    .rec .acts { opacity: 1; }
+    .rec .body { padding-right: 68px; }
+    .rec .acts button { width: 26px; height: 26px; }
+    /* 习惯追踪表手机端横向滚动，避免 9 列被截断 */
+    .hbt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   }
   @media (max-width: 480px){
     .modcard-grid { grid-template-columns: 1fr; }
-    .main { padding: 12px 10px calc(44px + env(safe-area-inset-bottom)); }
+    .main { padding: 12px 10px calc(76px + env(safe-area-inset-bottom)); }
     .hero-banner .hstats { gap: 12px; }
   }
 
@@ -1905,7 +1926,7 @@ function habitTileHTML(){
     return `<tr><td class="hn"><span class="hdot" style="background:${palette[ri%palette.length]}"></span>${esc(x.title)}</td>${cells}<td class="hrate" style="color:${palette[ri%palette.length]}">${rate}%</td></tr>`;
   }).join("") : `<tr><td colspan="9" style="text-align:center;color:var(--text-tertiary);font-size:12.5px;padding:18px 0">还没有习惯，去「习惯打卡」添加吧</td></tr>`;
   return `<div class="tile b7"><div class="tile-h"><span class="tic">${icon("leaf",16)}</span><div class="tt"><span class="en">HABIT TRACKER</span><span class="zh">本周习惯追踪表</span></div><span class="r js-open" data-open="checkin">本周 · 周${dnames[((new Date().getDay())+6)%7]}</span></div>
-    <table class="habit-tb"><thead><tr><th class="hh">习惯</th>${ths}<th class="hr">完成率</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    <div class="hbt-scroll"><table class="habit-tb"><thead><tr><th class="hh">习惯</th>${ths}<th class="hr">完成率</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
 /* 待办清单（仪表盘式，就地勾选） */
