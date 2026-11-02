@@ -51,6 +51,7 @@
     --module-5: #8a7fc9;             /* 灰紫 — 笔记/日记 */
     --module-6: #4a7dc9;             /* 蓝 — 投资 */
     --module-7: #9a6fc4;             /* 紫 — 电影 */
+    --module-8: #c25f86;             /* 玫瑰 — 亲密健康 */
 
     /* ---- 危险色 ---- */
     --danger: #cf4b43;               /* 删除/危险 */
@@ -1087,6 +1088,64 @@
   .ia-row b { margin-left:auto; font-variant-numeric:tabular-nums; }
   .ia-note { font-size:11.5px; color:var(--text-secondary); margin-top:10px; }
 
+/* ===== 亲密健康模块 ===== */
+.r-ic{ width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto; }
+.rec .top{ display:flex;gap:12px;align-items:flex-start; }
+.chips{ display:flex;flex-wrap:wrap;gap:7px; }
+.chip{ padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface-nested);color:var(--text-secondary);font-size:12.5px;cursor:pointer;user-select:none;transition:.15s; }
+.chip.on{ background:color-mix(in srgb, var(--module-8) 18%, var(--surface-card));border-color:var(--module-8);color:var(--module-8);font-weight:600; }
+.stars{ display:flex;gap:4px; }
+.star{ font-size:22px;line-height:1;color:var(--text-tertiary);cursor:pointer;transition:.1s; }
+.star.on{ color:#e6b877; }
+.timer-row{ display:flex;gap:8px;align-items:center; }
+.timer-row .select{ flex:1; }
+.select{ padding:8px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface-nested);color:var(--text);font-size:14px; }
+#it-timer.on{ background:var(--module-8);color:#fff;border-color:var(--module-8); }
+.ic-cal{ margin-top:4px; }
+.ic-nav{ display:flex;align-items:center;justify-content:space-between;margin-bottom:8px; }
+.ic-ym{ font-weight:700;font-size:13px; }
+.ic-grid{ display:grid;grid-template-columns:repeat(7,1fr);gap:5px; }
+.ic-dow{ text-align:center;font-size:11px;color:var(--text-tertiary);padding-bottom:4px; }
+.ic-cell{ position:relative;height:40px;border-radius:9px;background:var(--surface-nested);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text-secondary); }
+.ic-cell.blank{ background:transparent; }
+.ic-cell.on{ background:color-mix(in srgb, var(--module-8) 16%, var(--surface-card));color:var(--text);font-weight:700;cursor:pointer; }
+.ic-cell.on:hover{ outline:1px solid var(--module-8); }
+.ic-day{ cursor:pointer; }
+.ic-dot{ position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--module-8); }
+.ic-cnt{ position:absolute;top:3px;right:5px;font-size:9px;color:var(--module-8);font-weight:700; }
+/* 伴侣周期阶段：月历色条 + 图例 + 侧栏标签 */
+.ph-stripe{ position:absolute;top:0;left:7px;right:7px;height:3px;border-radius:0 0 3px 3px; }
+.ph-period{ background:#e8607d; }
+.ph-fertile{ background:#3fae6b; }
+.ph-ovulation{ background:#f0a02a; }
+.ph-safe{ background:#9bb4d0; }
+.ic-cell.ic-ph-ovulation{ box-shadow:inset 0 0 0 2px #f0a02a; }
+.ic-legend{ display:flex;gap:14px;flex-wrap:wrap;margin:10px 2px 2px;font-size:12px;color:var(--text-secondary); }
+.ic-legend span{ display:flex;align-items:center;gap:5px; }
+.ic-legend .lg{ width:12px;height:12px;border-radius:3px;display:inline-block; }
+.ic-legend .lg.period{ background:#e8607d; }
+.ic-legend .lg.fertile{ background:#3fae6b; }
+.ic-legend .lg.ovulation{ background:#f0a02a; }
+.ic-legend .lg.safe{ background:#9bb4d0; }
+.ph-tag{ padding:1px 9px;border-radius:10px;font-size:12px;font-weight:600; }
+.ph-tag.ph-period{ background:#fbe0e7;color:#c23b57; }
+.ph-tag.ph-fertile{ background:#dcefe4;color:#2f8f55; }
+.ph-tag.ph-ovulation{ background:#fdeccd;color:#c47e10; }
+.ph-tag.ph-safe{ background:#e7eef6;color:#5b7da3; }
+.ic-detail{ margin-top:12px;background:var(--surface-nested);border-radius:10px;padding:10px 12px; }
+.ic-detail-h{ font-size:12.5px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px; }
+.ic-detail-h #ic-add{ margin-left:auto; }
+.ic-rec{ padding:7px 0;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:2px;cursor:pointer; }
+.ic-rec:first-of-type{ border-top:none; }
+.ic-rec-b{ font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px; }
+.ic-rec-m{ font-size:11.5px;color:var(--text-secondary); }
+.ic-trend{ margin-top:4px; }
+.ic-trend .trend-svg{ width:100%;height:auto; }
+.b-inti{ border-left:3px solid var(--module-8); }
+.inti-stats{ display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--text-secondary); }
+.inti-stats b{ color:var(--text);font-size:15px;margin-right:3px; }
+.inti-bars{ display:flex;align-items:flex-end;gap:6px;height:42px;margin-top:10px; }
+.inti-bars i{ flex:1;background:color-mix(in srgb, var(--module-8) 55%, var(--surface-card));border-radius:4px 4px 0 0;min-height:4px; }
 </style>
 </head>
 <body>
@@ -1284,6 +1343,17 @@ const CONFIG = {
         {id:302, code:"510300.SH", name:"沪深300ETF", action:"buy", qty:1000, price:4.2,  fee:5,     date:"2025-09-01", note:"首笔定投"},
         {id:303, code:"AU9999",    name:"黄金9999",   action:"buy",  qty:50,  price:520,  fee:0,     date:"2025-07-20", note:"避险配置"}
       ] },
+
+    // === 亲密健康：身体 / 亲密记录（轻量化裁剪后的个人健康追踪） ===
+    { key:"intimate", name:"亲密健康", icon:"heart", tint:"#f6dde6", color:"var(--module-8)", type:"intimate", desc:"身体 / 亲密健康记录（时间·对象·保护措施·时长·评分·心情）",
+      moods:["愉悦","放松","平淡","疲惫","满足"],
+      protections:["避孕套","避孕药","PrEP","其他"],
+      toys:["按摩器","润滑","眼罩","束缚","其他"],
+      seed:[
+        {id:71, date:daysAgoISO(0), behavior:"partner", partner:"伴侣", location:"家", protection:["避孕套"], toys:[], duration:35, rating:4, mood:"愉悦", note:""},
+        {id:72, date:daysAgoISO(-3), behavior:"solo", partner:"", location:"家", protection:[], toys:["按摩器"], duration:15, rating:3, mood:"放松", note:""},
+        {id:73, date:daysAgoISO(-9), behavior:"partner", partner:"伴侣", location:"家", protection:["避孕套"], toys:["润滑"], duration:28, rating:5, mood:"满足", note:""}
+      ] },
   ],
   // === 投资设置：行情源（默认免 token）、刷新间隔、CORS 代理 ===
   invest: {
@@ -1361,6 +1431,7 @@ const ICONS = {
   school:'<path d="M12 4 2 9l10 5 10-5-10-5z"/><path d="M6 11v4c0 1 2.5 3 6 3s6-2 6-3v-4"/><path d="M22 9v6"/>',
   film:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
   square:'<rect x="5" y="5" width="14" height="14" rx="2"/>',
+  heart:'<path d="M12 20s-7-4.6-7-9.3A3.7 3.7 0 0 1 12 7a3.7 3.7 0 0 1 7 3.7C19 15.4 12 20 12 20z"/>',
 };
 function icon(name, size=22, sw=1.7){
   const path = ICONS[name] || ICONS.grid;
@@ -1372,6 +1443,7 @@ function icon(name, size=22, sw=1.7){
    ============================================================ */
 function isoToday(){ return new Date().toISOString().slice(0,10); }
 function today(){ return isoToday(); }
+function daysAgoISO(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
 function avgProgress(list){
   if(!list||!list.length) return { value:0, sub:"0" };
   const v = Math.round(list.reduce((s,x)=>s+Math.min(100,(x.current/x.target)*100||0),0)/list.length);
@@ -1409,6 +1481,8 @@ const store = {
 let data = store.load();
 // 固定习惯（阅读/运动/电影）的“今日打卡”日志，按模块级存储，避免与子项数据混淆
 ["readLog","sportLog","movieLog"].forEach(k=>{ if(data[k]==null) data[k]={}; });
+// 亲密健康：伴侣周期设置（日历法估算，仅供参考）
+if(data.cycle==null) data.cycle={ partner:"伴侣", lastStart:"", cycleLen:28, periodLen:5, lutealLen:14 };
 // 数据修复：历史上「固定收支补录/交易联动」误写入幽灵数组 data.finance（记账本实际使用 data.money），合并回正
 if(Array.isArray(data.finance)){
   const led=Array.isArray(data.money)?data.money:[];
@@ -2087,6 +2161,19 @@ function spendTileHTML(){
 
 /* 阅读 / 运动 / 电影 已取消独立模块，统一在「习惯打卡」里作为自由打卡项新建 */
 
+function intimateTileHTML(){
+  const all=data.intimate||[]; const total=all.length;
+  const ym=curYM(); const thisMonth=all.filter(x=>(x.date||"").startsWith(ym)).length;
+  const durs=all.map(x=>+x.duration||0).filter(v=>v>0);
+  const avgDur=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
+  const now=new Date(); const trend=[]; for(let i=5;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); const ym2=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; trend.push(all.filter(x=>(x.date||"").startsWith(ym2)).length); }
+  const maxT=Math.max(1,...trend);
+  const bars=trend.map(v=>`<i style="height:${Math.max(6,Math.round(v/maxT*100))}%"></i>`).join("");
+  return `<div class="tile b-inti" data-open="intimate"><div class="tile-h"><span class="tic">${icon("heart",16)}</span><div class="tt"><span class="en">INTIMATE · 近 6 月</span><span class="zh">亲密健康</span></div><span class="r">本月 ${thisMonth}</span></div>
+    <div class="inti-stats"><span><b>${total}</b> 总</span><span><b>${avgDur}</b> 分均</span></div>
+    <div class="inti-bars">${bars}</div></div>`;
+}
+
 function renderHome(){
   const now = new Date();
   const dow = (now.getDay()+6)%7;
@@ -2137,7 +2224,10 @@ function renderHome(){
     <div class="bento">${portfolioTileHTML()}</div>
 
     ${grp("记账本","MONEY&nbsp;&nbsp;&&nbsp;&nbsp;GROWTH")}
-    <div class="bento">${spendTileHTML()}</div>`;
+    <div class="bento">${spendTileHTML()}</div>
+
+    ${grp("亲密健康","INTIMATE&nbsp;&nbsp;HEALTH")}
+    <div class="bento">${intimateTileHTML()}</div>`;
   wireHome();
   startClock();
   // 首页访问时若投资缓存过期则后台刷新（延时到 quotes 初始化后）
@@ -2438,6 +2528,115 @@ function habitCalendarHTML(ym){
   return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历</div><div class="hc-wrap">${rows.join("")}</div>
     <div class="hc-legend"><span class="hc-dot on"></span>已打卡<span class="hc-dot"></span>未打卡</div></div>`;
 }
+// 伴侣周期：日历法阶段推算（经期 / 易孕期 / 排卵日 / 安全期）
+function cyclePhase(dateStr){
+  const c=data.cycle; if(!c||!c.lastStart) return null;
+  const cycleLen=Math.max(15,+c.cycleLen||28), periodLen=Math.max(1,+c.periodLen||5), lutealLen=Math.max(8,+c.lutealLen||14);
+  const S=ymdToDate(c.lastStart), D=ymdToDate(dateStr);
+  let k=Math.floor(Math.round((D-S)/86400000)/cycleLen);
+  const S0=new Date(S); S0.setDate(S0.getDate()+k*cycleLen);
+  const ov=new Date(S0); ov.setDate(ov.getDate()+(cycleLen-lutealLen));
+  const fertS=new Date(ov); fertS.setDate(fertS.getDate()-5);
+  const fertE=new Date(ov); fertE.setDate(fertE.getDate()+1);
+  const pEnd=new Date(S0); pEnd.setDate(pEnd.getDate()+periodLen);
+  if(D>=S0 && D<pEnd) return "period";
+  if(D.getTime()===ov.getTime()) return "ovulation";
+  if(D>=fertS && D<=fertE) return "fertile";
+  return "safe";
+}
+function cycleInfo(){
+  const c=data.cycle; if(!c||!c.lastStart) return null;
+  const cycleLen=Math.max(15,+c.cycleLen||28), periodLen=Math.max(1,+c.periodLen||5), lutealLen=Math.max(8,+c.lutealLen||14);
+  const S=ymdToDate(c.lastStart), T=ymdToDate(today());
+  let k=Math.ceil(Math.round((T-S)/86400000)/cycleLen); if(k<0)k=0;
+  const nextStart=new Date(S); nextStart.setDate(nextStart.getDate()+k*cycleLen);
+  const ov=new Date(nextStart); ov.setDate(ov.getDate()+(cycleLen-lutealLen));
+  const f=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  return { cycleLen, periodLen, partner:(c.partner||"伴侣"),
+    nextPeriod:f(nextStart), nextPeriodIn:Math.round((nextStart-T)/86400000),
+    nextOv:f(ov), nextOvIn:Math.round((ov-T)/86400000),
+    phase:cyclePhase(today()) };
+}
+function cycleCardHTML(){
+  const i=cycleInfo(); if(!i) return "";
+  const phMap={period:["经期","ph-period"],fertile:["易孕期","ph-fertile"],ovulation:["排卵日","ph-ovulation"],safe:["安全期","ph-safe"]};
+  const [phLabel,phCls]=phMap[i.phase]||["—",""];
+  const rows=[
+    ["当前阶段",`<span class="ph-tag ${phCls}">${phLabel}</span>`],
+    ["距下次月经",`${i.nextPeriodIn} 天 · ${i.nextPeriod}`],
+    ["距下次排卵",`${i.nextOvIn} 天 · ${i.nextOv}`],
+    ["平均周期 / 经期",`${i.cycleLen} / ${i.periodLen} 天`]
+  ].map(([k,v])=>`<div class="stat-row"><span class="k">${k}</span><span class="val">${v}</span></div>`).join("");
+  return `<div class="side-card"><div class="sh">${icon("heart",15)} 伴侣周期 · ${esc(i.partner)}</div>${rows}</div>`;
+}
+function intimateCalendarHTML(ym){
+  const [y,mo]=ym.split("-").map(Number);
+  const days=monthDaysArr(ym);
+  const lead=(new Date(y,mo-1,1).getDay()+6)%7;
+  const byDay={}; (data.intimate||[]).forEach(r=>{ if((r.date||"").startsWith(ym)){ const dn=+r.date.slice(8,10); byDay[dn]=(byDay[dn]||0)+1; } });
+  const cells=Array.from({length:lead},()=>`<div class="ic-cell blank"></div>`)
+    + days.map(dstr=>{ const dn=+dstr.slice(8,10); const n=byDay[dn]||0; const ph=cyclePhase(dstr); const pc=ph?` ic-ph-${ph}`:""; return `<div class="ic-cell ${n?'on':''}${pc} ic-day" data-date="${dstr}">${dn}${ph?`<span class="ph-stripe ph-${ph}"></span>`:''}${n?`<span class="ic-dot"></span>`:''}${n>1?`<span class="ic-cnt">${n}</span>`:''}</div>`; }).join("");
+  const legend=(data.cycle&&data.cycle.lastStart)?`<div class="ic-legend"><span><i class="lg period"></i>经期</span><span><i class="lg fertile"></i>易孕期</span><span><i class="lg ovulation"></i>排卵日</span><span><i class="lg safe"></i>安全期</span></div>`:"";
+  const wk=['一','二','三','四','五','六','日'].map(w=>`<div class="ic-dow">${w}</div>`).join("");
+  const todayStr=today();
+  const sel=(intimateSelDate&&intimateSelDate.startsWith(ym))?intimateSelDate:(todayStr.startsWith(ym)?todayStr:ym+"-01");
+  const selRecs=(data.intimate||[]).filter(r=>(r.date||"")===sel);
+  const detail = selRecs.length ? selRecs.map(r=>{
+    const bh=r.behavior==="solo"?"自慰":(r.partner||"伴侣");
+    const meta=[r.duration?r.duration+" 分钟":"", r.rating?"★".repeat(r.rating):"", r.mood?r.mood:""].filter(Boolean).join(" · ");
+    return `<div class="ic-rec" data-edit="${r.id}"><span class="ic-rec-b">${r.behavior==="solo"?icon("user",11):icon("heart",11)} ${esc(bh)}</span><span class="ic-rec-m">${esc(meta)}</span></div>`;
+  }).join("") : `<div class="focus-empty" style="padding:10px 0">这一天还没有记录，点下方「+ 添加」或右上角「新建」</div>`;
+  return `<div class="sec-title">${icon("calendar",14)} 打卡日历 <span style="margin-left:auto;font-weight:500;color:var(--text-secondary);font-size:12px">点击日期查看当天记录</span></div>
+    <div id="ic-cal" class="ic-cal">
+      <div class="ic-nav"><button class="btn ghost xs" id="ic-prev">${icon("chevron",13)} 上月</button><span class="ic-ym">${y}年${mo}月</span><button class="btn ghost xs" id="ic-next">下月 ${icon("chevron",13)}</button></div>
+      <div class="ic-grid">${wk}${cells}</div>
+      ${legend}
+      <div class="ic-detail"><div class="ic-detail-h">${sel.slice(5).replace("-","/")} 当日记录 <button class="btn ghost xs" id="ic-add" data-date="${sel}">+ 添加</button></div>${detail}</div>
+    </div>`;
+}
+function openCycleSettings(){
+  const c=data.cycle||{partner:"伴侣",lastStart:"",cycleLen:28,periodLen:5,lutealLen:14};
+  const ov=document.createElement("div"); ov.className="overlay";
+  ov.innerHTML=`<div class="modal"><h3>伴侣周期设置</h3><div class="sub">日历法估算，仅供参考，非避孕依据</div>
+    <div class="field"><label>伴侣称呼</label><input id="cy-partner" value="${attr(c.partner||"")}" placeholder="如：伴侣"/></div>
+    <div class="field"><label>最近一次月经开始日</label><input id="cy-last" type="date" value="${c.lastStart||""}"/></div>
+    <div class="frow">
+      <div class="field"><label>平均周期（天）</label><input id="cy-len" type="number" min="15" value="${c.cycleLen||28}"/></div>
+      <div class="field"><label>经期长度（天）</label><input id="cy-plen" type="number" min="1" value="${c.periodLen||5}"/></div>
+    </div>
+    <div class="field"><label>黄体期（天，默认 14）</label><input id="cy-lut" type="number" min="8" value="${c.lutealLen||14}"/></div>
+    <div class="modal-actions"><div class="spacer"></div><button class="btn ghost" id="cy-cancel">取消</button><button class="btn" id="cy-save">保存</button></div></div>`;
+  document.body.appendChild(ov);
+  const close=()=>ov.remove();
+  ov.onclick=e=>{ if(e.target===ov) close(); };
+  ov.querySelector("#cy-cancel").onclick=close;
+  ov.querySelector("#cy-save").onclick=()=>{
+    data.cycle={ partner:(ov.querySelector("#cy-partner").value||"").trim()||"伴侣",
+      lastStart:ov.querySelector("#cy-last").value||"",
+      cycleLen:Math.max(15,+ov.querySelector("#cy-len").value||28),
+      periodLen:Math.max(1,+ov.querySelector("#cy-plen").value||5),
+      lutealLen:Math.max(8,+ov.querySelector("#cy-lut").value||14) };
+    persist(); close();
+  };
+}
+
+// 复盘页：亲密健康本月概览
+function intimateReview(){
+  const arr=(data.intimate||[]);
+  if(!arr.length) return "";
+  const ym=insightMonth;
+  const mc=arr.filter(x=>(x.date||"").startsWith(ym)).length;
+  const durs=arr.filter(x=>(x.date||"").startsWith(ym)).map(x=>+x.duration||0).filter(v=>v>0);
+  const avgDur=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
+  const partnerN=arr.filter(x=>(x.date||"").startsWith(ym)&&x.behavior!=="solo").length;
+  const soloN=arr.filter(x=>(x.date||"").startsWith(ym)&&x.behavior==="solo").length;
+  const row=(k,v)=>`<div class="stat-row"><span class="k">${k}</span><span class="val">${v}</span></div>`;
+  return `<div class="rv-card"><div class="rv-hd">${icon("heart",15)} 亲密健康 · 本月</div>
+    ${row("本月次数",`${mc} 次`)}
+    ${row("平均时长",`${avgDur} 分钟`)}
+    ${row("伴侣 / 自慰",`${partnerN} / ${soloN}`)}</div>`;
+}
+
 function renderInsight(){
   // 月度复盘：支持月份切换
   if(!insightMonth){ insightMonth=curYM(); }
@@ -2544,7 +2743,7 @@ function renderInsight(){
   // 投资复盘 + 净资产聚合（月底自动写入资产快照）
   maybeSnapshotAsset();
   const investHTML=investmentReviewHTML();
-  const reviews=[checkinReview(),financeReview(),spendCategoryReview(),investHTML].filter(Boolean).join("");
+  const reviews=[checkinReview(),financeReview(),spendCategoryReview(),intimateReview(),investHTML].filter(Boolean).join("");
   const hasReviews=!!reviews;
 
   const [cy,cm]=curYM().split("-").map(Number);
@@ -2613,18 +2812,23 @@ function renderModule(key){
   } else if(m.type==="movie"){
     const ym=curYM(); const thisMonth=(all).filter(x=>(x.date||"").startsWith(ym)).length;
     head=headHero(m, `${thisMonth}`, `本月观影 · 共 ${all.length} 部`);
+  } else if(m.type==="intimate"){
+    const ym=curYM(); const total=all.length; const thisMonth=all.filter(x=>(x.date||"").startsWith(ym)).length;
+    head=headHero(m, `${thisMonth}`, `本月记录 · 共 ${total} 次`);
   }
 
-  // 视图切换按钮（仅 todo 显示）
-  const viewSwitcher = (m.type==="todo") ? `<div class="seg view-switch" id="todo-view">
-    <div class="opt ${todoView==='list'?'on':''}" data-v="list">${icon("list",13)} 清单</div>
-    <div class="opt ${todoView==='calendar'?'on':''}" data-v="calendar">${icon("calendar",13)} 日历</div>
+  // 视图切换按钮（todo / intimate 支持 清单/日历）
+  const isCalType = (m.type==="todo"||m.type==="intimate");
+  const curView = (m.type==="todo")?todoViewMode:intimateViewMode;
+  const viewSwitcher = isCalType ? `<div class="seg view-switch" id="${m.type}-view">
+    <div class="opt ${curView==='list'?'on':''}" data-v="list">${icon("list",13)} 清单</div>
+    <div class="opt ${curView==='calendar'?'on':''}" data-v="calendar">${icon("calendar",13)} 日历</div>
   </div>` : '';
 
   // 日历视图内容
   let mainContent="";
-  if(m.type==="todo" && todoView==="calendar"){
-    mainContent = renderTodoCalendar(key, all, searchQ);
+  if((m.type==="todo" && todoView==="calendar") || (m.type==="intimate" && intimateViewMode==="calendar")){
+    mainContent = (m.type==="todo") ? renderTodoCalendar(key, all, searchQ) : intimateCalendarHTML(intimateYM);
   } else {
     // 待办清单默认隐藏已完成，可点“显示已完成”临时展开
     const listItems = (m.type==="todo" && !showDoneTodos) ? it.filter(x=>!x.done) : it;
@@ -2641,7 +2845,7 @@ function renderModule(key){
   $("#screen").innerHTML=`<div class="header"><div><h2>${m.name}</h2><p>${m.desc}</p></div></div>
     <div class="toolbar">
       ${viewSwitcher}
-      <div class="spacer"></div>${(data.__trash||[]).some(e=>e.key===key)?`<button class="btn ghost" id="btn-trash">${icon("trash",14,2.2)}回收站 <span class="badge">${(data.__trash||[]).filter(e=>e.key===key).length}</span></button>`:''}<button class="btn" id="btn-new">${icon("plus",16,2.2)}新建</button></div>
+      <div class="spacer"></div>${(data.__trash||[]).some(e=>e.key===key)?`<button class="btn ghost" id="btn-trash">${icon("trash",14,2.2)}回收站 <span class="badge">${(data.__trash||[]).filter(e=>e.key===key).length}</span></button>`:''}${(m.type==="intimate")?`<button class="btn ghost" id="btn-cycle">${icon("heart",14,2.2)}周期</button>`:''}<button class="btn" id="btn-new">${icon("plus",16,2.2)}新建</button></div>
     ${head}
     ${FIXED_HABITS.includes(key)?habitBarHTML(key):''}
     <div class="mod-layout">
@@ -2674,6 +2878,18 @@ function renderModule(key){
       openEditor(key,(data[key]).find(i=>i.id==el.dataset.id));
     });
   }
+  // 亲密健康：视图切换 + 月历导航 + 日期点击新建
+  if(m.type==="intimate"){
+    const iv=$("#intimate-view"); if(iv) iv.querySelectorAll(".opt").forEach(o=>o.onclick=()=>{ intimateViewMode=o.dataset.v; renderModule(key); });
+    const ip=$("#ic-prev"); if(ip) ip.onclick=()=>{ let [y,mm]=intimateYM.split("-").map(Number); mm--; if(mm<1){mm=12;y--;} intimateYM=`${y}-${String(mm).padStart(2,"0")}`; renderModule(key); };
+    const inx=$("#ic-next"); if(inx) inx.onclick=()=>{ let [y,mm]=intimateYM.split("-").map(Number); mm++; if(mm>12){mm=1;y++;} intimateYM=`${y}-${String(mm).padStart(2,"0")}`; renderModule(key); };
+    const calEl=$("#ic-cal"); if(calEl){
+      calEl.querySelectorAll(".ic-day").forEach(c=>c.onclick=()=>{ intimateSelDate=c.dataset.date; renderModule(key); });
+      const addBtn=calEl.querySelector("#ic-add"); if(addBtn) addBtn.onclick=()=>{ openEditor("intimate", null, {date:addBtn.dataset.date}); };
+      calEl.querySelectorAll(".ic-rec").forEach(r=>r.onclick=()=>{ openEditor("intimate", (data.intimate||[]).find(i=>i.id==r.dataset.edit)); });
+    }
+    const cb=$("#btn-cycle"); if(cb) cb.onclick=()=>openCycleSettings();
+  }
   $("#btn-new").onclick=()=>openEditor(key,null);
   const tb=$("#btn-trash"); if(tb) tb.onclick=()=>openTrash(key);
   $("#screen").querySelectorAll(".js-habit-chk").forEach(el=>el.onclick=()=>{ toggleHabitToday(el.dataset.key); store.save(); render(); });
@@ -2684,6 +2900,9 @@ function renderModule(key){
 /* 待办日历视图（月历） */
 let todoViewMode="list"; // list | calendar
 let showDoneTodos=false; // 待办清单是否显示已完成
+let intimateViewMode="list"; // list | calendar
+let intimateYM=curYM();
+let intimateSelDate=""; // 月历中选中的日期
 function renderTodoCalendar(key, all, q){
   const todayStr=isoToday();
   const now=new Date();
@@ -2932,6 +3151,35 @@ function sideStats(m, all){
         <div style="margin-top:6px">${list}</div></div>`;
   }
 
+  if(m.type==="intimate"){
+    const recs=all; const total=recs.length;
+    if(!total) return `<div class="side-card"><div class="sh">${icon("heart",15)} 概览</div><div class="focus-empty" style="padding:8px 0">还没有记录，点右上角「新建」添加第一条吧</div></div>`;
+    const months=new Set(recs.map(r=>(r.date||"").slice(0,7)));
+    const monthsActive=Math.max(1,months.size);
+    const avgPerMonth=(total/monthsActive).toFixed(1);
+    const durs=recs.map(r=>+r.duration||0).filter(v=>v>0);
+    const avgDur=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
+    // 月度趋势（近 6 个月）
+    const now=new Date(); const trend=[];
+    for(let i=5;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); const ym=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; trend.push(recs.filter(r=>(r.date||"").startsWith(ym)).length); }
+    const trendSvg = trend.some(v=>v>0)? trendSVG(trend) : `<div class="focus-empty" style="padding:6px 0;font-size:12px">近 6 个月暂无数据</div>`;
+    // 行为分布
+    const partnerN=recs.filter(r=>r.behavior!=="solo").length, soloN=recs.filter(r=>r.behavior==="solo").length;
+    const behBars=[["伴侣",partnerN],["自慰",soloN]].filter(x=>x[1]>0).map(([k,v])=>{ const pct=Math.round(v/total*100); return `<div class="cbrow"><span class="cbn">${k}</span><span class="cbt"><i style="width:${pct}%;background:var(--module-8)"></i></span><span class="cbv">${v}</span></div>`; }).join("");
+    // 星期分布
+    const wd=[0,0,0,0,0,0,0]; recs.forEach(r=>{ const dt=r.date?new Date(r.date+"T00:00:00"):null; if(dt) wd[(dt.getDay()+6)%7]++; });
+    const maxW=Math.max(1,...wd); const wdNames=["一","二","三","四","五","六","日"];
+    const wdBars=wd.map((v,i)=>`<div class="cbrow"><span class="cbn">周${wdNames[i]}</span><span class="cbt"><i style="width:${Math.round(v/maxW*100)}%;background:var(--module-2)"></i></span><span class="cbv">${v}</span></div>`).join("");
+    return `<div class="side-card"><div class="sh">${icon("heart",15)} 概览</div>
+        ${row("总次数",`${total} 次`)}
+        ${row("月均频次",`${avgPerMonth} 次/月`)}
+        ${row("平均时长",`${avgDur} 分钟`)}</div>
+      <div class="side-card"><div class="sh">${icon("chart",15)} 月度趋势</div><div class="ic-trend">${trendSvg}</div></div>
+      <div class="side-card"><div class="sh">${icon("target",15)} 行为分布</div><div class="catbar">${behBars||'<div class="focus-empty" style="padding:6px 0;font-size:12px">暂无数据</div>'}</div></div>
+      <div class="side-card"><div class="sh">${icon("calendar",15)} 星期分布</div><div class="catbar">${wdBars}</div></div>
+      ${cycleCardHTML()}`;
+  }
+
   if(m.type==="movie"){
     const ym=curYM(); const thisMonth=(data.movie||[]).filter(x=>(x.date||"").startsWith(ym)).length;
     const goal=movieGoal(); const pct=goal?Math.min(100,Math.round(thisMonth/goal*100)):0;
@@ -3030,6 +3278,18 @@ function recHTML(m,x){
       ${goal?`<span class="streak" style="color:var(--module-3)">${icon("calendar",12)} 本月 ${mc}/${goal} 天</span>`:''}
       ${lst?`<span class="streak" style="color:var(--text-tertiary)">最长 ${lst} 天</span>`:''}
       ${on?'<span class="badge" style="background:var(--accent-muted);color:var(--accent)">今日已打卡</span>':''}${customBlock}</div></div></div>`; }
+  if(m.type==="intimate"){
+    const bh = x.behavior==="solo" ? "自慰" : (x.partner||"伴侣");
+    const tags=[...(x.protection||[]),...(x.toys||[])].map(t=>`<span class="meta-tag">${esc(t)}</span>`).join("");
+    const stars = x.rating? "★".repeat(x.rating) : "";
+    const meta=[x.date||"",x.duration?`${x.duration} 分钟`:"",stars,x.mood?esc(x.mood):"",x.location?esc(x.location):""].filter(Boolean).join(" · ");
+    return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:44px" data-edit="${x.id}">
+      <div class="r-ic" style="color:${m.color};background:color-mix(in srgb, ${m.color} 14%, transparent)">${x.behavior==="solo"?icon("user",16):icon("heart",16)}</div>
+      <div class="body" data-edit="${x.id}"><span class="rname">${esc(bh)}</span>
+      ${meta?`<div class="rnote">${meta}</div>`:''}
+      ${tags?`<div class="meta-line">${tags}</div>`:''}
+      ${x.note?`<div class="rnote">${esc(x.note)}</div>`:''}</div></div></div>`;
+  }
   if(m.type==="progress"){ const pct=Math.min(100,Math.round((x.current/x.target)*100||0));
     // 阅读专属：阅后感 / 关键句 / 标签
     let readBlock="";
@@ -3139,8 +3399,11 @@ function wireModule(key){ const m=modOf(key);
 }
 
 /* ---------- EDITOR MODAL (per type) ---------- */
-function openEditor(key,item){
+function openEditor(key,item,prefill){
   const m=modOf(key); const editing=!!item; const d=item||newItem(m);
+  if(prefill){ Object.keys(prefill).forEach(k=>d[k]=prefill[k]); }
+  // 亲密健康：多选标签 / 评分的临时选择态（供编辑器内交互与保存共用）
+  let _prot=new Set(d.protection||[]), _toys=new Set(d.toys||[]), _rating=d.rating||0, _itTimer=null, _itT0=0;
   let _subtasks=[]; if(m.type==="todo") _subtasks=(d.subtasks||[]).map(s=>({text:s.text,done:!!s.done}));
   let fields="";
   if(m.type==="todo"){
@@ -3160,6 +3423,30 @@ function openEditor(key,item){
         <div class="field"><label>${icon("target",14)} 每月目标（天）</label><input id="f-month-goal" type="number" value="${d.monthGoal??''}" placeholder="如 25（每月天）"/></div>
       </div>
       <p class="sub" style="margin:0">保存后可在卡片点击左侧方块打卡；连续天数自动统计，每天从零开始。</p>`;
+  } else if(m.type==="intimate"){
+    const bhOpts=[{v:"partner",l:"伴侣"},{v:"solo",l:"自慰"}];
+    const starHTML=[1,2,3,4,5].map(n=>`<div class="star ${d.rating>=n?'on':''}" data-v="${n}">★</div>`).join("");
+    const protChips=(m.protections||[]).map(t=>`<div class="chip ${(d.protection||[]).includes(t)?'on':''}" data-v="${attr(t)}">${esc(t)}</div>`).join("");
+    const toyChips=(m.toys||[]).map(t=>`<div class="chip ${(d.toys||[]).includes(t)?'on':''}" data-v="${attr(t)}">${esc(t)}</div>`).join("");
+    const moodOpts=(m.moods||[]).map(md=>`<div class="opt ${md===d.mood?'on':''}" data-v="${attr(md)}">${md}</div>`).join("");
+    const tpls=(data.__intimateTemplates||[]).map(t=>`<option value="${attr(t.name)}">${esc(t.name)}</option>`).join("");
+    fields=`
+      <div class="field"><label>发生时间</label><input id="f-date" type="date" value="${d.date||isoToday()}"/></div>
+      <div class="field"><label>行为类型</label><div class="seg" id="f-behavior">${bhOpts.map(o=>`<div class="opt ${o.v===d.behavior?'on':''}" data-v="${o.v}">${o.l}</div>`).join("")}</div></div>
+      <div class="frow">
+        <div class="field"><label>对象</label><input id="f-partner" value="${attr(d.partner||'')}" placeholder="如：伴侣 / 自慰可留空"/></div>
+        <div class="field"><label>地点</label><input id="f-loc" value="${attr(d.location||'')}" placeholder="如：家 / 旅店"/></div>
+      </div>
+      <div class="field"><label>保护措施（可多选）</label><div class="chips" id="f-protection">${protChips}</div></div>
+      <div class="field"><label>使用道具（可多选）</label><div class="chips" id="f-toys">${toyChips}</div></div>
+      <div class="frow">
+        <div class="field"><label>持续时长（分钟）</label><div class="timer-row"><input id="f-duration" type="number" min="0" value="${d.duration||''}" placeholder="如 30"/><button class="btn ghost" id="it-timer" type="button">${icon("bolt",13)} 计时</button></div></div>
+        <div class="field"><label>主观评分</label><div class="stars" id="f-rating">${starHTML}</div></div>
+      </div>
+      <div class="field"><label>心情</label><div class="seg" id="f-mood">${moodOpts}</div></div>
+      <div class="field"><label>备注</label><textarea id="f-note" placeholder="随手记">${esc(d.note||'')}</textarea></div>
+      <div class="field"><label>模板</label><div class="timer-row"><select id="it-tpl" class="select"><option value="">— 选择模板 —</option>${tpls}</select><button class="btn ghost" id="it-tpl-save" type="button">存为模板</button></div></div>
+      <p class="sub" style="margin:0">数据仅保存在本机浏览器；计时器结束会自动填入时长。</p>`;
   } else if(m.type==="progress"){
     fields=`<div class="field"><label>名称</label><input id="f-title" value="${attr(d.title)}" placeholder="书名 / 目标"/></div>
       <div class="frow"><div class="field"><label>当前</label><input id="f-cur" type="number" value="${d.current??0}"/></div>
@@ -3429,6 +3716,44 @@ function openEditor(key,item){
   }
   // === end 照片+录音 ===
 
+  // 亲密健康：多选标签 / 评分 / 计时器 / 模板
+  if(m.type==="intimate"){
+    const v2=id=>{ const el=overlay.querySelector(id); return el?el.value:undefined; };
+    const seg2=id=>{ const el=overlay.querySelector(id); return el?el.querySelector(".opt.on")?.dataset.v:undefined; };
+    const setSeg2=(id,v)=>{ const c=overlay.querySelector(id); if(c) c.querySelectorAll(".opt").forEach(o=>o.classList.toggle("on",o.dataset.v===v)); };
+    const setStars=r=>{ overlay.querySelectorAll("#f-rating .star").forEach(s=>s.classList.toggle("on",+s.dataset.v<=r)); _rating=r; };
+    overlay.querySelectorAll("#f-protection .chip").forEach(ch=>ch.onclick=()=>{ const v=ch.dataset.v; if(_prot.has(v)){_prot.delete(v);ch.classList.remove("on");} else {_prot.add(v);ch.classList.add("on");} });
+    overlay.querySelectorAll("#f-toys .chip").forEach(ch=>ch.onclick=()=>{ const v=ch.dataset.v; if(_toys.has(v)){_toys.delete(v);ch.classList.remove("on");} else {_toys.add(v);ch.classList.add("on");} });
+    overlay.querySelectorAll("#f-rating .star").forEach(s=>s.onclick=()=>{ setStars(+s.dataset.v); });
+    const tbtn=overlay.querySelector("#it-timer");
+    if(tbtn) tbtn.onclick=()=>{
+      if(_itTimer){ clearInterval(_itTimer); _itTimer=null; const sec=Math.round((Date.now()-_itT0)/1000); const du=overlay.querySelector("#f-duration"); if(du) du.value=Math.max(1,Math.round(sec/60)); tbtn.textContent="计时"; tbtn.classList.remove("on"); }
+      else { _itT0=Date.now(); tbtn.classList.add("on"); tbtn.textContent="⏱ 00:00"; _itTimer=setInterval(()=>{ const s=Math.floor((Date.now()-_itT0)/1000); tbtn.textContent="⏱ "+String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); },1000); }
+    };
+    const tsel=overlay.querySelector("#it-tpl");
+    if(tsel) tsel.onchange=()=>{
+      const t=(data.__intimateTemplates||[]).find(x=>x.name===tsel.value); if(!t) return;
+      setSeg2("#f-behavior",t.fields.behavior);
+      const p=overlay.querySelector("#f-partner"); if(p)p.value=t.fields.partner||"";
+      const lo=overlay.querySelector("#f-loc"); if(lo)lo.value=t.fields.location||"";
+      overlay.querySelectorAll("#f-protection .chip").forEach(ch=>ch.classList.toggle("on",(t.fields.protection||[]).includes(ch.dataset.v)));
+      overlay.querySelectorAll("#f-toys .chip").forEach(ch=>ch.classList.toggle("on",(t.fields.toys||[]).includes(ch.dataset.v)));
+      const du=overlay.querySelector("#f-duration"); if(du)du.value=t.fields.duration||"";
+      setStars(t.fields.rating||0);
+      const mo=overlay.querySelector("#f-mood"); if(mo) mo.querySelectorAll(".opt").forEach(o=>o.classList.toggle("on",o.dataset.v===t.fields.mood));
+      const nt=overlay.querySelector("#f-note"); if(nt)nt.value=t.fields.note||"";
+      tsel.value="";
+    };
+    const tsave=overlay.querySelector("#it-tpl-save");
+    if(tsave) tsave.onclick=()=>{
+      const tpls=data.__intimateTemplates||[]; const name="模板"+(tpls.length+1);
+      tpls.push({name, fields:{ behavior:seg2("#f-behavior")||"partner", partner:(v2("#f-partner")||"").trim(), location:(v2("#f-loc")||"").trim(),
+        protection:[...overlay.querySelectorAll("#f-protection .chip.on")].map(c=>c.dataset.v),
+        toys:[...overlay.querySelectorAll("#f-toys .chip.on")].map(c=>c.dataset.v),
+        duration:Math.max(0,+v2("#f-duration")||0), rating:_rating, mood:seg2("#f-mood")||"", note:(v2("#f-note")||"").trim() }});
+      data.__intimateTemplates=tpls; persist(); toast("已存为"+name);
+    };
+  }
   // 待办子任务：增 / 勾选 / 删
   if(m.type==="todo"){
     const box=overlay.querySelector("#subtask-box");
@@ -3472,6 +3797,7 @@ function openEditor(key,item){
         d.tags=tagsStr.split(/[、,，]/).map(s=>s.trim()).filter(Boolean);
       }
     }
+    else if(m.type==="intimate"){ d.date=val("#f-date")||isoToday(); d.behavior=seg("#f-behavior")||"partner"; d.partner=(val("#f-partner")||"").trim(); d.location=(val("#f-loc")||"").trim(); d.protection=[..._prot]; d.toys=[..._toys]; d.duration=Math.max(0,+val("#f-duration")||0); d.rating=_rating; d.mood=seg("#f-mood")||""; d.note=(val("#f-note")||"").trim(); }
     else if(m.type==="checkin"){ d.monthGoal=Math.max(0,+val("#f-month-goal")||0); d.weekGoal=Math.max(0,+val("#f-week-goal")||0); }
     else if(m.type==="finance"){ d.type=seg("#f-ftype")||"expense"; d.amount=Math.max(0,+val("#f-amt")||0); d.category=seg("#f-cat")||(m.categories&&m.categories[0])||"其他"; d.date=val("#f-date"); }
     else if(m.type==="note"){ d.mood=seg("#f-mood")||d.mood||""; d.content=(val("#f-content")||"").trim(); d.date=val("#f-date"); d.loc=(val("#f-loc")||"").trim(); d.photos=editorPhotos; d.audio=editorAudio; d.tags=(val("#f-tags")||"").trim().split(/[、,，]/).map(s=>s.trim()).filter(Boolean); }
@@ -3598,6 +3924,7 @@ function newItem(m){ const base={id:Date.now()}; let item;
   else if(m.type==="portfolio") item={...base,code:"",name:"",kind:"stock",qty:0,costPrice:0,buyDate:isoToday(),sector:"",tags:[],targetPrice:0,stopLossPrice:0,note:"",monthGoal:0};
   else if(m.type==="trades") item={...base,code:"",name:"",action:"buy",qty:0,price:0,fee:0,date:isoToday(),note:""};
   else if(m.type==="movie") item={...base,title:"",rating:0,date:isoToday(),note:"",tags:[]};
+  else if(m.type==="intimate") item={...base,date:isoToday(),behavior:"partner",partner:"",location:"",protection:[],toys:[],duration:0,rating:0,mood:"",note:""};
   else item={...base,title:"",content:"",mood:(m.moods&&m.moods[0])||"",date:isoToday(),tags:[]};
   // initialize custom fields
   (m.fields||[]).forEach(f=>{ if(!(f.key in item)) item[f.key]= f.type==="select"?(f.options&&f.options[0]||""):""; });
@@ -3851,7 +4178,7 @@ function buildNav(){
   // 只渲染顶层模块（有 parent 字段的子模块不显示在导航）
   const topMods = CONFIG.modules.filter(m=>!m.parent);
   // 手机端导航文案精简：桌面显示完整名，手机显示短名（span 切换由 CSS 控制）
-  const NAV_SHORT={home:"首页",todo:"待办",habits:"习惯",money:"记账",notes:"笔记",timetable:"课表",portfolio:"投资",insight:"复盘"};
+  const NAV_SHORT={home:"首页",todo:"待办",habits:"习惯",money:"记账",notes:"笔记",timetable:"课表",portfolio:"投资",insight:"复盘",intimate:"健康"};
   const navLabel=(key,name)=>`<span class="nav-full">${esc(name)}</span><span class="nav-short">${esc(NAV_SHORT[key]||name)}</span>`;
   const html=[`<div class="navi" data-go="home">${icon("home",19)}${navLabel("home","首页")}</div>`,
     `<div class="nav-sep">功能模块</div>`]
