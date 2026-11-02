@@ -24,24 +24,24 @@
      THEME TOKENS — 一处改色，整站换肤（简约·墨色中性默认）
      ============================================================ */
   :root {
-    /* ---- 页面与表面（米白旧报纸） ---- */
-    --page-bg: #f1e8d3;              /* 页面底色·泛黄旧报纸 */
-    --surface-card: #fbf5e6;         /* 卡片/面板/输入框·稍亮的纸 */
-    --surface-nested: #ece0c2;       /* 嵌套区域·更深的纸纹 */
+    /* ---- 页面与表面（现代浅色·暖橙 APP） ---- */
+    --page-bg: #f6f5f3;              /* 页面底色·浅暖灰 */
+    --surface-card: #ffffff;         /* 卡片/面板/输入框·纯白 */
+    --surface-nested: #f1efeb;       /* 嵌套区域·浅灰 */
 
-    /* ---- 边框（纸边褐） ---- */
-    --border: #d9caa3;               /* 常规边框：卡片、分隔线 */
-    --border-input: #c4b07e;         /* 强边框：输入框、按钮、chip、勾选框 */
+    /* ---- 边框（浅灰描边） ---- */
+    --border: #ece9e3;               /* 常规边框：卡片、分隔线 */
+    --border-input: #e0dcd4;         /* 强边框：输入框、按钮、chip、勾选框 */
 
-    /* ---- 文本层级（浅棕文字） ---- */
-    --text: #3a2f1f;                 /* 主文本：深棕墨字 */
-    --text-secondary: #8a7550;       /* 次文本：中棕 */
-    --text-tertiary: #b8a67c;        /* 弱文本：浅棕 */
+    /* ---- 文本层级（暖近黑） ---- */
+    --text: #2b2622;                 /* 主文本 */
+    --text-secondary: #6f6a62;       /* 次文本 */
+    --text-tertiary: #a39d93;        /* 弱文本 */
 
     /* ---- 主色（橘黄） ---- */
     --accent: #c46a2a;               /* 主色·橘黄：按钮、选中、竖条 */
     --accent-muted: #f0dcc0;         /* 主色浅底：focus 光晕 */
-    --on-accent: #fbf5e6;            /* 主色上的前景文字 */
+    --on-accent: #ffffff;            /* 主色上的前景文字·纯白 */
 
     /* ---- 模块色（橘黄 + 墨绿 + 赭黄 + 砖红 + 灰紫） ---- */
     --module-1: #c46a2a;             /* 橘黄 — 打卡/完成/收入 */
@@ -69,18 +69,18 @@
     --page-texture: none;
 
     /* ---- 圆角 ---- */
-    --radius-control: 6px;
-    --radius-tile: 10px;
-    --radius-card: 12px;
-    --radius-sheet: 16px;
+    --radius-control: 10px;
+    --radius-tile: 14px;
+    --radius-card: 16px;
+    --radius-sheet: 22px;
 
     /* ---- 阴影（报纸油墨感） ---- */
-    --shadow-card: 0 1px 2px rgba(58,47,31,.05), 0 6px 18px rgba(58,47,31,.07);
-    --shadow-overlay: 0 14px 36px rgba(58,47,31,.18);
+    --shadow-card: 0 1px 2px rgba(28,22,16,.04), 0 8px 24px rgba(28,22,16,.06);
+    --shadow-overlay: 0 20px 50px rgba(28,22,16,.18);
 
     /* ---- 字体与布局 ---- */
-    --font: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", Georgia, serif;
-    --font-hand: "Zhi Mang Xing", "Caveat", "Kaiti", cursive;
+    --font: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-hand: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
     --sidebar-w: 258px;
 
     /* ---- 统一字号阶梯（模块化比例 ≈1.2） ---- */
@@ -103,14 +103,7 @@
   }
   body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
     background-image: var(--page-texture); background-size: cover; background-position: center; opacity:.5; }
-  /* 纸张纤维纹理：多层径向渐变模拟旧报纸的纸纹 */
-  body::after { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
-    background-image:
-      radial-gradient(circle at 20% 30%, rgba(180,150,90,.05) 0, transparent 40%),
-      radial-gradient(circle at 80% 70%, rgba(160,120,60,.04) 0, transparent 45%),
-      repeating-linear-gradient(0deg, rgba(120,90,50,.018) 0 1px, transparent 1px 3px),
-      repeating-linear-gradient(90deg, rgba(120,90,50,.012) 0 1px, transparent 1px 4px);
-    mix-blend-mode: multiply; }
+  /* 现代浅色：纯色背景，无纸纹 */
   svg { display: block; }
   .layout { min-height: 100vh; }
 
@@ -120,63 +113,48 @@
   /* 手写字体工具类 */
   .hand { font-family: var(--font-hand); font-weight: normal; }
 
-  /* 报头（masthead）—— 报纸式大标题 */
-  .masthead { text-align:center; padding: 18px 0 6px; border-bottom: 3px double var(--text); position:relative; margin-bottom: 4px; }
-  .masthead .m-title { font-family: var(--font); font-weight:900; font-size: var(--fs-display); letter-spacing: .08em; color:var(--text); line-height:1; }
-  .masthead .m-sub { font-size: 12px; letter-spacing: .35em; color:var(--text-secondary); margin-top: 6px; text-transform: uppercase; }
-  .masthead .m-meta { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-secondary);
-    margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+  /* 报头：现代 APP 状态条（日期 / 周数），去报纸双线大标题 */
+  .masthead { padding: 6px 2px; margin-bottom: 10px; }
+  .masthead .m-title { font-weight:800; font-size: var(--fs-h2); letter-spacing: -.01em; color:var(--text); line-height:1.2; }
+  .masthead .m-sub { font-size: 12px; color:var(--text-secondary); margin-top: 4px; }
+  .masthead .m-meta { display:flex; justify-content:space-between; align-items:center; font-size:12.5px; color:var(--text-secondary);
+    margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
   .masthead .m-meta .price { color:var(--accent); font-weight:700; }
-  /* 精简版报头：去掉大标题，仅保留日期/周数信息条 */
-  .masthead.masthead-slim { padding: 12px 0 10px; border-bottom: 2px solid var(--text); }
-  .masthead.masthead-slim .m-meta { margin-top: 0; padding-top: 0; border-top: none; font-size: 12px; }
+  .masthead.masthead-slim { padding: 2px 2px 8px; }
+  .masthead.masthead-slim .m-meta { margin-top: 0; padding-top: 0; border-top: none; font-size: 13px; }
 
   /* 报纸分栏竖线（双细线） */
   .col-rule { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
 
-  /* 邮票（邮票）：齿孔边框 + 旋转 */
-  .stamp { display:inline-flex; align-items:center; gap:6px; padding: 6px 14px; position:relative;
-    background: var(--surface-nested); color: var(--accent); font-weight:700; font-size: 12.5px; letter-spacing:.04em;
-    border: 1.5px solid var(--accent); transform: rotate(-4deg); box-shadow: 1px 2px 0 rgba(58,47,31,.08); }
-  .stamp::before { content:""; position:absolute; inset:0; pointer-events:none;
-    -webkit-mask: radial-gradient(circle, transparent 0 2.5px, #000 2.8px) 0 0/7px 7px;
-            mask: radial-gradient(circle, transparent 0 2.5px, #000 2.8px) 0 0/7px 7px;
-    background: var(--accent); opacity:.12; }
-  .stamp.s-green { color:var(--module-2); border-color:var(--module-2); }
-  .stamp.s-green::before { background: var(--module-2); }
-  .stamp.s-brown { color:var(--module-4); border-color:var(--module-4); }
-  .stamp.s-brown::before { background: var(--module-4); }
+  /* 邮票 → 干净的胶囊徽标（去齿孔/旋转） */
+  .stamp { display:inline-flex; align-items:center; gap:6px; padding: 4px 11px; border-radius:999px;
+    background: var(--surface-nested); color:var(--accent); font-weight:700; font-size:12px; letter-spacing:.02em;
+    border:1px solid var(--border-input); }
+  .stamp::before { display:none; }
+  .stamp.s-green { color:var(--module-2); border-color: color-mix(in srgb, var(--module-2) 45%, transparent); }
+  .stamp.s-brown { color:var(--module-4); border-color: color-mix(in srgb, var(--module-4) 45%, transparent); }
 
-  /* 胶带（胶带）：半透明斜贴条 */
-  .tape { position:absolute; width: 78px; height: 22px; background: rgba(245,220,140,.55);
-    box-shadow: 0 1px 2px rgba(58,47,31,.12); pointer-events:none; z-index: 2; }
-  .tape.tl { top:-9px; left: 18px; transform: rotate(-8deg); }
-  .tape.tr { top:-9px; right: 18px; transform: rotate(7deg); }
-  .tape.bl { bottom:-9px; left: 22px; transform: rotate(6deg); }
-  .tape.br { bottom:-9px; right: 22px; transform: rotate(-7deg); }
-  .tape.green { background: rgba(120,170,130,.45); }
-  .tape.orange { background: rgba(230,150,80,.5); }
+  /* 胶带（装饰）→ 隐藏，去报纸贴纸感 */
+  .tape { display:none; }
 
-  /* 铅笔批注：手写小字，略带旋转，铅笔灰绿色 */
-  .pencil-note { font-family: var(--font-hand); font-size: 14px; color: #5a7a52; line-height: 1.3;
-    transform: rotate(-3deg); letter-spacing: .02em; }
-  .pencil-note.orange { color: #b56a2a; }
-  .pencil-note.brown  { color: #7a5a3a; }
-  .pencil-note.right  { transform: rotate(3deg); text-align: right; }
+  /* 铅笔批注 → 普通次要文字（去手写旋转） */
+  .pencil-note { font-family: var(--font); font-size: 13px; color: var(--text-secondary); line-height:1.4; letter-spacing:.01em; }
+  .pencil-note.orange { color: var(--accent); }
+  .pencil-note.brown  { color: var(--text-secondary); }
+  .pencil-note.right  { text-align: right; }
 
-  /* 圈注（红笔圈） */
-  .red-circle { display:inline-block; border: 2px solid var(--danger); border-radius: 50%;
-    padding: 0 6px; line-height: 1.4; transform: rotate(-2deg); }
+  /* 圈注 → 轻量描边徽标 */
+  .red-circle { display:inline-block; border: 1.5px solid var(--danger); border-radius: 8px;
+    padding: 1px 7px; line-height:1.5; }
 
-  /* 小猫涂鸦 SVG 容器 */
-  .cat-doodle { display:inline-block; vertical-align: middle; color: var(--text-secondary); opacity:.7; }
-  .cat-doodle.big { width: 64px; height: 64px; }
+  /* 小猫涂鸦 → 隐藏（整体去猫猫元素） */
+  .cat-doodle { display:none; }
 
-  /* 报头下方分割装饰（带小猫） */
-  .news-divider { display:flex; align-items:center; gap:10px; margin: 18px 0 10px; }
-  .news-divider .line { flex:1; height:0; border-top: 2px solid var(--text); position:relative; }
-  .news-divider .line::after { content:""; position:absolute; inset:0; border-top: 1px solid var(--text); transform: translateY(3px); opacity:.5; }
-  .news-divider .kicker { font-size: 11px; letter-spacing:.3em; color:var(--text-secondary); text-transform: uppercase; }
+  /* 分割装饰 → 简约浅灰分隔 + 小标签 */
+  .news-divider { display:flex; align-items:center; gap:10px; margin: 16px 0 8px; }
+  .news-divider .line { flex:1; height:0; border-top: 1px solid var(--border); position:relative; }
+  .news-divider .line::after { display:none; }
+  .news-divider .kicker { font-size: 11px; letter-spacing:.16em; color:var(--text-tertiary); text-transform: uppercase; }
 
   /* 报角小标记 */
   .edition-tag { display:inline-block; font-size:10px; letter-spacing:.2em; color:var(--accent);
@@ -311,22 +289,19 @@
     background: var(--surface-card); border:1px solid var(--border); border-radius:999px; padding:8px 15px; box-shadow: var(--shadow-card); }
   .date-chip svg { color: var(--text-tertiary); }
 
-  /* ---------- hero banner (顶部大图问候区) ---------- */
+  /* ---------- hero banner (顶部问候区，去大图，干净渐变) ---------- */
   .hero-banner { position: relative; overflow: hidden; border-radius: var(--radius-sheet); border: 1px solid var(--border);
-    box-shadow: var(--shadow-card); min-height: 180px; display: flex; flex-direction: column; justify-content: center;
-    padding: 34px 40px; margin-bottom: 24px;
-    background: var(--surface-nested) var(--greet-image) right center / cover no-repeat; }
-  .hero-banner::before { content:""; position:absolute; inset:0; pointer-events:none;
-    background: linear-gradient(100deg, var(--surface-card) 34%, color-mix(in srgb, var(--surface-card) 82%, transparent) 52%, transparent 76%); }
+    box-shadow: var(--shadow-card); min-height: 168px; display: flex; flex-direction: column; justify-content: center;
+    padding: 28px 32px; margin-bottom: 22px;
+    background: linear-gradient(135deg, #ffffff 0%, #fff5ea 100%); }
   .hero-banner > * { position: relative; z-index: 1; }
-  .hero-banner .hi { font-size: var(--fs-h1); font-weight: 800; letter-spacing: -.03em; }
-  .hero-banner .sub { color: var(--text-secondary); font-size: var(--fs-body); margin-top: 7px; max-width: 460px; }
-  .hero-banner .hstats { display: flex; gap: 26px; margin-top: 22px; }
+  .hero-banner .hi { font-size: 25px; font-weight: 800; letter-spacing: -.03em; }
+  .hero-banner .sub { color: var(--text-secondary); font-size: var(--fs-body); margin-top: 8px; max-width: 460px; }
+  .hero-banner .hstats { display: flex; gap: 26px; margin-top: 20px; flex-wrap: wrap; }
   .hero-banner .hstat { display: flex; flex-direction: column; gap: 2px; }
-  .hero-banner .hstat .n { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+  .hero-banner .hstat .n { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
   .hero-banner .hstat .t { font-size: 12px; color: var(--text-secondary); }
-  .hero-banner .hstat + .hstat { padding-left: 26px; border-left: 1px solid var(--border-input); }
-  .hero-banner .htop { position: absolute; top: 22px; right: 26px; z-index: 2; display: flex; gap: 10px; align-items: center; }
+  .hero-banner .hstat + .hstat { padding-left: 26px; border-left: 1px solid var(--border); }
 
   .card { background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
   .sec-title { display:flex; align-items:center; gap:9px; font-size:var(--fs-h3); font-weight:800; margin: 18px 2px 10px; letter-spacing: -.01em; }
@@ -2093,16 +2068,14 @@ function renderHome(){
   // 头版大图（hero）：左侧问候+统计+时钟
   const todoIt=data.todo||[]; const todoDone=todoIt.filter(x=>x.done).length;
   const chkIt=data.checkin||[]; const chkDone=chkIt.filter(x=>x.log&&x.log[today()]).length;
-  const hero = `<div class="hero-banner b12" style="min-height:230px">
-    <span class="tape tl"></span><span class="tape tr green"></span>
-    <div class="hi" style="font-size:30px">${hi}，${esc(CONFIG.owner)}</div>
+  const hero = `<div class="hero-banner b12">
+    <div class="hi">${hi}，${esc(CONFIG.owner)}</div>
     <div class="sub">${esc(q)}</div>
     <div class="hstats">
       <div class="hstat"><span class="n" style="color:var(--accent)">${todoDone}/${todoIt.length}</span><span class="t">今日待办完成</span></div>
       <div class="hstat"><span class="n" style="color:var(--module-2)">${chkDone}/${chkIt.length}</span><span class="t">习惯打卡</span></div>
       <div class="hstat"><span class="n" style="color:var(--module-3)"><span id="clk">${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}</span></span><span class="t">此刻</span></div>
     </div>
-    <div class="htop"><span class="stamp s-green">已审阅</span></div>
   </div>`;
 
   $("#screen").innerHTML = `
