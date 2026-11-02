@@ -1001,14 +1001,14 @@
   .mv-stars i.on { color:#f5b301; }
 
   /* 习惯打卡月历：每个习惯一张 7 列小日历（周对齐，不再折成两行） */
-  .habit-cal-card .hc-dow { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; max-width:238px; margin:2px 0 8px; }
-  .habit-cal-card .hc-dow span { text-align:center; font-size:10.5px; color:var(--text-tertiary); }
-  .habit-cal-card .hc-item { margin-bottom:12px; }
-  .habit-cal-card .hc-top { display:flex; align-items:baseline; gap:8px; margin-bottom:5px; }
-  .habit-cal-card .hc-name { font-size:12.5px; font-weight:600; color:var(--text); }
-  .habit-cal-card .hc-stat { margin-left:auto; font-size:11.5px; color:var(--text-secondary); }
-  .habit-cal-card .hc-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; max-width:238px; }
-  .habit-cal-card .hc-cell { aspect-ratio:1/1; border-radius:4px; background:var(--surface-nested); border:1px solid var(--border); }
+  /* 习惯打卡月历：迷你卡片网格，一排 2-3 个（参考年度总结样式） */
+  .habit-cal-card .hc-wrap { display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:14px; margin-top:8px; }
+  .habit-cal-card .hc-item { margin-bottom:0; min-width:0; }
+  .habit-cal-card .hc-top { display:flex; align-items:baseline; gap:6px; margin-bottom:4px; }
+  .habit-cal-card .hc-name { font-size:11.5px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .habit-cal-card .hc-stat { margin-left:auto; font-size:10.5px; color:var(--text-secondary); flex:0 0 auto; }
+  .habit-cal-card .hc-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2.5px; }
+  .habit-cal-card .hc-cell { aspect-ratio:1/1; border-radius:2.5px; background:var(--surface-nested); border:1px solid var(--border); }
   .habit-cal-card .hc-cell.on { background:var(--accent); border-color:var(--accent); }
   .habit-cal-card .hc-cell.blank { background:transparent; border-color:transparent; }
   .habit-cal-card .hc-legend { margin-top:8px; font-size:11.5px; color:var(--text-tertiary); display:flex; align-items:center; gap:6px; }
@@ -1474,6 +1474,7 @@ const sync = {
     for(const k of Object.keys(local)){
       const lv = local[k], cv = cloud[k];
       if(k==="__avatar" || k==="__pomo" || k==="__trend"){ out[k] = (lv!==undefined ? lv : cv); continue; }
+      if(k==="__tombstones" || k==="__revived"){ out[k] = mergeStampMaps(cv, lv); continue; }
       if(Array.isArray(lv) && Array.isArray(cv)){
         const m = new Map();
         cv.forEach(x=>m.set(key(x), x));
@@ -1483,6 +1484,13 @@ const sync = {
         out[k] = {...cv, ...lv};
       } else {
         out[k] = (lv!==undefined && lv!==null && lv!=="") ? lv : cv;
+      }
+    }
+    // 删除墓碑：被删除的记录/回收站条目不参与合并，避免多端旧快照把已删数据“复活”
+    const tom = out.__tombstones;
+    if(tom){
+      for(const mk of Object.keys(tom)){
+        if(Array.isArray(out[mk])) out[mk] = dropTombstoned(out[mk], mk, tom, out.__revived);
       }
     }
     return out;
@@ -2283,7 +2291,7 @@ function openRecurringModal(r){
     data.recurring=rules; applyRecurring(); persist(); ov.remove(); renderModule("money");
   };
   ov.querySelector("#rm-del").onclick=()=>{
-    data.recurring=(data.recurring||[]).filter(x=>x.id!==r.id); persist(); ov.remove(); renderModule("money");
+    data.recurring=(data.recurring||[]).filter(x=>x.id!==r.id); markTomb("recurring",[r]); persist(); ov.remove(); renderModule("money");
   };
 }
 
@@ -2390,7 +2398,7 @@ function openLiabilityModal(l){
     else data.liabilities.push({id:Date.now(),title,type,amount});
     persist(); ov.remove(); renderModule("money");
   };
-  ov.querySelector("#lb-del2").onclick=()=>{ data.liabilities=(data.liabilities||[]).filter(x=>x.id!==l.id); persist(); ov.remove(); renderModule("money"); };
+  ov.querySelector("#lb-del2").onclick=()=>{ data.liabilities=(data.liabilities||[]).filter(x=>x.id!==l.id); markTomb("liabilities",[l]); persist(); ov.remove(); renderModule("money"); };
 }
 function habitCalRow(name, log, days, ym){
   const [y,mo]=ym.split("-").map(Number);
@@ -2404,8 +2412,7 @@ function habitCalendarHTML(ym){
   const days=monthDaysArr(ym); const rows=[];
   (data.checkin||[]).forEach(x=>{ rows.push(habitCalRow(esc(x.title),x.log||{},days,ym)); });
   if(!rows.length) return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历 · ${ym}</div><div class="focus-empty">还没有打卡项，去「习惯打卡」添加吧</div></div>`;
-  const dow=`<div class="hc-dow">${["一","二","三","四","五","六","日"].map(d=>`<span>${d}</span>`).join("")}</div>`;
-  return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历 · ${ym}</div>${dow}${rows.join("")}
+  return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历 · ${ym}</div><div class="hc-wrap">${rows.join("")}</div>
     <div class="hc-legend"><span class="hc-dot on"></span>已打卡<span class="hc-dot"></span>未打卡</div></div>`;
 }
 function renderInsight(){
@@ -2609,7 +2616,7 @@ function renderModule(key){
   const foOpen=$("#fo-opening"); if(foOpen) foOpen.onchange=()=>{ data.__cashOpening=Math.max(0,+foOpen.value||0); persist(); renderModule("money"); };
   const foLink=$("#fo-link"); if(foLink) foLink.onchange=()=>{ data.__linkTradeToLedger=foLink.checked; if(foLink.checked) syncTradeLedger(); persist(); renderModule("money"); };
   const lbAdd=$("#lb-add"); if(lbAdd) lbAdd.onclick=()=>openLiabilityModal(null);
-  $("#screen").querySelectorAll(".js-lb-del").forEach(b=>b.onclick=()=>{ data.liabilities=(data.liabilities||[]).filter(x=>x.id!=b.dataset.id); persist(); renderModule("money"); });
+  $("#screen").querySelectorAll(".js-lb-del").forEach(b=>b.onclick=()=>{ const it=(data.liabilities||[]).find(x=>x.id==b.dataset.id); data.liabilities=(data.liabilities||[]).filter(x=>x.id!=b.dataset.id); if(it) markTomb("liabilities",[it]); persist(); renderModule("money"); });
   // 视图切换
   if(m.type==="todo"){
     $("#screen").querySelectorAll("#todo-view .opt").forEach(o=>o.onclick=()=>{
@@ -3574,11 +3581,60 @@ function confirmDelete(key,id){ const item=(data[key]||[]).find(i=>i.id==id); if
 
 // ---------- 回收站：软删除 + 24 小时可恢复 ----------
 function trashLabel(key,item){ return item.title || item.name || item.code || "记录"; }
+
+/* ---------- 删除墓碑：让「删除」在多端合并中生效 ----------
+   并集合并无法表达“删除”：云端/其他设备若还留着旧快照，push→pull 会把已删记录与
+   回收站条目原样并回来，表现为“删除后仍在、回收站越删越多”。
+   约定：data.__tombstones[key]["id:<id>" | "g:<groupId>"] = 删除时间戳；
+        data.__revived[key]["id:<id>"] = 恢复时间戳（晚于墓碑则记录复活）。 */
+function markTomb(key, items){
+  if(!items || !items.length) return;
+  data.__tombstones = data.__tombstones || {};
+  const m = data.__tombstones[key] = data.__tombstones[key] || {};
+  const now = Date.now();
+  items.forEach(it=>{ if(!it) return;
+    if(it.id!=null) m["id:"+it.id] = now;
+    else if(it.groupId!=null) m["g:"+it.groupId] = now; });
+}
+function markRevive(key, items){
+  if(!items || !items.length) return;
+  data.__revived = data.__revived || {};
+  const m = data.__revived[key] = data.__revived[key] || {};
+  const now = Date.now();
+  items.forEach(it=>{ if(it && it.id!=null) m["id:"+it.id] = now; });
+}
+function mergeStampMaps(cv, lv){
+  const out = {}, a = (cv && typeof cv==="object") ? cv : {}, b = (lv && typeof lv==="object") ? lv : {};
+  for(const mk of new Set([...Object.keys(a), ...Object.keys(b)])){
+    const ma = a[mk]||{}, mb = b[mk]||{}, m = {};
+    for(const idk of new Set([...Object.keys(ma), ...Object.keys(mb)])){
+      m[idk] = Math.max(+ma[idk]||0, +mb[idk]||0);
+    }
+    out[mk] = m;
+  }
+  return out;
+}
+function dropTombstoned(arr, key, tom, rev){
+  const t = (tom && tom[key]) || {}, r = (rev && rev[key]) || {};
+  return arr.filter(x=>{
+    if(!x) return false;
+    if(x.id!=null){
+      const ik = "id:"+x.id;
+      if(t[ik]!=null && !(r[ik]!=null && r[ik] > t[ik])) return false;
+    }
+    if(x.groupId!=null && t["g:"+x.groupId]!=null) return false;
+    return true;
+  });
+}
 function purgeExpiredTrash(){
   if(!data.__trash || !data.__trash.length) return;
-  const now=Date.now(); const before=data.__trash.length;
+  const now=Date.now();
+  const expired=data.__trash.filter(e=> now-(+e.deletedAt||now) >= 24*3600*1000);
+  if(!expired.length) return;
+  expired.forEach(e=>{ const arr=data[e.key]||[]; if(!arr.some(x=>x.id===e.item.id)) markTomb(e.key,[e.item]); });
+  markTomb("__trash", expired);
   data.__trash=data.__trash.filter(e=> now-(+e.deletedAt||now) < 24*3600*1000);
-  if(data.__trash.length!==before) store.save();
+  store.save();
 }
 function softDelete(key,id){
   const arr=data[key]||[]; const idx=arr.findIndex(i=>i.id==id); if(idx<0) return null;
@@ -3600,18 +3656,32 @@ function softDelete(key,id){
     data.money=(data.money||[]).filter(f=>!(f.tradeId!=null && f.tradeId===item.id));
   }
   data[key]=arr.filter(i=>i.id!=id);
-  data.__trash=(data.__trash||[]).concat(entries);
+  // 同一条记录反复“删了又复活”时，回收站会堆积重复条目：先移除同记录的旧条目
+  const dups=(data.__trash||[]).filter(e=>entries.some(n=>n.key===e.key && n.item.id===e.item.id));
+  if(dups.length) markTomb("__trash", dups);
+  data.__trash=(data.__trash||[]).filter(e=>!dups.includes(e)).concat(entries);
+  entries.forEach(e=>markTomb(e.key,[e.item]));   // 墓碑：多端合并时不再复活
   persist(); render();
   return groupId;
 }
 function restoreTrash(groupId){
   const entries=(data.__trash||[]).filter(e=>e.groupId===groupId);
   if(!entries.length) return;
-  entries.forEach(e=>{ const arr=data[e.key]||[]; if(!arr.some(x=>x.id===e.item.id)){ arr.push(e.item); data[e.key]=arr; } });
+  entries.forEach(e=>{
+    const arr=data[e.key]||[];
+    if(!arr.some(x=>x.id===e.item.id)){ arr.push(e.item); data[e.key]=arr; markRevive(e.key,[e.item]); }
+  });
   data.__trash=(data.__trash||[]).filter(e=>e.groupId!==groupId);
+  markTomb("__trash", entries);
   persist(); render();
 }
-function purgeGroup(groupId){ data.__trash=(data.__trash||[]).filter(e=>e.groupId!==groupId); persist(); }
+function purgeGroup(groupId){
+  const removed=(data.__trash||[]).filter(e=>e.groupId===groupId);
+  data.__trash=(data.__trash||[]).filter(e=>e.groupId!==groupId);
+  removed.forEach(e=>{ const arr=data[e.key]||[]; if(!arr.some(x=>x.id===e.item.id)) markTomb(e.key,[e.item]); });
+  if(removed.length) markTomb("__trash", removed);
+  persist();
+}
 function openTrash(){
   purgeExpiredTrash();
   const list=(data.__trash||[]);
@@ -3635,7 +3705,12 @@ function openTrash(){
   ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
   ov.querySelectorAll(".js-restore").forEach(b=>b.onclick=()=>{ restoreTrash(b.dataset.g); ov.remove(); openTrash(); });
   ov.querySelectorAll(".js-purge").forEach(b=>b.onclick=()=>{ purgeGroup(b.dataset.g); ov.remove(); openTrash(); });
-  const te=ov.querySelector("#tr-empty"); if(te) te.onclick=()=>{ data.__trash=[]; persist(); ov.remove(); openTrash(); };
+  const te=ov.querySelector("#tr-empty"); if(te) te.onclick=()=>{
+    const removedAll=data.__trash||[];
+    removedAll.forEach(e=>{ const arr=data[e.key]||[]; if(!arr.some(x=>x.id===e.item.id)) markTomb(e.key,[e.item]); });
+    if(removedAll.length) markTomb("__trash", removedAll);
+    data.__trash=[]; persist(); ov.remove(); openTrash();
+  };
 }
 
 /* ---------- router / sidebar ---------- */
