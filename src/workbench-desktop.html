@@ -782,7 +782,7 @@
   .rv-month-name { font-size:13px; font-weight:700; color:var(--accent); min-width:80px; text-align:center; }
   .rv-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; margin-top:14px; }
   .rv-card { background:var(--surface-card); border:1px solid var(--border); border-radius:var(--radius-card); padding:14px; }
-  .habit-cal-card { margin-top:12px; }   /* 与上方 rv-grid 的卡片保持间距 */
+  .habit-cal-card { margin-top:20px; }   /* 与上方「投资表现」等复盘卡片分节，加大段间距 */
   .rv-hd { font-size:13px; font-weight:700; color:var(--text); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
   .rv-row { display:grid; grid-template-columns:1fr 2fr auto auto; gap:10px; align-items:center; padding:6px 0; font-size:12px; }
   .rv-row + .rv-row { border-top:1px dashed var(--border); }
@@ -2959,7 +2959,7 @@ function recHTML(m,x){
   const thumb=x.image?`<img class="thumb" src="${attr(x.image)}" alt="">`:'';
   const customMeta=(m.fields||[]).filter(f=>x[f.key]).map(f=>`<span class="meta-tag">${esc(x[f.key])}</span>`).join("");
   const customBlock=customMeta?`<div class="meta-line">${customMeta}</div>`:'';
-  const layout=x.layout||'default';
+  const layout='default';   // 统一为标准卡片，不再渲染大图/引文两种形式
   const layoutCls=`rec-layout-${layout}`;
 
   // feature layout: 大图在上 + 标题 + 正文在下 (适合有图记录)
@@ -3233,8 +3233,7 @@ function openEditor(key,item){
       </div>`;
   }
   // layout variant selector
-  const layoutOpts=[{v:'default',l:'标准'},{v:'feature',l:'大图'},{v:'quote',l:'引文'}];
-  fields=`<div class="field"><label>卡片样式</label><div class="seg" id="f-layout">${layoutOpts.map(o=>`<div class="opt ${o.v===(d.layout||'default')?'on':''}" data-v="${o.v}">${o.l}</div>`).join("")}</div></div>`+fields;
+  // 卡片样式：统一为标准布局，不再提供「大图」「引文」两种形式
   // custom fields (from m.fields config) — rendered after type-specific fields
   (m.fields||[]).forEach(f=>{
     const v=d[f.key]||"";
@@ -3421,7 +3420,7 @@ function openEditor(key,item){
     const val=id=>{ const el=overlay.querySelector(id); return el?el.value:undefined; };
     const seg=id=>{ const el=overlay.querySelector(id+" .on"); return el?el.dataset.v:undefined; };
     d.title=(val("#f-title")||"").trim()||"未命名";
-    d.layout=seg("#f-layout")||'default';
+    d.layout='default';   // 已取消卡片样式选项，统一标准布局
     if(m.type==="todo"){ d.priority=seg("#f-prio")||d.priority; d.note=(val("#f-note")||"").trim(); d.date=val("#f-date")||isoToday(); d.time=(val("#f-time")||"").trim(); d.subtasks=_subtasks; }
     else if(m.type==="progress"){
       d.current=Math.max(0,+val("#f-cur")||0);
