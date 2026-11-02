@@ -782,6 +782,7 @@
   .rv-month-name { font-size:13px; font-weight:700; color:var(--accent); min-width:80px; text-align:center; }
   .rv-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; margin-top:14px; }
   .rv-card { background:var(--surface-card); border:1px solid var(--border); border-radius:var(--radius-card); padding:14px; }
+  .habit-cal-card { margin-top:12px; }   /* 与上方 rv-grid 的卡片保持间距 */
   .rv-hd { font-size:13px; font-weight:700; color:var(--text); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
   .rv-row { display:grid; grid-template-columns:1fr 2fr auto auto; gap:10px; align-items:center; padding:6px 0; font-size:12px; }
   .rv-row + .rv-row { border-top:1px dashed var(--border); }
@@ -950,8 +951,18 @@
     /* 课表横向滚动 */
     .tt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .tt-grid { min-width: 680px; }
-    .modal { width: auto; padding: 18px 16px; border-radius: 16px; max-height: 88vh; }
-    .modal h3 { font-size: 17px; }
+    .modal { width: auto; padding: 16px 14px; border-radius: 16px; max-height: 92vh; }
+    .modal h3 { font-size: 16.5px; }
+    /* 弹窗整体紧凑化：字段/控件统一缩小，减少一屏放不下的情况 */
+    .modal .sub { font-size: 12px; margin: 4px 0 12px; }
+    .modal .field { margin-bottom: 10px; }
+    .modal .field label { font-size: 12px; margin-bottom: 4px; }
+    .modal input, .modal textarea { padding: 8px 10px; font-size: 14px; border-radius: 9px; }
+    .modal textarea { min-height: 56px; }
+    .modal .seg { gap: 6px; }
+    .modal .seg .opt { padding: 8px 6px; font-size: 12.5px; min-width: 0; border-radius: 9px; }
+    .modal .modal-actions { margin-top: 14px; }
+    .modal .btn { padding: 9px 14px; font-size: 13.5px; }
     .frow { flex-direction: column; gap: 0; }
     .seg .opt { padding: 8px 6px; font-size: 13px; }
     /* 列表页更贴近主流 App：收紧间距、统一更细的圆角观感 */
@@ -2601,7 +2612,7 @@ function renderModule(key){
   $("#screen").innerHTML=`<div class="header"><div><h2>${m.name}</h2><p>${m.desc}</p></div></div>
     <div class="toolbar">
       ${viewSwitcher}
-      <div class="spacer"></div>${(data.__trash||[]).length?`<button class="btn ghost" id="btn-trash">${icon("trash",14,2.2)}回收站 <span class="badge">${(data.__trash||[]).length}</span></button>`:''}<button class="btn" id="btn-new">${icon("plus",16,2.2)}新建</button></div>
+      <div class="spacer"></div>${(data.__trash||[]).some(e=>e.key===key)?`<button class="btn ghost" id="btn-trash">${icon("trash",14,2.2)}回收站 <span class="badge">${(data.__trash||[]).filter(e=>e.key===key).length}</span></button>`:''}<button class="btn" id="btn-new">${icon("plus",16,2.2)}新建</button></div>
     ${head}
     ${FIXED_HABITS.includes(key)?habitBarHTML(key):''}
     <div class="mod-layout">
@@ -2635,7 +2646,7 @@ function renderModule(key){
     });
   }
   $("#btn-new").onclick=()=>openEditor(key,null);
-  const tb=$("#btn-trash"); if(tb) tb.onclick=()=>openTrash();
+  const tb=$("#btn-trash"); if(tb) tb.onclick=()=>openTrash(key);
   $("#screen").querySelectorAll(".js-habit-chk").forEach(el=>el.onclick=()=>{ toggleHabitToday(el.dataset.key); store.save(); render(); });
   const mvGoalEl=$("#mv-goal"); if(mvGoalEl) mvGoalEl.onchange=()=>{ data.__movieGoal=Math.max(0,+mvGoalEl.value||0); store.save(); render(); };
   wireModule(key);
@@ -3682,9 +3693,11 @@ function purgeGroup(groupId){
   if(removed.length) markTomb("__trash", removed);
   persist();
 }
-function openTrash(){
+function openTrash(key, keys){
   purgeExpiredTrash();
-  const list=(data.__trash||[]);
+  // 按模块隔离：只显示当前模块删除的条目（keys 为允许的 key 集合，如投资模块的级联）
+  const allow = keys || (key?[key]:null);
+  const list=(data.__trash||[]).filter(e=>!allow||allow.includes(e.key));
   const ov=document.createElement("div"); ov.className="overlay";
   const rows = list.length ? list.map(e=>{
     const left=Math.max(0, 24*3600*1000 - (Date.now()-e.deletedAt));
@@ -3695,7 +3708,7 @@ function openTrash(){
         <button class="btn ghost sm js-restore" data-g="${e.groupId}">恢复</button>
         <button class="btn ghost sm js-purge" data-g="${e.groupId}">彻底删除</button>
       </div></div>`;
-  }).join("") : `<div class="focus-empty">回收站是空的。删除的记录会先存到这里，保留 24 小时，期间可随时恢复。</div>`;
+  }).join("") : `<div class="focus-empty">回收站是空的。本模块删除的记录会先存到这里，保留 24 小时，期间可随时恢复。</div>`;
   ov.innerHTML=`<div class="modal" style="width:460px;max-width:94vw"><div class="modal-h"><h3>回收站 <span class="sub" style="font-weight:400">24 小时内可恢复</span></h3><button class="modal-x" id="tr-x">&times;</button></div>
     <div class="modal-b"><div class="trash-list">${rows}</div></div>
     <div class="modal-f"><button class="btn ghost" id="tr-empty" ${list.length?'':'disabled'}>清空回收站</button><div class="spacer"></div><button class="btn" id="tr-close">关闭</button></div></div>`;
@@ -3703,13 +3716,14 @@ function openTrash(){
   ov.querySelector("#tr-x").onclick=()=>ov.remove();
   ov.querySelector("#tr-close").onclick=()=>ov.remove();
   ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
-  ov.querySelectorAll(".js-restore").forEach(b=>b.onclick=()=>{ restoreTrash(b.dataset.g); ov.remove(); openTrash(); });
-  ov.querySelectorAll(".js-purge").forEach(b=>b.onclick=()=>{ purgeGroup(b.dataset.g); ov.remove(); openTrash(); });
+  ov.querySelectorAll(".js-restore").forEach(b=>b.onclick=()=>{ restoreTrash(b.dataset.g); ov.remove(); openTrash(key); });
+  ov.querySelectorAll(".js-purge").forEach(b=>b.onclick=()=>{ purgeGroup(b.dataset.g); ov.remove(); openTrash(key); });
   const te=ov.querySelector("#tr-empty"); if(te) te.onclick=()=>{
-    const removedAll=data.__trash||[];
-    removedAll.forEach(e=>{ const arr=data[e.key]||[]; if(!arr.some(x=>x.id===e.item.id)) markTomb(e.key,[e.item]); });
-    if(removedAll.length) markTomb("__trash", removedAll);
-    data.__trash=[]; persist(); ov.remove(); openTrash();
+    // 仅清空当前模块的条目
+    list.forEach(e=>{ const arr=data[e.key]||[]; if(!arr.some(x=>x.id===e.item.id)) markTomb(e.key,[e.item]); });
+    if(list.length) markTomb("__trash", list);
+    data.__trash=(data.__trash||[]).filter(e=>!list.includes(e));
+    persist(); ov.remove(); openTrash(key);
   };
 }
 
@@ -4346,7 +4360,7 @@ async function renderPortfolio(){
   $("#screen").innerHTML = `<div class="header"><div><h2>${m.name}</h2><p>${m.desc}</p></div><div class="spacer"></div>
     <button class="btn" id="pf-refresh">${icon("refresh",14)} 刷新行情</button>
     <button class="btn" id="pf-trade-add">${icon("exchange",14)} 记一笔交易</button>
-    ${(data.__trash||[]).length?`<button class="btn ghost" id="pf-trash">${icon("trash",14)} 回收站 <span class="badge">${data.__trash.length}</span></button>`:''}
+    ${(data.__trash||[]).some(e=>e.key==="portfolio"||e.key==="trades"||e.key==="money")?`<button class="btn ghost" id="pf-trash">${icon("trash",14)} 回收站 <span class="badge">${(data.__trash||[]).filter(e=>e.key==="portfolio"||e.key==="trades"||e.key==="money").length}</span></button>`:''}
     <button class="btn primary" id="pf-add">${icon("plus",14)} 新增持仓</button></div>
 
     ${settingsPanel}
@@ -4456,7 +4470,7 @@ function bindPortfolioEvents(){
   };
   $("#pf-add").onclick = ()=>openEditor("portfolio", null);
   $("#pf-trade-add").onclick = ()=>openEditor("trades", null);
-  const ptb=$("#pf-trash"); if(ptb) ptb.onclick=()=>openTrash();
+  const ptb=$("#pf-trash"); if(ptb) ptb.onclick=()=>openTrash("portfolio",["portfolio","trades","money"]);
   const vt=$("#pf-view-trades"); if(vt) vt.onclick=()=>go("trades");
 
   document.querySelectorAll(".js-pf-edit").forEach(b=>b.onclick=()=>openEditor("portfolio", (data.portfolio||[]).find(x=>x.id==b.dataset.id)));
