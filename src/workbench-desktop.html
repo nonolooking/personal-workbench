@@ -2422,8 +2422,8 @@ function habitCalRow(name, log, days, ym){
 function habitCalendarHTML(ym){
   const days=monthDaysArr(ym); const rows=[];
   (data.checkin||[]).forEach(x=>{ rows.push(habitCalRow(esc(x.title),x.log||{},days,ym)); });
-  if(!rows.length) return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历 · ${ym}</div><div class="focus-empty">还没有打卡项，去「习惯打卡」添加吧</div></div>`;
-  return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历 · ${ym}</div><div class="hc-wrap">${rows.join("")}</div>
+  if(!rows.length) return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历</div><div class="focus-empty">还没有打卡项，去「习惯打卡」添加吧</div></div>`;
+  return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历</div><div class="hc-wrap">${rows.join("")}</div>
     <div class="hc-legend"><span class="hc-dot on"></span>已打卡<span class="hc-dot"></span>未打卡</div></div>`;
 }
 function renderInsight(){
@@ -2504,6 +2504,18 @@ function renderInsight(){
       </div></div>`;
   };
 
+  // 记账：本月支出分类占比（原为记账模块侧栏，现统一收拢到复盘页）
+  const spendCategoryReview=()=>{
+    const palette=["var(--accent)","var(--module-1)","var(--module-2)","var(--module-3)","var(--module-4)","var(--module-5)","var(--danger)"];
+    const byCat={}; (data.money||[]).filter(x=>x.type==="expense" && (x.date||"").startsWith(insightMonth))
+      .forEach(x=>{ const c=x.category||"其他"; byCat[c]=(byCat[c]||0)+ +x.amount; });
+    const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+    if(!cats.length) return "";
+    const maxC=cats[0][1];
+    const catBars=cats.map((c,i)=>`<div class="cbrow"><span class="cbn">${esc(c[0])}</span><span class="cbt"><i style="width:${Math.round(c[1]/maxC*100)}%;background:${palette[i%palette.length]}"></i></span><span class="cbv">¥${c[1]}</span></div>`).join("");
+    return `<div class="rv-card"><div class="rv-hd">${icon("chart",15)} 支出分类占比</div><div class="catbar">${catBars}</div></div>`;
+  };
+
   // 预算编辑入口
   const budgetEditor=`
     <div class="rv-budget">
@@ -2515,7 +2527,7 @@ function renderInsight(){
   // 投资复盘 + 净资产聚合（月底自动写入资产快照）
   maybeSnapshotAsset();
   const investHTML=investmentReviewHTML();
-  const reviews=[checkinReview(),financeReview(),investHTML].filter(Boolean).join("");
+  const reviews=[checkinReview(),financeReview(),spendCategoryReview(),investHTML].filter(Boolean).join("");
   const hasReviews=!!reviews;
 
   const [cy,cm]=curYM().split("-").map(Number);
@@ -2527,7 +2539,7 @@ function renderInsight(){
 
 
     <div class="sec-title" style="margin-top:28px">
-      <div class="rv-title">${icon("target",16)} 月度复盘 · ${monthName}</div>
+      <div class="rv-title">${icon("target",16)} 月度复盘</div>
       <div class="rv-month-nav">
         <button class="btn ghost" id="rv-prev" ${canPrev?'':'disabled'}>${icon("chevron",13)} 上月</button>
         <span class="rv-month-name">${monthName}</span>
@@ -2873,7 +2885,6 @@ function sideStats(m, all){
         ${row("净结余",`¥${inc-exp}`)}
         ${row("今日支出",`¥${todayExp}`)}
         ${row("总笔数",`${all.length} 笔`)}</div>
-      <div class="side-card"><div class="sh">${icon("chart",15)} 支出分类占比</div><div class="catbar">${catBars}</div></div>
       ${financeBudgetCard(m)}`;
   }
 
@@ -4705,7 +4716,7 @@ function investmentReviewHTML(){
       </div>
     </div>
     <div class="rv-card">
-      <div class="rv-hd">${icon("trending",15)} 投资表现 · ${curYM()}</div>
+      <div class="rv-hd">${icon("trending",15)} 投资表现</div>
       <div class="rv-row ${cls}">
         <div class="rv-name">综合收益率</div>
         <div class="rv-bar"><i style="width:${Math.min(100, Math.abs(totalPct))}%"></i></div>
