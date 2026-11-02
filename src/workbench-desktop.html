@@ -1203,7 +1203,7 @@ const CONFIG = {
     { key:"habits", name:"习惯打卡", icon:"leaf", tint:"#f0dcc0", color:"var(--module-1)", type:"group", desc:"每日打卡·自由记录",
       subKeys:["checkin"], defaultSub:"checkin" },
     { key:"checkin", name:"打卡", icon:"leaf", tint:"#f0dcc0", color:"var(--module-1)", type:"checkin", desc:"每日小习惯打卡（可自由增删，如阅读 / 运动 / 电影）", parent:"habits",
-      seed:[ {id:21,title:"喝够 8 杯水",log:{},monthGoal:25}, {id:22,title:"23:30 前睡觉",log:{},monthGoal:25}, {id:23,title:"维生素 / 补品",log:{},monthGoal:20} ] },
+      seed:[ {id:21,title:"喝够 8 杯水",log:{},weekGoal:7,monthGoal:25}, {id:22,title:"23:30 前睡觉",log:{},weekGoal:7,monthGoal:25}, {id:23,title:"维生素 / 补品",log:{},weekGoal:7,monthGoal:20} ] },
 
     { key:"money", name:"记账本", icon:"wallet", tint:"#f0ddcf", color:"var(--module-4)", type:"finance", desc:"收入·支出·分类·占比",
       categories:["餐饮","交通","购物","居家","娱乐","工资","其他"],
@@ -1382,6 +1382,18 @@ const FIXED_HABITS = ["read","sport","movie"];   // 固定习惯分类（不可�
 function habitLogKey(k){ return k+"Log"; }       // 模块级“今日打卡”日志键
 function habitTodayOn(k){ const L=data[habitLogKey(k)]||{}; return !!L[today()]; }
 function toggleHabitToday(k){ const L=habitLogKey(k); data[L]=data[L]||{}; const t=today(); if(data[L][t]) delete data[L][t]; else data[L][t]=true; }
+// 取某天所在自然周（周一~周日）的日期字符串数组
+function weekKeys(anchor){
+  const dt=new Date(anchor+"T00:00:00");
+  const wd=(dt.getDay()+6)%7; // 周一为每周第一列
+  const start=new Date(dt); start.setDate(dt.getDate()-wd);
+  const out=[];
+  for(let i=0;i<7;i++){ const d=new Date(start); d.setDate(start.getDate()+i);
+    out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`); }
+  return out;
+}
+// 上一个月（YYYY-MM）
+function prevYM(ym){ let [y,m]=ym.split("-").map(Number); m--; if(m<1){ m=12; y--; } return `${y}-${String(m).padStart(2,"0")}`; }
 function movieGoal(){ return (data.__movieGoal!=null)?data.__movieGoal:(modOf("movie").monthGoal||0); }
 function habitBarHTML(key){ const on=habitTodayOn(key); return `<div class="habit-bar"><button class="btn js-habit-chk ${on?'on':''}" data-key="${key}">${icon("check",15,2.4)} ${on?'今日已打卡 ✓':'今日打卡'}</button><span class="habit-hint">${modOf(key).name} · 每天勾选一次</span></div>`; }
 const $ = s => document.querySelector(s);
@@ -2464,28 +2476,33 @@ function renderInsight(){
     }).join("");
     return `<div class="rv-card"><div class="rv-hd">${icon(key==="read"?"book":"activity",15)} ${label}</div>${rows}</div>`;
   };
-  // 打卡：本月已打卡天数 vs monthGoal
+  // 打卡：本周 vs 每周目标；本月 vs 每月目标（对比上月完成率）
   const checkinReview=()=>{
-    const arr=(data.checkin||[]).filter(x=>x.monthGoal);
-    if(!arr.length) return "";
-    const [yy,mm]=insightMonth.split("-").map(Number);
-    const daysInMonth=new Date(yy,mm,0).getDate();
-    const countDays=(log)=>{
-      if(!log) return 0;
-      return Object.keys(log).filter(d=>d.startsWith(insightMonth)).length;
-    };
-    const rows=arr.map(x=>{
-      const cnt=countDays(x.log); const goal=+x.monthGoal||0;
-      const pct=goal?Math.min(100,Math.round(cnt/goal*100)):0;
+    const items=(data.checkin||[]).filter(x=>(x.weekGoal||x.monthGoal));
+    if(!items.length) return "";
+    const lastYM=prevYM(insightMonth);
+    const countDays=(log,ym)=> log?Object.keys(log).filter(d=>d.startsWith(ym)&&log[d]).length : 0;
+    const wk=weekKeys(today());
+    const wcOf=(log)=> wk.filter(k=>(log||{})[k]).length;
+    // 本周（对比每周目标）
+    const wkItems=items.filter(x=>x.weekGoal);
+    const wkRows=wkItems.map(x=>{
+      const wc=wcOf(x.log); const goal=+x.weekGoal||0; const pct=goal?Math.min(100,Math.round(wc/goal*100)):0;
       const cls=pct>=100?"done":(pct>=60?"ok":"warn");
-      return `<div class="rv-row ${cls}">
-        <div class="rv-name">${esc(x.title||"")}</div>
-        <div class="rv-bar"><i style="width:${pct}%"></i></div>
-        <div class="rv-val">${cnt}<span class="rv-g">/${goal} 天</span></div>
-        <div class="rv-pct ${cls}">${pct}%</div>
-      </div>`;
+      return `<div class="rv-row ${cls}"><div class="rv-name">${esc(x.title||"")}</div><div class="rv-bar"><i style="width:${pct}%"></i></div><div class="rv-val">${wc}<span class="rv-g">/${goal} 天</span></div><div class="rv-pct ${cls}">${pct}%</div></div>`;
     }).join("");
-    return `<div class="rv-card"><div class="rv-hd">${icon("leaf",15)} 习惯打卡</div>${rows}</div>`;
+    const wkCard= wkRows?`<div class="rv-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡 · 本周</div>${wkRows}</div>`:"";
+    // 本月（对比每月目标 + 对比上月）
+    const moItems=items.filter(x=>x.monthGoal);
+    const moRows=moItems.map(x=>{
+      const mc=countDays(x.log,insightMonth); const goal=+x.monthGoal||0; const pct=goal?Math.min(100,Math.round(mc/goal*100)):0;
+      const lmc=countDays(x.log,lastYM); const lpct=goal?Math.min(100,Math.round(lmc/goal*100)):0;
+      const delta=pct-lpct; const dTxt=delta>0?` ▲${delta}`:(delta<0?` ▼${Math.abs(delta)}`:` —`);
+      const cls=pct>=100?"done":(pct>=60?"ok":"warn");
+      return `<div class="rv-row ${cls}"><div class="rv-name">${esc(x.title||"")}</div><div class="rv-bar"><i style="width:${pct}%"></i></div><div class="rv-val">${mc}<span class="rv-g">/${goal} 天</span></div><div class="rv-pct ${cls}">${pct}%<span class="rv-delta">${dTxt}</span></div></div>`;
+    }).join("");
+    const moCard= moRows?`<div class="rv-card"><div class="rv-hd">${icon("leaf",15)} 习惯打卡 · 本月 <span class="rv-cap">对比上月</span></div>${moRows}</div>`:"";
+    return wkCard+moCard;
   };
   // 记账：本月支出 vs 预算
   const financeReview=()=>{
@@ -2546,7 +2563,7 @@ function renderInsight(){
         <button class="btn ghost" id="rv-next" ${canNext?'':'disabled'}>下月 ${icon("chevron",13)}</button>
       </div>
     </div>
-    ${hasReviews?`<div class="rv-grid">${reviews}</div>`:`<div class="focus-empty" style="margin:10px 0">还没有设置月度目标 — 到「阅读」「锻炼」「习惯打卡」编辑器里填入「月度目标」字段，或设置「本月预算」</div>`}
+    ${hasReviews?`<div class="rv-grid">${reviews}</div>`:`<div class="focus-empty" style="margin:10px 0">还没有可统计的目标 — 到「习惯打卡」「阅读」「锻炼」编辑器里填入「每周/每月目标」，或设置「本月预算」</div>`}
     ${habitCalendarHTML(insightMonth)}
     ${budgetEditor}`;
 
@@ -3004,10 +3021,12 @@ function recHTML(m,x){
       ${x.note?`<span class="rdate" style="margin-left:0;color:var(--text-tertiary)">${esc(x.note).slice(0,40)}</span>`:''}${customBlock}</div></div></div>`; }
   if(m.type==="checkin"){ const on=!!(x.log&&x.log[today()]); const st=streak(x.log); const lst=longestStreak(x.log);
     const ym=curYM(); const mc=Object.keys(x.log||{}).filter(k=>k.startsWith(ym)&&x.log[k]).length; const goal=x.monthGoal||0;
+    const wk=weekKeys(today()); const wc=wk.filter(k=>(x.log||{})[k]).length; const wgoal=x.weekGoal||0;
     return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:44px"><div class="chk js-chk ${on?'on':''}" data-id="${x.id}">${chkMark}</div>
       ${thumb}
       <div class="body" data-edit="${x.id}"><span class="rname">${esc(x.title)}</span>
       <span class="streak">${icon("flame",13)} 连续 ${st} 天</span>
+      ${wgoal?`<span class="streak" style="color:var(--module-1)">${icon("calendar",12)} 本周 ${wc}/${wgoal} 天</span>`:''}
       ${goal?`<span class="streak" style="color:var(--module-3)">${icon("calendar",12)} 本月 ${mc}/${goal} 天</span>`:''}
       ${lst?`<span class="streak" style="color:var(--text-tertiary)">最长 ${lst} 天</span>`:''}
       ${on?'<span class="badge" style="background:var(--accent-muted);color:var(--accent)">今日已打卡</span>':''}${customBlock}</div></div></div>`; }
@@ -3136,6 +3155,10 @@ function openEditor(key,item){
       </div>`;
   } else if(m.type==="checkin"){
     fields=`<div class="field"><label>打卡项</label><input id="f-title" value="${attr(d.title)}" placeholder="例如：喝够 8 杯水"/></div>
+      <div class="frow">
+        <div class="field"><label>${icon("calendar",14)} 每周目标（天）</label><input id="f-week-goal" type="number" value="${d.weekGoal??''}" placeholder="如 7（每周 7 天）"/></div>
+        <div class="field"><label>${icon("target",14)} 每月目标（天）</label><input id="f-month-goal" type="number" value="${d.monthGoal??''}" placeholder="如 25（每月天）"/></div>
+      </div>
       <p class="sub" style="margin:0">保存后可在卡片点击左侧方块打卡；连续天数自动统计，每天从零开始。</p>`;
   } else if(m.type==="progress"){
     fields=`<div class="field"><label>名称</label><input id="f-title" value="${attr(d.title)}" placeholder="书名 / 目标"/></div>
@@ -3163,10 +3186,6 @@ function openEditor(key,item){
         <div class="field"><label>${icon("tag",14)} 标签关键词</label><input id="f-tags" value="${attr((tags).join('、'))}" placeholder="用、分隔，如：认知、习惯、复利"/></div>
       </div>`;
     }
-  } else if(m.type==="checkin"){
-    fields=`<div class="field"><label>打卡项</label><input id="f-title" value="${attr(d.title)}" placeholder="例如：喝够 8 杯水"/></div>
-      <div class="field"><label>${icon("target",14)} 月度目标（天）</label><input id="f-month-goal" type="number" value="${d.monthGoal??''}" placeholder="本月计划打卡多少天（如 25）"/></div>
-      <p class="sub" style="margin:0">保存后可在卡片点击左侧方块打卡；连续天数自动统计，每天从零开始。</p>`;
   } else if(m.type==="finance"){
     fields=`<div class="field"><label>类型</label><div class="seg" id="f-ftype">
         <div class="opt ${d.type!=='income'?'on':''}" data-v="expense">支出</div><div class="opt ${d.type==='income'?'on':''}" data-v="income">收入</div></div></div>
@@ -3453,7 +3472,7 @@ function openEditor(key,item){
         d.tags=tagsStr.split(/[、,，]/).map(s=>s.trim()).filter(Boolean);
       }
     }
-    else if(m.type==="checkin"){ d.monthGoal=Math.max(0,+val("#f-month-goal")||0); }
+    else if(m.type==="checkin"){ d.monthGoal=Math.max(0,+val("#f-month-goal")||0); d.weekGoal=Math.max(0,+val("#f-week-goal")||0); }
     else if(m.type==="finance"){ d.type=seg("#f-ftype")||"expense"; d.amount=Math.max(0,+val("#f-amt")||0); d.category=seg("#f-cat")||(m.categories&&m.categories[0])||"其他"; d.date=val("#f-date"); }
     else if(m.type==="note"){ d.mood=seg("#f-mood")||d.mood||""; d.content=(val("#f-content")||"").trim(); d.date=val("#f-date"); d.loc=(val("#f-loc")||"").trim(); d.photos=editorPhotos; d.audio=editorAudio; d.tags=(val("#f-tags")||"").trim().split(/[、,，]/).map(s=>s.trim()).filter(Boolean); }
     else if(m.type==="timetable"){
