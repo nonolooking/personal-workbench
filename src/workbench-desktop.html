@@ -304,6 +304,29 @@
   .hero-banner .hstat .t { font-size: 12px; color: var(--text-secondary); }
   .hero-banner .hstat + .hstat { padding-left: 26px; border-left: 1px solid var(--border); }
 
+  /* ---------- 人生进度卡片（首页，替代原问候 hero） ---------- */
+  .life-card { padding: 22px 26px; }
+  .life-head { display: flex; align-items: center; gap: 10px; }
+  .life-head .spacer { flex: 1; }
+  .life-title { display: flex; align-items: center; gap: 9px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+  .life-title svg { color: var(--accent); }
+  .life-age { font-size: 12px; font-weight: 600; color: var(--text-secondary); background: var(--surface-nested); padding: 3px 10px; border-radius: 999px; }
+  .life-target { font-size: 12.5px; color: var(--text-secondary); }
+  .life-bar { position: relative; height: 10px; border-radius: 999px; background: var(--surface-nested); overflow: hidden; margin: 16px 0 14px; }
+  .life-bar i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 999px; background: var(--accent); transition: width .5s cubic-bezier(.2,.8,.3,1); }
+  .life-cap { font-size: 12.5px; color: var(--text-secondary); }
+  .life-pct { font-size: 46px; font-weight: 800; letter-spacing: -.04em; color: var(--accent); line-height: 1.1; margin: 2px 0 10px; }
+  .life-pct .u { font-size: 22px; font-weight: 800; margin-left: 2px; }
+  .life-foot { display: flex; gap: 26px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-secondary); }
+  .life-foot b { color: var(--text); font-size: 14.5px; font-weight: 800; letter-spacing: -.01em; }
+  .life-empty { color: var(--text-secondary); font-size: var(--fs-body); padding: 18px 0 6px; }
+  .life-sep { height: 1px; background: var(--border); margin: 16px 0 14px; }
+  .life-year-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+  .life-year-head > span:first-child { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+  .life-year-pct { font-size: 14px; font-weight: 800; color: var(--module-2); letter-spacing: -.01em; }
+  .life-bar.year i { background: var(--module-2); }
+  @media (max-width: 640px){ .life-card { padding: 18px 16px; } .life-pct { font-size: 38px; } }
+
   .card { background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
   .sec-title { display:flex; align-items:center; gap:9px; font-size:var(--fs-h3); font-weight:800; margin: 18px 2px 10px; letter-spacing: -.01em; }
   .sec-title::before { content:""; width: 3px; height: 14px; border-radius: 2px; background: var(--accent); }
@@ -1483,6 +1506,8 @@ let data = store.load();
 ["readLog","sportLog","movieLog"].forEach(k=>{ if(data[k]==null) data[k]={}; });
 // 亲密健康：伴侣周期设置（日历法估算，仅供参考）
 if(data.cycle==null) data.cycle={ partner:"伴侣", lastStart:"", cycleLen:28, periodLen:5, lutealLen:14 };
+// 首页：人生进度设置（生日 / 目标年龄）
+if(data.life==null) data.life={ birth:"", target:80 };
 // 数据修复：历史上「固定收支补录/交易联动」误写入幽灵数组 data.finance（记账本实际使用 data.money），合并回正
 if(Array.isArray(data.finance)){
   const led=Array.isArray(data.money)?data.money:[];
@@ -2174,13 +2199,67 @@ function intimateTileHTML(){
     <div class="inti-bars">${bars}</div></div>`;
 }
 
+// 首页：人生进度（生日 → 目标年龄 的已过百分比 / 剩余年月）
+function lifeInfo(){
+  const L=data.life||{}; if(!L.birth) return null;
+  const b=ymdToDate(L.birth); const target=Math.max(1,+L.target||80);
+  const now=new Date();
+  const targetDate=new Date(b.getFullYear()+target, b.getMonth(), b.getDate());
+  const pct=Math.min(100,Math.max(0,(now-b)/(targetDate-b)*100));
+  let age=now.getFullYear()-b.getFullYear();
+  if(new Date(b.getFullYear()+age, b.getMonth(), b.getDate())>now) age--;
+  return { target, age:Math.max(0,age), pctStr:String(+pct.toFixed(2)),
+    yearsLeft:Math.max(0,target-Math.max(0,age)),
+    monthsLeft:Math.max(0,Math.floor((targetDate-now)/86400000/30.4375)) };
+}
+function yearInfo(){
+  const now=new Date();
+  const yStart=new Date(now.getFullYear(),0,1);
+  const yEnd=new Date(now.getFullYear()+1,0,1);
+  const yearTotal=Math.round((yEnd-yStart)/86400000);
+  const yearElapsed=Math.floor((now-yStart)/86400000);
+  const yPct=Math.min(100,Math.max(0,(now-yStart)/(yEnd-yStart)*100));
+  return { yearPctStr:String(+yPct.toFixed(2)), yearElapsed, yearTotal, yearLeft:Math.max(0,yearTotal-yearElapsed) };
+}
+function lifeTileHTML(){
+  const i=lifeInfo(); const y=yearInfo();
+  const lifeBlock = i ? `
+    <div class="life-bar"><i style="width:${i.pctStr}%"></i></div>
+    <div class="life-cap">你已经走过人生的</div>
+    <div class="life-pct">${i.pctStr}<span class="u">%</span></div>
+    <div class="life-foot"><span><b>${i.pctStr}%</b> 已过</span><span><b>${i.yearsLeft}</b> 年剩余</span><span><b>${i.monthsLeft}</b> 月剩余</span></div>` :
+    `<div class="life-empty">设置生日与目标年龄后，这里会显示你的人生进度。</div>`;
+  const ageTag = i ? `<span class="life-age">当前 ${i.age} 岁</span>` : ``;
+  const targetTag = i ? `<span class="life-target">目标 ${i.target} 岁</span>` : ``;
+  return `<div class="card life-card b12">
+    <div class="life-head"><div class="life-title">${icon("activity",17)} 人生进度 ${ageTag}</div>
+      <div class="spacer"></div>${targetTag}
+      <button class="btn ghost xs" id="btn-life-set">${icon("pen",13)}</button></div>
+    ${lifeBlock}
+    <div class="life-sep"></div>
+    <div class="life-year-head"><span>本年进度</span><span class="life-year-pct">${y.yearPctStr}%</span></div>
+    <div class="life-bar year"><i style="width:${y.yearPctStr}%"></i></div>
+    <div class="life-foot"><span><b>${y.yearElapsed}</b> 天已过</span><span><b>${y.yearLeft}</b> 天剩余（共 ${y.yearTotal} 天）</span></div>
+  </div>`;
+}
+function openLifeSettings(){
+  const L=data.life||{birth:"",target:80};
+  const ov=document.createElement("div"); ov.className="overlay";
+  ov.innerHTML=`<div class="modal"><h3>人生进度设置</h3>
+    <div class="field"><label>生日</label><input id="lf-birth" type="date" value="${L.birth||""}"/></div>
+    <div class="field"><label>目标年龄（岁）</label><input id="lf-target" type="number" min="1" max="150" value="${L.target||80}"/></div>
+    <div class="modal-actions"><div class="spacer"></div><button class="btn ghost" id="lf-cancel">取消</button><button class="btn" id="lf-save">保存</button></div></div>`;
+  document.body.appendChild(ov);
+  const close=()=>ov.remove();
+  ov.onclick=e=>{ if(e.target===ov) close(); };
+  ov.querySelector("#lf-cancel").onclick=close;
+  ov.querySelector("#lf-save").onclick=()=>{
+    data.life={ birth:ov.querySelector("#lf-birth").value||"",
+      target:Math.min(150,Math.max(1,+ov.querySelector("#lf-target").value||80)) };
+    persist(); close();
+  };
+}
 function renderHome(){
-  const now = new Date();
-  const dow = (now.getDay()+6)%7;
-  const q = CONFIG.quotes[dow % CONFIG.quotes.length];
-  const hour = now.getHours();
-  const hi = hour<5?"夜深了":hour<11?"早上好":hour<13?"中午好":hour<18?"下午好":"晚上好";
-
   // 报头（精简版）：仅日期与周数，避免与侧栏品牌、问候语三重标题
   const masthead = `<div class="masthead masthead-slim">
     <div class="m-meta">
@@ -2189,23 +2268,10 @@ function renderHome(){
     </div>
   </div>`;
 
-  // 头版大图（hero）：左侧问候+统计+时钟
-  const todoIt=data.todo||[]; const todoDone=todoIt.filter(x=>x.done).length;
-  const chkIt=data.checkin||[]; const chkDone=chkIt.filter(x=>x.log&&x.log[today()]).length;
-  const hero = `<div class="hero-banner b12">
-    <div class="hi">${hi}，${esc(CONFIG.owner)}</div>
-    <div class="sub">${esc(q)}</div>
-    <div class="hstats">
-      <div class="hstat"><span class="n" style="color:var(--accent)">${todoDone}/${todoIt.length}</span><span class="t">今日待办完成</span></div>
-      <div class="hstat"><span class="n" style="color:var(--module-2)">${chkDone}/${chkIt.length}</span><span class="t">习惯打卡</span></div>
-      <div class="hstat"><span class="n" style="color:var(--module-3)"><span id="clk">${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}</span></span><span class="t">此刻</span></div>
-    </div>
-  </div>`;
-
   $("#screen").innerHTML = `
     ${masthead}
     <div class="bento" style="margin-top:18px">
-      ${hero}
+      ${lifeTileHTML()}
     </div>
 
     ${grp("习惯打卡","HABITS")}
@@ -2228,6 +2294,7 @@ function renderHome(){
 
     ${grp("亲密健康","INTIMATE&nbsp;&nbsp;HEALTH")}
     <div class="bento">${intimateTileHTML()}</div>`;
+  const ls=$("#btn-life-set"); if(ls) ls.onclick=()=>openLifeSettings();
   wireHome();
   startClock();
   // 首页访问时若投资缓存过期则后台刷新（延时到 quotes 初始化后）
