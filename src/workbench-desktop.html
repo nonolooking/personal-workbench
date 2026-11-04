@@ -2065,11 +2065,12 @@ function habitTileHTML(){
 function todoTileHTML(){
   const it=data.todo||[]; const done=it.filter(x=>x.done).length; const pct=it.length?Math.round(done/it.length*100):0;
   const chk=icon("check",12,2.8);
-  const list = it.length ? it.map(x=>{ const m=modOf("todo"); const p=(m.priorities||[]).find(p=>p.key===x.priority);
+  const active = it.filter(x=>!x.done);
+  const list = active.length ? active.map(x=>{ const m=modOf("todo"); const p=(m.priorities||[]).find(p=>p.key===x.priority);
     return `<div class="tk-row"><div class="tk-chk js-pin-chk ${x.done?'on':''}" data-mkey="todo" data-id="${x.id}">${chk}</div>
       <span class="tk-name ${x.done?'done':''} js-pin-open" data-mkey="todo" data-id="${x.id}">${esc(x.title)}</span>
       ${p?`<span class="badge" style="background:${p.color};color:${p.text}"><span class="dot"></span>${p.label}</span>`:''}</div>`; }).join("")
-    : `<div class="focus-empty">还没有待办，去「今日计划」添加吧</div>`;
+    : `<div class="focus-empty">今天的待办都已完成，去「今日计划」添加吧</div>`;
   return `<div class="tile b5"><div class="tile-h"><span class="tic">${icon("list",16)}</span><div class="tt"><span class="en">TODO LIST</span><span class="zh">待办清单</span></div><span class="r js-open" data-open="todo">查看全部</span></div>
     <div class="tk-head"><span class="pct">${done}<span style="color:var(--text-secondary)">/${it.length}</span></span><span class="cnt">完成 ${pct}%</span><span class="bar"><i style="width:${pct}%"></i></span></div>
     <div class="tk-list">${list}</div></div>`;
@@ -2208,9 +2209,12 @@ function lifeInfo(){
   const pct=Math.min(100,Math.max(0,(now-b)/(targetDate-b)*100));
   let age=now.getFullYear()-b.getFullYear();
   if(new Date(b.getFullYear()+age, b.getMonth(), b.getDate())>now) age--;
+  const msLeft=Math.max(0, targetDate-now);
   return { target, age:Math.max(0,age), pctStr:String(+pct.toFixed(2)),
     yearsLeft:Math.max(0,target-Math.max(0,age)),
-    monthsLeft:Math.max(0,Math.floor((targetDate-now)/86400000/30.4375)) };
+    monthsLeft:Math.max(0,Math.floor(msLeft/86400000/30.4375)),
+    daysLeft:Math.floor(msLeft/86400000),
+    hoursLeft:Math.floor(msLeft/3600000) };
 }
 function yearInfo(){
   const now=new Date();
@@ -2227,7 +2231,7 @@ function lifeTileHTML(){
     <div class="life-bar"><i style="width:${i.pctStr}%"></i></div>
     <div class="life-cap">你已经走过人生的</div>
     <div class="life-pct">${i.pctStr}<span class="u">%</span></div>
-    <div class="life-foot"><span><b>${i.pctStr}%</b> 已过</span><span><b>${i.yearsLeft}</b> 年剩余</span><span><b>${i.monthsLeft}</b> 月剩余</span></div>` :
+    <div class="life-foot"><span><b>${i.yearsLeft}</b> 年剩余</span><span><b>${i.monthsLeft}</b> 月剩余</span><span><b>${i.daysLeft}</b> 天剩余</span><span><b>${i.hoursLeft}</b> 小时剩余</span></div>` :
     `<div class="life-empty">设置生日与目标年龄后，这里会显示你的人生进度。</div>`;
   const ageTag = i ? `<span class="life-age">当前 ${i.age} 岁</span>` : ``;
   const targetTag = i ? `<span class="life-target">目标 ${i.target} 岁</span>` : ``;
@@ -2257,6 +2261,7 @@ function openLifeSettings(){
     data.life={ birth:ov.querySelector("#lf-birth").value||"",
       target:Math.min(150,Math.max(1,+ov.querySelector("#lf-target").value||80)) };
     persist(); close();
+    if(typeof render==="function") render(); // 保存后立即刷新首页卡片
   };
 }
 function renderHome(){
@@ -2615,9 +2620,13 @@ function cycleInfo(){
   const c=data.cycle; if(!c||!c.lastStart) return null;
   const cycleLen=Math.max(15,+c.cycleLen||28), periodLen=Math.max(1,+c.periodLen||5), lutealLen=Math.max(8,+c.lutealLen||14);
   const S=ymdToDate(c.lastStart), T=ymdToDate(today());
-  let k=Math.ceil(Math.round((T-S)/86400000)/cycleLen); if(k<0)k=0;
-  const nextStart=new Date(S); nextStart.setDate(nextStart.getDate()+k*cycleLen);
-  const ov=new Date(nextStart); ov.setDate(ov.getDate()+(cycleLen-lutealLen));
+  let kp=Math.ceil(Math.round((T-S)/86400000)/cycleLen); if(kp<0)kp=0;
+  const nextStart=new Date(S); nextStart.setDate(nextStart.getDate()+kp*cycleLen);
+  // 排卵日：取“包含今天”的周期对应的排卵日，若已过去则顺延至下一周期
+  let kc=Math.floor(Math.round((T-S)/86400000)/cycleLen);
+  const curStart=new Date(S); curStart.setDate(curStart.getDate()+kc*cycleLen);
+  const ov=new Date(curStart); ov.setDate(ov.getDate()+(cycleLen-lutealLen));
+  if(ov<T) ov.setDate(ov.getDate()+cycleLen);
   const f=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
   return { cycleLen, periodLen, partner:(c.partner||"伴侣"),
     nextPeriod:f(nextStart), nextPeriodIn:Math.round((nextStart-T)/86400000),
@@ -2684,6 +2693,7 @@ function openCycleSettings(){
       periodLen:Math.max(1,+ov.querySelector("#cy-plen").value||5),
       lutealLen:Math.max(8,+ov.querySelector("#cy-lut").value||14) };
     persist(); close();
+    if(typeof renderModule==="function") renderModule("intimate"); // 保存后立即刷新月历与侧栏
   };
 }
 
@@ -2897,8 +2907,10 @@ function renderModule(key){
   if((m.type==="todo" && todoView==="calendar") || (m.type==="intimate" && intimateViewMode==="calendar")){
     mainContent = (m.type==="todo") ? renderTodoCalendar(key, all, searchQ) : intimateCalendarHTML(intimateYM);
   } else {
-    // 待办清单默认隐藏已完成，可点“显示已完成”临时展开
-    const listItems = (m.type==="todo" && !showDoneTodos) ? it.filter(x=>!x.done) : it;
+    // 待办清单默认隐藏已完成，可点“显示已完成”临时展开；记账本“全部记录”仅显示当月支出
+    let listItems = it;
+    if(m.type==="todo" && !showDoneTodos) listItems = it.filter(x=>!x.done);
+    else if(m.type==="finance") listItems = it.filter(x=>x.type==="expense" && (x.date||"").startsWith(curYM()));
     const doneN = m.type==="todo" ? all.filter(x=>x.done).length : 0;
     const doneToggle = (m.type==="todo" && doneN>0)
       ? `<span id="toggle-done" style="cursor:pointer;margin-left:12px;font-size:12px;color:var(--text-secondary)">${showDoneTodos?'隐藏已完成':'显示已完成 '+doneN}</span>` : '';
