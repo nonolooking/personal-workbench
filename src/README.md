@@ -1,74 +1,64 @@
 # 个人看板 · 工作台 (Personal Workbench)
 
-一个复古报刊风格的单文件个人工作台，整合了待办、习惯、记账、笔记、课表和投资看板六大模块。开箱即用，支持 PWA 加桌面，多设备同步。
+一个复古报刊风格的单文件个人工作台，整合了待办、习惯、记账、笔记、课表、投资与亲密健康等模块。本地优先、开箱即用，可选登录开启云端同步，并支持 PWA「添加到主屏幕」获得接近原生 App 的体验。
 
-> 一份 HTML，所有功能本地存储；登录后自动云端同步，多设备共享。
+> 一份 HTML，所有功能与数据都在浏览器本地；登录后自动云端同步，多设备共享。
 
 ---
 
-## ✨ 项目介绍
+## ✨ 项目特性
 
-`个人看板 · 工作台` 是一款「单文件 + 复古报刊」风格的全平台个人看板。它把日常高频使用的小工具集中到一个界面里，避免在多个 App 之间频繁切换：
-
-- **单文件部署**：核心代码只有 `workbench-desktop.html` 一个文件，丢到任何静态托管（GitHub Pages / Netlify / 本地浏览器）即可运行。
+- **单文件部署**：核心代码只有 `src/workbench-desktop.html` 一个文件（HTML + CSS + JS 全内嵌），丢到任意静态托管即可运行。
 - **本地优先**：所有数据默认保存在浏览器 `localStorage` 与 `IndexedDB`，离线也能用。
 - **云端可选**：内置 Supabase 接入，登录后数据自动云端同步，多设备无缝衔接。
-- **PWA 支持**：可"添加到主屏幕"，在 iPhone / Android / macOS / Windows 上都获得接近原生 App 的体验。
-- **复古报刊美学**：墨色中性配色 + 衬线标题 + 手写体点缀，安静、克制、有质感。
+- **PWA 可安装**：已内置 `manifest.webmanifest` 与 `service worker`，可离线使用并「添加到主屏幕」。
+- **复古报刊美学**：墨色中性配色 + 衬线大标题 + kicker 小标签 + 栏线分隔，安静、克制、有质感。
 
 ---
 
 ## 🧩 功能模块
 
-经过模块整合，左侧导航从 11 项精简为 **6 大模块**，强相关功能通过顶部子标签页切换：
+导航整合为 **7 个模块**（其中「习惯打卡」「笔记」「投资看板」为分组，内含子标签）：
 
-| 模块 | 子模块 / 类型 | 说明 |
+| 模块 | 子标签 | 说明 |
 | --- | --- | --- |
-| 📋 **今日待办** | todo | 今日任务清单，P0/P1/P2 优先级；**截止日期/逾期标红**、**子任务清单** |
-| 🌿 **习惯打卡** | 习惯 · 阅读 · 运动 | 子标签切换；打卡月历、书籍进度+摘录、运动分钟数；**连续打卡天数/最长连续、月度频率目标** |
-| 💰 **记账本** | finance | 收入/支出、分类占比、按月汇总；**信封预算（分类额度 + 超支预警）** |
-| ✍️ **笔记收藏** | 日记 · 收藏 | 子标签切换；心情日记（图片/音频）、稍后读；**标签 + 全文搜索** |
-| 🏫 **学校课表** | timetable | 周一至周日课程、课外补习自定义时段；**单/双周课表**、教师/教室/**作业** |
-| 📈 **投资看板** | 持仓 · 交易流水 | 子标签切换；持仓盈亏、大盘指数、买卖流水；**免 token 行情 + 加权成本会计 + 多资产类** |
+| 📋 **今日待办** | — | 今日任务清单，P0/P1/P2 优先级；截止日期/逾期标红、子任务清单、日历视图 |
+| 🌿 **习惯打卡** | 打卡 | 自由增删每日小习惯（如阅读 / 运动 / 电影）；打卡月历、周/月目标进度 |
+| 💰 **记账本** | — | 收入/支出、分类占比、按月汇总；**信封预算**（总预算 + 分类额度 + 超支预警） |
+| ✍️ **笔记** | 日记 | 心情日记（心情标签 + 图片/音频），灵感与摘录记录 |
+| 🏫 **学校课表** | — | 周一至周日课程、课外自定义时段；单/双周课表、教师/教室/作业 |
+| 📈 **投资看板** | 持仓 · 交易流水 | 持仓盈亏、大盘指数、买卖流水；免 token 行情 + 加权成本会计 + 多资产类 |
+| 💗 **亲密健康** | — | 身体 / 亲密健康记录（时间·对象·保护措施·时长·评分·心情）轻量追踪 |
 
-**首页**还提供：
+> 笔记模块的「收藏」功能已废弃，当前仅保留日记。
+
+**首页**作为聚合视图，提供：
 - 每日一句（按星期轮换）
-- 今日概览环形（待办完成率、习惯综合进度、今日课表）
-- 快速记录按钮（记打卡 / 记想法 / 记一笔 / 记行情）
-- 番茄钟 / 心情曲线 / 媒体备份
-
----
-
-## 🆕 功能增强（参考成熟开源项目）
-
-下列增强在保持「单文件 / 本地优先 / 离线 PWA」架构不变的前提下，借鉴了 GitHub 高星项目的最佳实践：
-
-| 模块 | 新增能力 | 参考项目思路 |
-| --- | --- | --- |
-| 💰 记账本 | **信封预算**：为各分类设月度额度，超出标红预警；含合计超支提示 | Actual Budget（信封预算法 / 本地优先） |
-| 🌿 习惯打卡 | **连续打卡天数 + 最长连续**，卡片与侧栏同步展示；**月度频率目标**（本月 X/Y 天） | Loop Habit Tracker / Habitica（连续天数、频率目标） |
-| 📋 今日待办 | **截止日期 + 逾期标红**；**子任务清单**（勾选/增删，卡片显示完成进度） | Super Productivity（截止、子任务、计时） |
-| 🏫 学校课表 | **单/双周课表**（本周类型提示、非本周课淡化）；每课**教师 / 教室 / 作业** | 各平台课表 App（单双周、课程属性） |
-| ✍️ 笔记收藏 | **标签**（可搜索）+ **全文搜索**（标题/内容/标签） | Joplin / Logseq（标签、本地全文检索） |
-
-> 整体路线与 Actual、Super Productivity、Joplin 一致：**本地优先 + 可选云同步**，无需后端即可使用。
+- 今日概览（待办完成率、习惯综合进度、今日课表）
+- 人生进度卡（依生辰与目标年龄推算余生进度）
+- 快捷记录（记打卡 / 记想法 / 记一笔 / 记行情）
+- 番茄钟 / 心情曲线 / 媒体备份入口
 
 ---
 
 ## 🚀 如何使用
 
-### 1. 直接打开
-下载 `workbench-desktop.html`，双击用浏览器打开即可使用。所有数据保存在浏览器本地，开箱即用。
+### 1. 本地预览（开发 / 调试）
+仓库根目录带了一个零依赖的 Node 静态服务器：
+
+```bash
+node _server.js
+# 浏览器打开 http://localhost:8642/workbench-desktop.html
+```
+
+> 直接双击 `workbench-desktop.html` 以 `file://` 打开也能用，但 Service Worker 与部分 `fetch` 需要 `http(s)` 环境，建议用上面的本地服务器或静态托管来体验完整 PWA 能力。
 
 ### 2. 在线访问（推荐）
-部署到 GitHub Pages / Netlify / Vercel 后，通过 URL 访问，可以：
-- 跨设备使用（iPhone / Mac / Windows / Android）
-- "添加到主屏幕"获得 App 体验
-- 登录后开启云端同步
+部署到 GitHub Pages / Netlify / Vercel 后，通过 URL 访问，可跨设备使用、「添加到主屏幕」获得 App 体验、登录后开启云端同步。
 
 ### 3. 登录同步
 点击左上角同步状态（"未登录·仅本地"），注册/登录账号后：
-- 数据自动云端同步（800ms 防抖推送）
+- 数据自动云端同步（防抖推送）
 - 切换设备登录即可拉取最新数据
 - 未登录时数据仅在本地，完全离线可用
 
@@ -76,77 +66,59 @@
 
 ## 📦 如何部署
 
+部署单元是 **`src/` 整个文件夹**——把它传到静态托管的根目录即可（manifest/sw 与 HTML 同目录，相对路径会自动解析）。
+
 ### 方式一：GitHub Pages（推荐，免费、永久托管）
-
-1. **Fork 或上传本仓库到 GitHub**
-   ```bash
-   git init
-   git add .
-   git commit -m "init: 个人看板工作台"
-   git branch -M main
-   git remote add origin https://github.com/<你的用户名>/<仓库名>.git
-   git push -U origin main
-   ```
-
-2. **开启 Pages**
-   - 进入仓库 `Settings → Pages`
-   - Source 选择 `Deploy from a branch`
-   - Branch 选 `main` / `(root)`，保存
-
-3. **访问地址**
-   等待 1~2 分钟后访问：
+1. 把 `src/` 下的文件上传 / 推到仓库（或 Fork 本仓库后删除根目录冗余、仅保留 `src/` 内容）。
+2. 进入仓库 `Settings → Pages`，Source 选 `Deploy from a branch`，Branch 选 `main` / `(root)`，保存。
+3. 等待 1~2 分钟后访问：
    ```
    https://<你的用户名>.github.io/<仓库名>/workbench-desktop.html
    ```
 
-> 💡 若希望根路径直接打开（去掉 `workbench-desktop.html`），可把文件改名为 `index.html`。
+> 💡 若希望根路径直接打开（去掉 `workbench-desktop.html`），把文件改名为 `index.html` 即可。
 
 ### 方式二：Netlify / Vercel 拖拽部署
-直接把 `workbench-desktop.html` 拖到 [Netlify Drop](https://app.netlify.com/drop) 或 Vercel 部署面板即可，几秒拿到一个 HTTPS 链接。
+直接把 `src/` 文件夹拖到 [Netlify Drop](https://app.netlify.com/drop) 或 Vercel 部署面板，几秒拿到一个 HTTPS 链接。
 
-### 方式三：本地静态服务器
+### 方式三：任意静态服务器
 ```bash
-# 任选其一
+# 进入 src 目录后任选其一
 python3 -m http.server 8080
 npx serve .
 ```
-浏览器访问 `http://localhost:8080/workbench-desktop.html`。
+浏览器访问对应地址下的 `workbench-desktop.html`。
 
 ---
 
 ## 📱 添加到主屏幕（PWA 原生体验）
 
-本项目已内置 `manifest.webmanifest` 和 `service worker`，可直接"添加到主屏幕"，伪装成原生 App。
+项目已内置 `manifest.webmanifest` 和 `service worker`，注册成功后可「添加到主屏幕」，伪装成原生 App。
 
 ### iPhone / iPad（iOS）
-1. 用 **Safari** 打开部署后的网址（GitHub Pages 链接）
+1. 用 **Safari** 打开部署后的网址
 2. 点底部分享按钮 → 滑动选 **"添加到主屏幕"**
 3. 命名（如"我的看板"）→ 添加
-4. 主屏幕会出现独立图标，点开是全屏无浏览器栏的 App 体验
+4. 主屏幕出现独立图标，点开是全屏无浏览器栏的 App 体验
 
 > ⚠️ iOS 上必须用 **Safari**，Chrome / 微信内置浏览器不支持加桌面。
 
-### macOS（桌面 PWA）
-1. 用 **Safari** 或 **Chrome** 打开网址
-2. **Safari**：菜单栏 `文件 → 添加到 Dock 栏`
-3. **Chrome**：地址栏右侧 `⋮ → 投放、保存和分享 → 安装页面作为应用`
-4. 启动器（Launchpad / Dock / 启动台）里会出现独立 App，独立窗口运行
+### macOS
+- **Safari**：菜单栏 `文件 → 添加到 Dock 栏`
+- **Chrome**：地址栏右侧 `⋮ → 投放、保存和分享 → 安装页面作为应用`
 
 ### Windows
-1. 用 **Edge** 或 **Chrome** 打开网址
-2. 地址栏右侧 `⋯ → 应用 → 将此站点作为应用安装`（Edge）或 `⋮ → 投放、保存和分享 → 安装页面作为应用`（Chrome）
-3. 桌面 / 开始菜单会出现独立快捷方式，双击打开是独立窗口
+- **Edge**：地址栏右侧 `⋯ → 应用 → 将此站点作为应用安装`
+- **Chrome**：地址栏右侧 `⋮ → 投放、保存和分享 → 安装页面作为应用`
 
 ### Android
-1. 用 **Chrome** 打开网址
-2. 菜单 `⋮ → 添加到主屏幕`
-3. 桌面出现 PWA 图标，可全屏运行
+用 **Chrome** 打开网址，菜单 `⋮ → 添加到主屏幕`。
 
 ---
 
 ## 🔧 配置 Supabase 云同步（可选）
 
-项目内置了一个公开 Supabase 实例用于演示。如需自建：
+应用已内置一个公开 Supabase 实例用于演示。如需自建：
 
 1. 到 [supabase.com](https://supabase.com) 注册并新建项目
 2. 在 SQL Editor 中执行：
@@ -180,26 +152,24 @@ npx serve .
 
 ### 资产类型（kind）
 持仓支持的 `kind`：`stock`(股票) / `fund`(基金) / `gold`(黄金) / `index`(指数) / `bond`(债券) / `crypto`(加密) / `cash`(现金)。
-- **现金类**：面值即数量，无行情波动；建仓时「数量」填金额（元），「成本价」随意。现金类会并入「净资产管理」的现金段，与记账本现金合并展示。
+- **现金类**：面值即数量，无行情波动；建仓时「数量」填金额（元），「成本价」随意。现金类会并入净资产管理。
 - **债券**：交易所债券填代码（如 `019xxx.SH`）自动取价；非交易所债券留空代码则按面值稳定展示。
 - **加密**：`code` 直接填 CoinGecko id（如 `bitcoin`），实时人民币价与 24h 涨跌。
 
 ### 会计逻辑（自动从交易流水计算）
-持仓盈亏**不再只算成本/现价差**，而是按该代码的全部交易流水（买入/卖出/分红/费用）滚动计算：
+持仓盈亏按该代码的全部交易流水（买入/卖出/分红/费用）滚动计算：
 - **加权成本价**：多次买入自动加权，买入费用摊入成本。
 - **已实现盈亏**：卖出时 `(卖价 − 当时成本) × 数量 − 卖出费`。
 - **累计分红**：分红金额（股数×每股 或 一次性金额，扣税/费）。
 - **总收益** = 浮动盈亏 + 已实现盈亏 + 累计分红，总览处拆分展示「浮 / 已 / 红」。
 - 无交易的持仓回退到其自身 `qty` / `costPrice`，向后兼容。
 
-### 自托管行情代理（可选，仅 TuShare 兜底用）
-若想用 TuShare 补充行情（需 Token），公共 CORS 代理易失效。仓库内置 `netlify/functions/quote.js` 轻量代理：
-1. 把该文件放到仓库 `netlify/functions/` 目录推到 GitHub，Netlify 自动部署。
-2. 在 `workbench-desktop.html` 的 `CONFIG.invest` 设置：
-   ```js
-   proxy: "/.netlify/functions/quote?url="   // 留空则退回公共代理
-   ```
-该代理同时支持通用转发与 TuShare POST，Token 也可经环境变量 `TUSHARE_TOKEN` 注入（更安全）。默认实时行情**无需**此代理。
+### 自托管行情代理（可选）
+若想用 TuShare 等需 Token 的源补充行情（公共 CORS 代理易失效），可在 `src/netlify/functions/` 放置一个转发函数（如 `quote.js`），并在 `workbench-desktop.html` 的 `CONFIG.invest.proxy` 设置：
+```js
+proxy: "/.netlify/functions/quote?url="   // 留空则退回公共代理
+```
+该函数同时支持通用转发与 TuShare POST，Token 可经环境变量注入（更安全）。默认实时行情**无需**此代理。
 
 ---
 
@@ -207,14 +177,17 @@ npx serve .
 
 ```
 .
-├── workbench-desktop.html   # 唯一的核心文件（HTML + CSS + JS 全部内嵌）
-├── manifest.webmanifest     # PWA 清单（图标、名称、启动方式）
-├── sw.js                    # Service Worker（离线缓存）
-├── netlify/
-│   └── functions/
-│       └── quote.js         # 自托管行情/TuShare 代理（可选，部署到 Netlify）
-├── assets/                  # 头像 / 横幅 等静态资源
-└── README.md
+├── _server.js                  # 本地开发静态服务器（Node，端口 8642，从 src/ 提供文件）
+├── 说明.txt                    # 项目简介与 SHA256
+├── personal-workbench-src.zip  # 打包好的 src/ 部署单元
+└── src/                        # 部署单元（整个文件夹即为线上内容）
+    ├── workbench-desktop.html  # 唯一核心文件（HTML + CSS + JS 全内嵌）
+    ├── manifest.webmanifest    # PWA 清单（名称、图标、启动方式）
+    ├── sw.js                   # Service Worker（应用壳离线缓存）
+    ├── assets/                 # 头像 avatar.jpg / 横幅 greet-banner.jpg
+    ├── netlify/
+    │   └── functions/          # （可选）自托管行情代理目录，默认留空
+    └── README.md
 ```
 
 ---
@@ -228,10 +201,13 @@ npx serve .
 是的，每个浏览器本地数据独立。要跨浏览器/跨设备共享，请登录云同步。
 
 **Q：能否完全离线使用？**
-可以。注册 Service Worker 后，第一次加载完成即可离线访问（云同步需要联网）。
+可以。注册 Service Worker 后，首次加载完成即可离线访问（云同步需要联网）。
 
 **Q：PWA 图标怎么改？**
-替换 `manifest.webmanifest` 中的 `icons` 路径，或替换 `assets/` 中的图标文件。
+替换 `manifest.webmanifest` 中的 `icons`（当前为内联 SVG 数据 URI，也可改为指向 `assets/` 下的图片文件）。
+
+**Q：如何重置所有数据？**
+应用使用存储键 `personal-dashboard-v2`。在浏览器开发者工具清除该站点 `localStorage` / `IndexedDB`，或换一个存储键（修改 `workbench-desktop.html` 顶部 `CONFIG.storageKey`）即可强制重置。
 
 ---
 
