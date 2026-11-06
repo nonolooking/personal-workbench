@@ -1,32 +1,19 @@
 {
-  "name": "个人看板 · 工作台",
-  "short_name": "看板",
-  "description": "复古报刊风格的个人看板：待办·习惯·记账·笔记·课表·投资",
-  "start_url": "./workbench-desktop.html",
+  "name": "我的看板 · 个人工作台",
+  "short_name": "我的看板",
+  "description": "复古报刊风个人工作台：人生进度、习惯、记账、亲密健康一站式记录",
+  "lang": "zh-CN",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "any",
-  "background_color": "#f7f1de",
-  "theme_color": "#3a3530",
-  "lang": "zh-CN",
+  "background_color": "#f4f3f0",
+  "theme_color": "#2a2622",
   "icons": [
     {
-      "src": "assets/avatar.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
-      "purpose": "any"
-    },
-    {
-      "src": "assets/avatar.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any"
-    },
-    {
-      "src": "assets/avatar.jpg",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%232a2622'/%3E%3Ctext x='50%25' y='56%25' font-family='Georgia,serif' font-size='96' fill='%23f4f3f0' text-anchor='middle' dominant-baseline='middle'%3E日%3C/text%3E%3C/svg%3E",
       "sizes": "any",
-      "type": "image/jpeg",
-      "purpose": "maskable"
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }

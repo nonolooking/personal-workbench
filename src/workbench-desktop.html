@@ -1126,6 +1126,38 @@
 .inti-stats b{ color:var(--text);font-size:15px;margin-right:3px; }
 .inti-bars{ display:flex;align-items:flex-end;gap:6px;height:42px;margin-top:10px; }
 .inti-bars i{ flex:1;background:color-mix(in srgb, var(--module-8) 55%, var(--surface-card));border-radius:4px 4px 0 0;min-height:4px; }
+
+  /* 人生周数网格 */
+  .life-weeks { margin-top:14px; border:1px solid var(--border); border-radius:12px; background:var(--surface-nested); padding:10px; overflow:auto; max-height:248px; }
+  .life-weeks svg { display:block; width:100%; height:auto; }
+  .life-weeks-cap { font-size:11.5px; color:var(--text-secondary); margin-top:8px; }
+  .life-weeks-cap b { color:var(--accent); }
+
+  /* 习惯打卡热力图（GitHub 式贡献网格） */
+  .hm-wrap { overflow-x:auto; padding-bottom:4px; }
+  .hm-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-top:1px solid var(--border); }
+  .hm-row:first-child { border-top:none; }
+  .hm-label { display:flex; align-items:center; gap:6px; width:64px; flex:0 0 auto; font-size:12.5px; font-weight:600; color:var(--text); }
+  .hm-dot { width:9px; height:9px; border-radius:3px; }
+  .hm-grid { display:flex; gap:3px; flex:1; min-width:0; }
+  .hm-week { display:flex; flex-direction:column; gap:3px; }
+  .hm-cell { width:9px; height:9px; border-radius:2px; background:var(--surface-nested); }
+  .hm-cell.on { background:var(--hc, var(--accent)); }
+  .hm-cell.fut { visibility:hidden; }
+  .hm-stat { flex:0 0 auto; font-size:11.5px; color:var(--text-secondary); white-space:nowrap; }
+  .hm-stat b { font-size:14px; }
+
+  /* 打印 / 导出日报 */
+  @media print {
+    :root { color-scheme:light; }
+    body { background:#fff !important; }
+    .navi, .bottom-nav, .toolbar, .overlay, #btn-export, .backup-bar, .float, .tabbar { display:none !important; }
+    #screen { padding:0 !important; max-width:840px; margin:0 auto; }
+    .bento { display:block !important; gap:14px !important; }
+    .tile, .card, .side-card, .modcard, .panel, .mini, .rec, .recurring-box, .fin-overview, .asset-alloc, .liabilities-box { box-shadow:none !important; break-inside:avoid; border:1px solid #ddd !important; }
+    .life-weeks, .hm-wrap { max-height:none !important; overflow:visible !important; }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
 </style>
 </head>
 <body>
@@ -1412,6 +1444,7 @@ const ICONS = {
   film:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
   square:'<rect x="5" y="5" width="14" height="14" rx="2"/>',
   heart:'<path d="M12 20s-7-4.6-7-9.3A3.7 3.7 0 0 1 12 7a3.7 3.7 0 0 1 7 3.7C19 15.4 12 20 12 20z"/>',
+  printer:'<path d="M6 9V4h12v5"/><rect x="4" y="9" width="16" height="7" rx="1.5"/><path d="M8 16h8v5H8z"/>',
 };
 function icon(name, size=22, sw=1.7){
   const path = ICONS[name] || ICONS.grid;
@@ -1434,6 +1467,9 @@ const FIXED_HABITS = ["read","sport","movie"];   // 固定习惯分类（不可�
 function habitLogKey(k){ return k+"Log"; }       // 模块级“今日打卡”日志键
 function habitTodayOn(k){ const L=data[habitLogKey(k)]||{}; return !!L[today()]; }
 function toggleHabitToday(k){ const L=habitLogKey(k); data[L]=data[L]||{}; const t=today(); if(data[L][t]) delete data[L][t]; else data[L][t]=true; }
+function isoOf(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function habitStreak(k){ const L=data[habitLogKey(k)]||{}; const d=new Date(); if(!L[today()]) d.setDate(d.getDate()-1); let s=0; while(L[isoOf(d)]){ s++; d.setDate(d.getDate()-1); } return s; }
+function habitYearCount(k){ const L=data[habitLogKey(k)]||{}; const y=new Date().getFullYear(); return Object.keys(L).filter(x=>x.startsWith(y+"-")).length; }
 // 取某天所在自然周（周一~周日）的日期字符串数组
 function weekKeys(anchor){
   const dt=new Date(anchor+"T00:00:00");
@@ -2018,6 +2054,19 @@ function habitTileHTML(){
     <div class="hbt-scroll"><table class="habit-tb"><thead><tr><th class="hh">习惯</th>${ths}<th class="hr">完成率</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
+/* 习惯打卡热力图：固定习惯近 52 周贡献网格 + 连胜 */
+function habitHeatmapHTML(){
+  const map=[["read","var(--module-1)"],["sport","var(--module-2)"],["movie","var(--module-3)"]];
+  const HABIT_NAMES={read:"阅读",sport:"运动",movie:"电影"};
+  const end=new Date(); const start=new Date(end); start.setDate(start.getDate()-363);
+  const lead=(start.getDay()+6)%7; start.setDate(start.getDate()-lead);
+  const weeks=[]; const cur=new Date(start);
+  while(cur<=end){ const wk=[]; for(let i=0;i<7;i++){ wk.push(new Date(cur)); cur.setDate(cur.getDate()+1); } weeks.push(wk); }
+  const cells=(log)=> weeks.map(wk=>`<div class="hm-week">`+wk.map(d=>{ const k=isoOf(d); const on=!!log[k]; const fut=d>end; return `<i class="hm-cell ${on?'on':''} ${fut?'fut':''}" title="${k}${on?' · 已打卡':''}"></i>`; }).join("")+`</div>`).join("");
+  const rows=map.map(([k,c])=>{ const log=data[habitLogKey(k)]||{}; const st=habitStreak(k); const yc=habitYearCount(k);
+    return `<div class="hm-row"><div class="hm-label"><span class="hm-dot" style="background:${c}"></span>${esc(HABIT_NAMES[k]||k)}</div><div class="hm-grid" style="--hc:${c}">${cells(log)}</div><div class="hm-stat"><b style="color:${c}">${st}</b> 连胜 · 本年 ${yc} 天</div></div>`; }).join("");
+  return `<div class="tile b12"><div class="tile-h"><span class="tic">${icon("flame",16)}</span><div class="tt"><span class="en">STREAK HEATMAP</span><span class="zh">习惯打卡热力图</span></div><span class="r">近 52 周</span></div><div class="hm-wrap">${rows}</div></div>`;
+}
 /* 待办清单（仪表盘式，就地勾选） */
 function todoTileHTML(){
   const it=data.todo||[]; const done=it.filter(x=>x.done).length; const pct=it.length?Math.round(done/it.length*100):0;
@@ -2188,7 +2237,8 @@ function lifeTileHTML(){
     <div class="life-bar"><i style="width:${i.pctStr}%"></i></div>
     <div class="life-cap">你已经走过人生的</div>
     <div class="life-pct">${i.pctStr}<span class="u">%</span></div>
-    <div class="life-foot"><span><b>${i.yearsLeft}</b> 年剩余</span><span><b>${i.monthsLeft}</b> 月剩余</span><span><b>${i.daysLeft}</b> 天剩余</span><span><b>${i.hoursLeft}</b> 小时剩余</span></div>` :
+    <div class="life-foot"><span><b>${i.yearsLeft}</b> 年剩余</span><span><b>${i.monthsLeft}</b> 月剩余</span><span><b>${i.daysLeft}</b> 天剩余</span><span><b>${i.hoursLeft}</b> 小时剩余</span></div>
+    ${lifeWeeksHTML()}` :
     `<div class="life-empty">设置生日与目标年龄后，这里会显示你的人生进度。</div>`;
   const ageTag = i ? `<span class="life-age">当前 ${i.age} 岁</span>` : ``;
   const targetTag = i ? `<span class="life-target">目标 ${i.target} 岁</span>` : ``;
@@ -2202,6 +2252,21 @@ function lifeTileHTML(){
     <div class="life-bar year"><i style="width:${y.yearPctStr}%"></i></div>
     <div class="life-foot"><span><b>${y.yearElapsed}</b> 天已过</span><span><b>${y.yearLeft}</b> 天剩余（共 ${y.yearTotal} 天）</span></div>
   </div>`;
+}
+function lifeWeeksHTML(){
+  const L=data.life||{}; if(!L.birth) return "";
+  const b=ymdToDate(L.birth); const target=Math.max(1,+L.target||80);
+  const now=new Date(); const wkMs=604800000;
+  const total=target*52; const elapsed=Math.floor((now-b)/wkMs);
+  const cell=6, gap=1.5, cols=52;
+  let rects="";
+  for(let i=0;i<total;i++){
+    const r=Math.floor(i/cols), c=i%cols; const lived=i<=elapsed; const cur=i===elapsed;
+    const fill=cur?"var(--module-2)":(lived?"var(--accent)":"var(--border)");
+    rects+=`<rect x="${(c*(cell+gap)).toFixed(1)}" y="${(r*(cell+gap)).toFixed(1)}" width="${cell}" height="${cell}" rx="1.2" fill="${fill}"></rect>`;
+  }
+  const w=cols*(cell+gap), h=Math.ceil(total/cols)*(cell+gap);
+  return `<div class="life-weeks"><svg viewBox="0 0 ${w.toFixed(1)} ${h.toFixed(1)}" width="100%" preserveAspectRatio="xMinYMin meet">${rects}</svg><div class="life-weeks-cap">每一格 = 一周 · 已走过 <b>${elapsed}</b> / ${total} 周</div></div>`;
 }
 function openLifeSettings(){
   const L=data.life||{birth:"",target:80};
@@ -2228,6 +2293,7 @@ function renderHome(){
       <span>${dateStr()}</span>
       <span class="price">第 ${weekNum()} 周</span>
     </div>
+    <button class="btn ghost xs" id="btn-export">${icon("printer",13)} 导出日报</button>
   </div>`;
 
   $("#screen").innerHTML = `
@@ -2238,6 +2304,8 @@ function renderHome(){
 
     ${grp("习惯打卡","HABITS")}
     <div class="bento">${habitTileHTML()}</div>
+    ${grp("打卡热力图","STREAK HEATMAP")}
+    <div class="bento">${habitHeatmapHTML()}</div>
 
     ${grp("今日待办","TODAY'S&nbsp;&nbsp;TASKS")}
     <div class="bento">${todoTileHTML()}</div>
@@ -2257,6 +2325,7 @@ function renderHome(){
     ${grp("亲密健康","INTIMATE&nbsp;&nbsp;HEALTH")}
     <div class="bento">${intimateTileHTML()}</div>`;
   const ls=$("#btn-life-set"); if(ls) ls.onclick=()=>openLifeSettings();
+  const eb=$("#btn-export"); if(eb) eb.onclick=()=>window.print();
   wireHome();
   startClock();
   // 首页访问时若投资缓存过期则后台刷新（延时到 quotes 初始化后）
