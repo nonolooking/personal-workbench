@@ -467,9 +467,9 @@
   .rec.rec-layout-quote .quote-meta { margin-top:10px; font-size:12px; color:var(--text-tertiary); }
 
 
-  /* module two-column layout: 左记录 / 右统计侧栏 */
-  .mod-layout { display:grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; margin-top: 14px; }
-  .mod-side { display:flex; flex-direction:column; gap: 12px; position: sticky; top: 16px; }
+  /* module layout: 记录区单列铺满；统计总结统一收拢到「复盘」模块 */
+  .mod-layout { display:grid; grid-template-columns: 1fr; gap: 16px; align-items: start; margin-top: 14px; }
+  .mod-side { display:flex; flex-direction:column; gap: 12px; }
   .side-card { background:var(--surface-card); border:1px solid var(--border); border-radius:var(--radius-tile); box-shadow:var(--shadow-card); padding:var(--pad-card); }
   .side-card .sh { display:flex; align-items:center; gap:10px; font-size:13px; font-weight:800; margin-bottom:12px; }
   .side-card .sh svg { width:26px; height:26px; padding:5px; border-radius:8px; flex:0 0 auto;
@@ -824,6 +824,44 @@
   .rv-budget input { width:120px; padding:6px 8px; border:1px solid var(--border-input); border-radius:6px;
     background:var(--surface-nested); color:var(--text); font-size:12px; }
   .rv-budget .btn { padding:6px 12px; font-size:12px; }
+  /* 复盘卡片标题右侧小字 / 环比标记 */
+  .rv-cap { margin-left:auto; font-size:11px; font-weight:500; color:var(--text-tertiary); }
+  .rv-delta { font-size:10.5px; font-weight:700; margin-left:3px; }
+  .rv-delta.up, .cm-up { color:var(--module-2); }
+  .rv-delta.down, .cm-down { color:var(--danger); }
+  .rv-delta.flat, .cm-flat { color:var(--text-tertiary); }
+  /* 各板块统计：从模块页收拢到复盘，可折叠，浅底无框 */
+  .rv-mod-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; margin-top:14px; align-items:start; }
+  .rv-mod { background:var(--surface-nested); border-radius:var(--radius-card); padding:14px; }
+  .rv-mod > summary { display:flex; align-items:center; gap:9px; font-size:13.5px; font-weight:800; cursor:pointer; list-style:none; }
+  .rv-mod > summary::-webkit-details-marker { display:none; }
+  .rv-mod > summary::after { content:""; width:7px; height:7px; margin-left:auto; flex:0 0 auto;
+    border-right:1.6px solid var(--text-tertiary); border-bottom:1.6px solid var(--text-tertiary);
+    transform:rotate(45deg); transition:transform .15s; }
+  .rv-mod[open] > summary::after { transform:rotate(-135deg); }
+  .rv-mod-ic { width:28px; height:28px; border-radius:9px; display:grid; place-items:center; flex:0 0 auto; }
+  .rv-mod-cnt { font-size:11.5px; font-weight:500; color:var(--text-tertiary); }
+  .rv-mod-body { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+  .rv-mod-body .side-card { border:none; box-shadow:none; border-radius:12px; }
+  .rv-mod-body .side-card .sh { margin-bottom:8px; }
+  /* 投资表现 · 本月收益 */
+  .rv-im { padding:12px; background:var(--surface-nested); border-radius:12px; margin-bottom:12px; }
+  .rv-im-hd { font-size:11.5px; color:var(--text-secondary); font-weight:600; display:flex; align-items:center; gap:6px; }
+  .rv-im-big { font-size:26px; font-weight:800; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin:4px 0 8px; }
+  .rv-im-big.up { color:var(--module-2); } .rv-im-big.down { color:var(--danger); }
+  .rv-im-rows { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:11.5px; color:var(--text-secondary); }
+  .rv-im-rows b { color:var(--text); font-variant-numeric:tabular-nums; }
+  /* 习惯打卡 · 本月对比上月（模块页概览） */
+  .cm-compare { margin-bottom:14px; }
+  .cm-total { display:flex; align-items:baseline; gap:8px; margin-bottom:10px; }
+  .cm-total b { font-size:26px; font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .cm-delta { margin-left:auto; font-size:12.5px; font-weight:700; }
+  .cm-delta.up { color:var(--module-2); } .cm-delta.down { color:var(--danger); } .cm-delta.flat { color:var(--text-tertiary); }
+  .cm-row { display:grid; grid-template-columns:1fr auto auto; gap:10px; align-items:center; padding:6px 0; font-size:12px; }
+  .cm-row + .cm-row { border-top:1px dashed var(--border); }
+  .cm-val { font-variant-numeric:tabular-nums; font-weight:700; color:var(--text); }
+  .cm-prev { font-size:11px; color:var(--text-tertiary); }
+  .cm-sign { min-width:44px; text-align:right; font-size:11.5px; font-weight:700; }
   .tc-strip::-webkit-scrollbar { height:6px; }
   .tc-strip::-webkit-scrollbar-thumb { background:var(--border); border-radius:999px; }
   .tc-card { padding:12px 14px; background:var(--surface-nested);
@@ -2047,6 +2085,29 @@ function habitTileHTML(){
     <div class="hbt-scroll"><table class="habit-tb"><thead><tr><th class="hh">习惯</th>${ths}<th class="hr">完成率</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
+/* 习惯打卡：本月打卡天数对比上月（模块页概览） */
+function checkinCompareHTML(){
+  const items=data.checkin||[]; if(!items.length) return "";
+  const ym=curYM(), last=prevYM(ym);
+  const days=(log,y)=> log?Object.keys(log).filter(d=>d.startsWith(y)&&log[d]).length:0;
+  let cur=0, prev=0;
+  const rows=items.map(x=>{
+    const c=days(x.log,ym), p=days(x.log,last), d=c-p;
+    cur+=c; prev+=p;
+    const cls=d>0?"up":(d<0?"down":"flat");
+    const sign=d>0?`▲ +${d}`:(d<0?`▼ ${d}`:`— 持平`);
+    return `<div class="cm-row"><div class="rv-name">${esc(x.title||"")}</div>
+      <div class="cm-val">${c} <span class="cm-prev">/ 上月 ${p} 天</span></div>
+      <div class="cm-sign ${cls}">${sign}</div></div>`;
+  }).join("");
+  const d=cur-prev, cls=d>0?"up":(d<0?"down":"flat");
+  const dTxt=d>0?`▲ +${d} 天`:(d<0?`▼ ${d} 天`:`— 与上月持平`);
+  return `<div class="rv-card cm-compare">
+    <div class="rv-hd">${icon("leaf",15)} 本月打卡 <span class="rv-cap">对比 ${+last.slice(5)} 月</span></div>
+    <div class="cm-total"><b>${cur}</b> 天 <span class="rv-g">上月 ${prev} 天</span><span class="cm-delta ${cls}">${dTxt}</span></div>
+    ${rows}</div>`;
+}
+
 /* 待办清单（仪表盘式，就地勾选） */
 function todoTileHTML(){
   const it=data.todo||[]; const done=it.filter(x=>x.done).length; const pct=it.length?Math.round(done/it.length*100):0;
@@ -2767,10 +2828,11 @@ function renderInsight(){
     const moItems=items.filter(x=>x.monthGoal);
     const moRows=moItems.map(x=>{
       const mc=countDays(x.log,insightMonth); const goal=+x.monthGoal||0; const pct=goal?Math.min(100,Math.round(mc/goal*100)):0;
-      const lmc=countDays(x.log,lastYM); const lpct=goal?Math.min(100,Math.round(lmc/goal*100)):0;
-      const delta=pct-lpct; const dTxt=delta>0?` ▲${delta}`:(delta<0?` ▼${Math.abs(delta)}`:` —`);
+      const lmc=countDays(x.log,lastYM);
+      const dd=mc-lmc; const ddCls=dd>0?"up":(dd<0?"down":"flat");
+      const dTxt=dd>0?`▲ +${dd} 天`:dd<0?`▼ ${dd} 天`:`— 持平`;
       const cls=pct>=100?"done":(pct>=60?"ok":"warn");
-      return `<div class="rv-row ${cls}"><div class="rv-name">${esc(x.title||"")}</div><div class="rv-bar"><i style="width:${pct}%"></i></div><div class="rv-val">${mc}<span class="rv-g">/${goal} 天</span></div><div class="rv-pct ${cls}">${pct}%<span class="rv-delta">${dTxt}</span></div></div>`;
+      return `<div class="rv-row ${cls}"><div class="rv-name">${esc(x.title||"")}</div><div class="rv-bar"><i style="width:${pct}%"></i></div><div class="rv-val">${mc}<span class="rv-g">/${goal} 天 · 上月 ${lmc}</span></div><div class="rv-pct ${cls}">${pct}%<span class="rv-delta ${ddCls}">${dTxt}</span></div></div>`;
     }).join("");
     const moCard= moRows?`<div class="rv-card"><div class="rv-hd">${icon("leaf",15)} 习惯打卡 · 本月 <span class="rv-cap">对比上月</span></div>${moRows}</div>`:"";
     return wkCard+moCard;
@@ -2814,9 +2876,18 @@ function renderInsight(){
 
   // 投资复盘 + 净资产聚合（月底自动写入资产快照）
   maybeSnapshotAsset();
-  const investHTML=investmentReviewHTML();
+  const investHTML=investmentReviewHTML(insightMonth);
   const reviews=[checkinReview(),financeReview(),spendCategoryReview(),intimateReview(),investHTML].filter(Boolean).join("");
   const hasReviews=!!reviews;
+
+  // 各板块统计：原模块页右侧统计栏统一收拢到复盘，按模块折叠
+  const statBlocks=["todo","checkin","money","note","intimate","trades"].map(k=>{
+    const bm=modOf(k); if(!bm) return "";
+    const list=data[k]||[];
+    const body=sideStats(bm,list);
+    if(!body || !body.trim()) return "";
+    return `<details class="rv-mod" open><summary><span class="rv-mod-ic" style="color:${bm.color};background:${bm.tint}">${icon(bm.icon,15)}</span>${bm.name}<span class="rv-mod-cnt">${list.length} 条</span></summary><div class="rv-mod-body">${body}</div></details>`;
+  }).join("");
 
   const [cy,cm]=curYM().split("-").map(Number);
   const canPrev=true;
@@ -2836,6 +2907,8 @@ function renderInsight(){
     </div>
     ${hasReviews?`<div class="rv-grid">${reviews}</div>`:`<div class="focus-empty" style="margin:10px 0">还没有可统计的目标 — 到「习惯打卡」「阅读」「锻炼」编辑器里填入「每周/每月目标」，或设置「本月预算」</div>`}
     ${habitCalendarHTML(insightMonth)}
+    <div class="sec-title" style="margin-top:28px">${icon("grid",15)} 各板块统计<span style="margin-left:auto;font-weight:500;color:var(--text-secondary);font-size:12px">点击标题可折叠</span></div>
+    <div class="rv-mod-grid">${statBlocks}</div>
     ${budgetEditor}`;
 
   $("#screen").querySelectorAll("[data-open]").forEach(el=>el.onclick=()=>go(el.dataset.open));
@@ -2923,8 +2996,7 @@ function renderModule(key){
     ${head}
     ${FIXED_HABITS.includes(key)?habitBarHTML(key):''}
     <div class="mod-layout">
-      <div class="mod-main">${mainContent}</div>
-      <aside class="mod-side">${sideStats(m,all)}</aside>
+      <div class="mod-main">${m.type==="checkin"?checkinCompareHTML():""}${mainContent}</div>
     </div>`;
   const tgl=$("#toggle-done"); if(tgl) tgl.onclick=()=>{ showDoneTodos=!showDoneTodos; renderModule(key); };
   const rbAdd=$("#rb-add"); if(rbAdd) rbAdd.onclick=()=>openRecurringModal(null);
@@ -3267,6 +3339,21 @@ function sideStats(m, all){
         ${row("总记录",`${all.length} 部`)}</div>
       <div class="side-card"><div class="sh">${icon("target",15)} 本月目标</div>
         <div class="field" style="margin:0"><input id="mv-goal" type="number" value="${goal}" placeholder="本月看几部" style="width:100%"/></div></div>`;
+  }
+
+  if(m.type==="trades"){
+    const ym=curYM();
+    const row2=(k,v)=>`<div class="stat-row"><span class="k">${k}</span><span class="val">${v}</span></div>`;
+    const sum=(action)=>all.filter(x=>x.action===action).reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
+    const mCount=all.filter(x=>(x.date||"").startsWith(ym)).length;
+    const fees=all.reduce((a,x)=>a+(+x.fee||0),0);
+    return `<div class="side-card"><div class="sh">${icon("exchange",15)} 交易概况</div>
+        ${row2("累计交易",`${all.length} 笔`)}
+        ${row2("本月交易",`<span style="color:var(--accent)">${mCount} 笔</span>`)}
+        ${row2("累计买入",`¥${sum("buy").toFixed(0)}`)}
+        ${row2("累计卖出",`¥${sum("sell").toFixed(0)}`)}
+        ${row2("累计分红",`¥${sum("dividend").toFixed(0)}`)}
+        ${row2("累计费用",`¥${fees.toFixed(0)}`)}</div>`;
   }
 
   if(m.type==="todo"){
@@ -5075,9 +5162,10 @@ function maybeSnapshotAsset(){
 }
 
 // 投资复盘卡片（嵌入 renderInsight）
-function investmentReviewHTML(){
+function investmentReviewHTML(month){
   const holdings = data.portfolio || [];
   if(!holdings.length) return "";
+  const ym = month || curYM();
   let totalCost=0, totalValue=0;
   const byKind = {}; // 按类型分组
   holdings.forEach(h=>{
@@ -5094,6 +5182,44 @@ function investmentReviewHTML(){
   });
   const totalPct = totalCost>0 ? (totalValue-totalCost)/totalCost*100 : 0;
   const cls = totalPct>=0 ? "done" : "warn";
+
+  // 本月投资收益：按所选月份的交易流水口径（已实现价差 + 分红 − 费用）
+  const monthTrades = (data.trades||[]).filter(t=>(t.date||"").startsWith(ym));
+  let mBuy=0, mSell=0, mRealized=0, mDiv=0, mFee=0, mBuyN=0, mSellN=0, mDivN=0;
+  monthTrades.forEach(t=>{
+    const q=+t.qty||0, p=+t.price||0, f=+t.fee||0;
+    mFee += f;
+    if(t.action==="buy"){ mBuy+=q*p; mBuyN++; }
+    else if(t.action==="sell"){
+      mSell+=q*p; mSellN++;
+      const agg=tradeAgg(t.code);
+      const h=(data.portfolio||[]).find(x=>x.code===t.code);
+      const cost=agg?agg.avgCost:(+((h||{}).costPrice)||0);
+      mRealized += (p-cost)*q;
+    }
+    else if(t.action==="dividend"){ mDiv += Math.max(0, q>0?q*p:p); mDivN++; }
+  });
+  const mNet = mRealized + mDiv - mFee;
+  const monthBlock = monthTrades.length
+    ? `<div class="rv-im">
+        <div class="rv-im-hd">${icon("calendar",13)} ${+ym.slice(5)} 月投资收益 <span class="rv-cap">按当月交易流水</span></div>
+        <div class="rv-im-big ${mNet>=0?'up':'down'}">${mNet>=0?'+':''}¥${mNet.toFixed(2)}</div>
+        <div class="rv-im-rows">
+          <span>已实现 <b>¥${mRealized.toFixed(0)}</b></span>
+          <span>分红 <b>¥${mDiv.toFixed(0)}</b></span>
+          <span>费用 <b>−¥${mFee.toFixed(0)}</b></span>
+          <span>交易 <b>${monthTrades.length} 笔</b></span>
+        </div>
+        <div class="rv-im-rows" style="margin-top:6px">
+          <span>买入 <b>¥${mBuy.toFixed(0)}</b>（${mBuyN} 笔）</span>
+          <span>卖出 <b>¥${mSell.toFixed(0)}</b>（${mSellN} 笔）</span>
+          <span>分红 <b>${mDivN} 笔</b></span>
+        </div>
+      </div>`
+    : `<div class="rv-im">
+        <div class="rv-im-hd">${icon("calendar",13)} ${+ym.slice(5)} 月投资收益</div>
+        <div class="rv-im-big" style="font-size:15px;font-weight:600;color:var(--text-secondary)">本月暂无交易记录</div>
+      </div>`;
   // 月目标完成度
   const rows = Object.entries(byKind).map(([k,v])=>{
     const pct = v.monthGoal ? Math.min(100, Math.round((totalPct/v.monthGoal)*100)) : 0;
@@ -5138,6 +5264,7 @@ function investmentReviewHTML(){
     </div>
     <div class="rv-card">
       <div class="rv-hd">${icon("trending",15)} 投资表现</div>
+      ${monthBlock}
       <div class="rv-row ${cls}">
         <div class="rv-name">综合收益率</div>
         <div class="rv-bar"><i style="width:${Math.min(100, Math.abs(totalPct))}%"></i></div>
@@ -5241,7 +5368,7 @@ function openBudgetModal(){
     const nb = data.__budget || {}; nb.cats = {};
     cats.forEach((c,i)=>{ const v = +($("#bud-"+i).value); if(v>0) nb.cats[c] = v; });
     nb.expense = Math.max(0, +($("#bud-total").value)||0);
-    data.__budget = nb; store.save(); closeModal(); renderModule("money");
+    data.__budget = nb; store.save(); closeModal(); render();
   };
 }
 
