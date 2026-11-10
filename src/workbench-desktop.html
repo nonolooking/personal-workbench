@@ -292,37 +292,35 @@
   .life-title svg { color: var(--accent); }
   .life-age { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); background: var(--surface-nested); padding: 3px 9px; border-radius: 999px; }
   .life-target { font-size: 12px; color: var(--text-secondary); }
-  .life-main { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.05fr); gap: 16px 24px; align-items: center; margin-top: 16px; }
+  .life-main { margin-top: 16px; }
   .life-cap { font-size: 12.5px; color: var(--text-secondary); }
   .life-pct { font-size: 50px; font-weight: 800; letter-spacing: -.045em; color: var(--accent); line-height: 1.05;
     margin: 3px 0 0; font-variant-numeric: tabular-nums; }
   .life-pct .u { font-size: 21px; font-weight: 700; margin-left: 3px; opacity: .72; }
-  .life-bar { position: relative; height: 8px; border-radius: 999px; background: var(--surface-nested); overflow: hidden; margin: 0; }
+  .life-bar { position: relative; height: 8px; border-radius: 999px; background: var(--surface-nested); overflow: hidden; margin: 16px 0 0; }
   .life-bar i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 999px; background: var(--accent); transition: width .5s cubic-bezier(.2,.8,.3,1); }
-  .life-main > .life-bar { grid-column: 1 / -1; }
-  .life-stats { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1px; background: var(--border);
-    border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .life-stat { background: var(--surface-card); padding: 10px 13px; display: flex; flex-direction: column; gap: 1px; }
-  .life-stat b { color: var(--text); font-size: 19px; font-weight: 800; letter-spacing: -.02em; line-height: 1.25; font-variant-numeric: tabular-nums; }
-  .life-stat span { font-size: 11.5px; color: var(--text-secondary); }
-  .life-stats.two .life-stat { padding: 9px 13px; }
-  .life-stats.two .life-stat b { font-size: 17px; }
+  /* 剩余时间：无边框、无分隔线，纯靠留白与字重分层 */
+  .life-stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px 24px; margin-top: 20px; }
+  .life-stat { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+  .life-stat b { color: var(--text); font-size: 18px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .life-stat span { font-size: 11.5px; color: var(--text-secondary); white-space: nowrap; }
+  .life-stats.two { grid-template-columns: repeat(2, minmax(0,1fr)); margin-top: 14px; }
+  .life-stats.two .life-stat b { font-size: 16px; }
   .life-empty { color: var(--text-secondary); font-size: var(--fs-body); padding: 18px 0 6px; }
-  .life-sep { height: 1px; background: var(--border); margin: 18px 0 14px; }
-  .life-year-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 9px; }
+  .life-year-head { display: flex; align-items: baseline; justify-content: space-between; margin: 28px 0 9px; }
   .life-year-head > span:first-child { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
   .life-year-pct { font-size: 14px; font-weight: 800; color: var(--module-2); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
-  .life-bar.year { margin: 0 0 12px; }
+  .life-bar.year { margin: 0; }
   .life-bar.year i { background: var(--module-2); }
   @media (max-width: 640px){
     .life-card { padding: 16px 15px; }
     .life-title { font-size: 16px; }
-    .life-main { grid-template-columns: 1fr; gap: 14px; margin-top: 13px; }
-    .life-main > .life-bar { grid-column: 1; }
+    .life-main { margin-top: 13px; }
     .life-pct { font-size: 40px; }
-    .life-stat { padding: 9px 12px; }
+    .life-bar { margin-top: 14px; }
+    .life-stats { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px 16px; margin-top: 16px; }
     .life-stat b { font-size: 17px; }
-    .life-sep { margin: 16px 0 13px; }
+    .life-year-head { margin-top: 22px; }
   }
 
   .card { background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
@@ -2217,17 +2215,15 @@ function lifeTileHTML(){
   const i=lifeInfo(); const y=yearInfo();
   const lifeBlock = i ? `
     <div class="life-main">
-      <div class="life-primary">
-        <div class="life-cap">你已经走过人生的</div>
-        <div class="life-pct">${i.pctStr}<span class="u">%</span></div>
-      </div>
+      <div class="life-cap">你已经走过人生的</div>
+      <div class="life-pct">${i.pctStr}<span class="u">%</span></div>
+      <div class="life-bar"><i style="width:${i.pctStr}%"></i></div>
       <div class="life-stats">
         <div class="life-stat"><b>${i.yearsLeft}</b><span>年剩余</span></div>
         <div class="life-stat"><b>${i.monthsLeft}</b><span>月剩余</span></div>
         <div class="life-stat"><b>${i.daysLeft}</b><span>天剩余</span></div>
         <div class="life-stat"><b>${i.hoursLeft}</b><span>小时剩余</span></div>
       </div>
-      <div class="life-bar"><i style="width:${i.pctStr}%"></i></div>
     </div>` :
     `<div class="life-empty">设置生日与目标年龄后，这里会显示你的人生进度。</div>`;
   const ageTag = i ? `<span class="life-age">当前 ${i.age} 岁</span>` : ``;
@@ -2237,7 +2233,6 @@ function lifeTileHTML(){
       <div class="spacer"></div>${targetTag}
       <button class="btn ghost xs" id="btn-life-set">${icon("pen",13)}</button></div>
     ${lifeBlock}
-    <div class="life-sep"></div>
     <div class="life-year-head"><span>本年进度</span><span class="life-year-pct">${y.yearPctStr}%</span></div>
     <div class="life-bar year"><i style="width:${y.yearPctStr}%"></i></div>
     <div class="life-stats two">
