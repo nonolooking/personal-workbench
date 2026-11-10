@@ -273,7 +273,7 @@
   /* ---------- main ---------- */
   .main { margin-left: var(--sidebar-w); padding: 26px 34px 48px; }
   .main > #screen { max-width: 1180px; }
-  .header { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 6px; }
+  .header { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 2px; }
   .header h2 { font-size: var(--fs-h1); font-weight: 800; letter-spacing: -.03em; }
   .header p { color: var(--text-secondary); font-size: 13px; margin-top: 5px; }
   .header .spacer { flex: 1; }
@@ -327,7 +327,7 @@
 
   .card { background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
   .sec-title { display:flex; align-items:center; gap:9px; font-size:var(--fs-h3); font-weight:800; margin: 18px 2px 10px; letter-spacing: -.01em; }
-  .sec-title::before { content:""; width: 3px; height: 14px; border-radius: 2px; background: var(--accent); }
+  .sec-title::before { content:""; width: 3px; height: 15px; border-radius: 3px; background: var(--accent); }
 
   /* ---------- dashboard grid ---------- */
   .grid { display: grid; gap: 16px; }
@@ -418,7 +418,7 @@
   .pin-empty .mini-star { display:inline-flex; vertical-align:-2px; color: var(--module-3); }
 
   /* ---------- toolbar in module view ---------- */
-  .toolbar { display:flex; align-items:center; gap:10px; margin: 14px 0 12px; }
+  .toolbar { display:flex; align-items:center; gap:10px; margin: 8px 0 14px; }
   .btn { background:var(--accent); color:var(--on-accent); border:none; border-radius:10px; padding:10px 18px; font-size:14px; cursor:pointer;
     font-weight:700; box-shadow: var(--shadow-card); transition: filter .15s, transform .1s; display:inline-flex; align-items:center; gap:7px; }
   .btn:hover { filter: brightness(1.12); } .btn:active { transform: translateY(1px); }
@@ -427,9 +427,9 @@
   .btn.danger { background:var(--danger); }
   .btn:disabled { opacity:.45; cursor:not-allowed; }
   .spacer { flex:1; }
-  input, textarea { font-family:var(--font); font-size:14px; border:1px solid var(--border-input); border-radius:10px;
+  input, textarea, select { font-family:var(--font); font-size:14px; border:1px solid var(--border-input); border-radius:10px;
     padding:9px 12px; background:var(--surface-card); color:var(--text); outline:none; transition: border-color .15s, box-shadow .15s; width:100%; }
-  input:focus, textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-muted); }
+  input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-muted); }
   input[type="checkbox"], input[type="radio"] { width:auto; accent-color:var(--accent); }
   textarea { resize:vertical; min-height:80px; }
   .search-box { position:relative; width: 240px; }
@@ -473,8 +473,9 @@
   .mod-layout { display:grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; margin-top: 14px; }
   .mod-side { display:flex; flex-direction:column; gap: 12px; position: sticky; top: 16px; }
   .side-card { background:var(--surface-card); border:1px solid var(--border); border-radius:var(--radius-tile); box-shadow:var(--shadow-card); padding:var(--pad-card); }
-  .side-card .sh { display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:800; margin-bottom:10px; }
-  .side-card .sh svg { color:var(--text-tertiary); }
+  .side-card .sh { display:flex; align-items:center; gap:10px; font-size:13px; font-weight:800; margin-bottom:12px; }
+  .side-card .sh svg { width:26px; height:26px; padding:5px; border-radius:8px; flex:0 0 auto;
+    background:var(--surface-nested); color:var(--text-secondary); }
   .stat-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); }
   .stat-row:last-child { border-bottom:none; padding-bottom:0; }
   .stat-row .k { font-size:12.5px; color:var(--text-secondary); display:flex; align-items:center; gap:7px; }
@@ -503,7 +504,7 @@
 
   /* record list — 行式列表 */
   .rec-grid { display:flex; flex-direction:column; gap:9px; }
-  .rec { position:relative; background:var(--surface-card); border:1px solid var(--border); border-radius:var(--radius-tile); box-shadow:var(--shadow-card); padding:var(--pad-card); transition: border-color .12s, box-shadow .15s; }
+  .rec { position:relative; background:var(--surface-card); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow-card); padding:13px 15px; transition: border-color .12s, box-shadow .15s; }
   .rec:hover { border-color: var(--border-input); box-shadow: var(--shadow-overlay); }
   .rec .top { display:flex; align-items:center; gap:12px; }
   .rec .chk { flex:0 0 auto; width:23px; height:23px; border-radius:7px; border:1.6px solid var(--border-input); display:grid; place-items:center;
@@ -539,7 +540,7 @@
   .st-del { color:var(--text-tertiary); cursor:pointer; font-size:15px; line-height:1; }
   .st-del:hover { color:var(--danger); }
   .subtask-add { display:flex; gap:8px; }
-  .subtask-add input { flex:1; }
+  .subtask-add input { flex:1; min-width:0; }
 
   /* ============================================================
      TIMETABLE — 学校课表网格
@@ -594,8 +595,9 @@
   .tt-day-cells { display:flex; flex-direction:column; gap:6px; }
   .tt-cell.custom { min-height:auto; }
   .tt-time-range { font-size:11px; color:var(--text-secondary); display:flex; align-items:center; gap:3px; font-weight:600; }
-  .empty { text-align:center; color:var(--text-secondary); padding:50px 20px; }
-  .empty .e { display:inline-grid; place-items:center; width:56px; height:56px; border-radius:16px; background:var(--surface-card); border:1px solid var(--border); color:var(--text-tertiary); margin-bottom:12px; }
+  .empty { text-align:center; color:var(--text-secondary); padding:44px 20px; font-size:13px; line-height:1.7; }
+  .empty .e { display:inline-grid; place-items:center; width:52px; height:52px; border-radius:16px; background:var(--surface-nested);
+    border:1px dashed var(--border-input); color:var(--text-tertiary); margin-bottom:12px; }
 
   /* ============================================================
      TODO CALENDAR — 待办月历视图
@@ -628,30 +630,32 @@
   .overlay { position:fixed; inset:0; background:color-mix(in srgb, var(--text) 44%, transparent); backdrop-filter: blur(3px); z-index:60;
     display:flex; align-items:center; justify-content:center; animation: fade .16s ease; }
   @keyframes fade { from { opacity:0; } }
-  .modal { background:var(--surface-card); border-radius:20px; padding:26px; width:480px; max-width:92vw; max-height:90vh; overflow-y:auto;
+  .modal { background:var(--surface-card); border-radius:20px; padding:0 24px; width:480px; max-width:92vw; max-height:90vh; overflow-y:auto;
     box-shadow:0 24px 60px color-mix(in srgb, var(--text) 26%, transparent); animation: pop .18s cubic-bezier(.2,.8,.3,1); }
   @keyframes pop { from { transform: translateY(10px) scale(.98); opacity:0; } }
-  .modal h3 { font-size:19px; font-weight:800; letter-spacing:-.01em; }
-  .modal .sub { color:var(--text-secondary); font-size:13px; margin:5px 0 18px; }
+  .modal h3 { font-size:18px; font-weight:800; letter-spacing:-.01em; padding-top:22px; }
+  .modal .sub { color:var(--text-secondary); font-size:13px; margin:5px -24px 0; padding:0 24px 16px; border-bottom:1px solid var(--border); }
   .field { margin-bottom:14px; }
-  .field label { display:block; color:var(--text-secondary); font-size:13px; margin-bottom:6px; }
+  .field label { display:block; color:var(--text-secondary); font-size:12.5px; font-weight:600; margin-bottom:6px; }
   .frow { display:flex; gap:12px; } .frow .field { flex:1; }
   .seg { display:flex; gap:8px; flex-wrap:wrap; }
   .seg .opt { flex:1; min-width:64px; text-align:center; padding:10px; border-radius:11px; border:1px solid var(--border-input);
-    cursor:pointer; font-size:13px; font-weight:600; color:var(--text-secondary); transition: all .12s; }
-  .seg .opt.on { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
+    cursor:pointer; font-size:13px; font-weight:600; color:var(--text-secondary); background:var(--surface-card); transition: all .12s; }
+  .seg .opt:hover { border-color:var(--accent); color:var(--accent); }
+  .seg .opt.on { background:var(--accent-muted); border-color:var(--accent); color:var(--accent); }
 
   /* 合并模块顶部 sub-tab 切换条 */
-  .sub-tabs { display:flex; gap:6px; padding:8px; margin-bottom:14px;
-    background:var(--card-tint,#f5efde); border-radius:13px; border:1px solid var(--border-input); }
+  .sub-tabs { display:flex; gap:6px; padding:6px; margin-bottom:14px;
+    background:var(--surface-nested); border-radius:12px; border:1px solid var(--border); }
   .seg-tab { display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
     border-radius:9px; border:none; background:transparent; color:var(--text-secondary);
     font-size:14px; font-weight:600; cursor:pointer; transition: all .15s; }
-  .seg-tab:hover { background:rgba(0,0,0,.04); }
-  .seg-tab.active { background:var(--accent); color:var(--on-accent); box-shadow:0 2px 6px rgba(0,0,0,.08); }
+  .seg-tab:hover { background:var(--drawer-hover); color:var(--text); }
+  .seg-tab.active { background:var(--accent); color:var(--on-accent); box-shadow:0 1px 3px color-mix(in srgb, var(--accent) 30%, transparent); }
   #sub-content { min-height:200px; }
   #sub-content .header { display:none; } /* 子模块的 header 已在 sub-tabs 之上展示 */
-  .modal-actions { display:flex; align-items:center; gap:10px; margin-top:22px; }
+  .modal-actions { position:sticky; bottom:0; z-index:1; display:flex; align-items:center; gap:10px;
+    margin:20px -24px 0; padding:14px 24px; background:var(--surface-card); border-top:1px solid var(--border); }
   .link-danger { color:var(--danger); background:none; border:none; font-size:14px; font-weight:600; cursor:pointer; padding:8px 10px; border-radius:8px; }
   .link-danger:hover { background:var(--danger-muted); }
 
@@ -967,17 +971,17 @@
     /* 课表横向滚动 */
     .tt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .tt-grid { min-width: 680px; }
-    .modal { width: auto; padding: 16px 14px; border-radius: 16px; max-height: 92vh; }
-    .modal h3 { font-size: 16.5px; }
+    .modal { width: auto; padding: 0 14px; border-radius: 16px; max-height: 92vh; }
+    .modal h3 { font-size: 16.5px; padding-top: 18px; }
     /* 弹窗整体紧凑化：字段/控件统一缩小，减少一屏放不下的情况 */
-    .modal .sub { font-size: 12px; margin: 4px 0 12px; }
+    .modal .sub { font-size: 12px; margin: 4px -14px 0; padding: 0 14px 12px; }
     .modal .field { margin-bottom: 10px; }
     .modal .field label { font-size: 12px; margin-bottom: 4px; }
     .modal input, .modal textarea { padding: 8px 10px; font-size: 14px; border-radius: 9px; }
     .modal textarea { min-height: 56px; }
     .modal .seg { gap: 6px; }
     .modal .seg .opt { padding: 8px 6px; font-size: 12.5px; min-width: 0; border-radius: 9px; }
-    .modal .modal-actions { margin-top: 14px; }
+    .modal .modal-actions { margin: 14px -14px 0; padding: 12px 14px; }
     .modal .btn { padding: 9px 14px; font-size: 13.5px; }
     .frow { flex-direction: column; gap: 0; }
     .seg .opt { padding: 8px 6px; font-size: 13px; }
@@ -989,7 +993,7 @@
     .tile-h { margin-bottom: 12px; }
     .modcard { padding: 13px 14px; }
     .sec-title { margin: 14px 2px 8px; }
-    .toolbar { margin: 10px 0 10px; }
+    .toolbar { margin: 8px 0 12px; }
     .rec { padding: 12px 14px; }
     .rec-grid { gap: 8px; }
     .pin { padding: 13px 14px; }
@@ -1004,7 +1008,7 @@
     /* 页头操作按钮：紧凑自然宽度，放得下就同行排布，放不下自动换行 */
     .header { gap: 8px; }
     .header .spacer { display: none; }
-    .header .btn { padding: 8px 12px; font-size: 12.5px; gap: 5px; }
+    .toolbar .btn { padding: 8px 12px; font-size: 12.5px; gap: 5px; }
     /* 投资设置卡：收窄间距，状态胶囊变小 */
     .pf-settings { gap: 6px 10px; padding: 9px 12px; }
     .pf-settings .btn { padding: 5px 10px; font-size: 12px; }
@@ -3489,7 +3493,7 @@ function openEditor(key,item,prefill){
       <div class="field"><label>备注</label><textarea id="f-note" placeholder="补充说明">${esc(d.note||'')}</textarea></div>
       <div class="field"><label>子任务（勾选完成）</label>
         <div id="subtask-box" class="subtask-box"></div>
-        <div class="subtask-add"><input id="f-st" type="text" placeholder="输入子任务，回车或点添加"/><button class="btn" id="f-st-add" type="button">添加</button></div>
+        <div class="subtask-add"><input id="f-st" type="text" placeholder="新子任务，回车添加"/><button class="btn" id="f-st-add" type="button">添加</button></div>
       </div>`;
   } else if(m.type==="checkin"){
     fields=`<div class="field"><label>打卡项</label><input id="f-title" value="${attr(d.title)}" placeholder="例如：喝够 8 杯水"/></div>
@@ -4678,7 +4682,7 @@ function portfolioCalc(holding, quote){
   const pnl = marketValue - costBasis;                    // 浮动盈亏（未实现）
   const pnlPct = costBasis>0 ? (pnl/costBasis*100) : 0;
   const dayPct = q.chgPct || 0;
-  const dayPnl = (q.preClose||last) ? (last - q.preClose) * qty : 0;
+  const dayPnl = (q.preClose > 0) ? (last - q.preClose) * qty : 0;
   const totalReturn = pnl + realized + dividends;         // 总收益（浮+已+红）
   const returnBase = costBasis + (agg ? agg.soldCost : 0);// 总投入成本基数（含已卖出）
   const totalReturnPct = returnBase>0 ? (totalReturn/returnBase*100) : 0;
@@ -4788,7 +4792,8 @@ async function renderPortfolio(){
       <button class="btn ghost sm" id="pf-token-btn">${icon("key",10)} 设置 Token</button>
     </div>`;
 
-  $("#screen").innerHTML = `<div class="header"><div><h2>${m.name}</h2><p>${m.desc}</p></div><div class="spacer"></div>
+  $("#screen").innerHTML = `<div class="header"><div><h2>${m.name}</h2><p>${m.desc}</p></div></div>
+    <div class="toolbar">
     <button class="btn" id="pf-refresh">${icon("refresh",14)} 刷新行情</button>
     <button class="btn" id="pf-trade-add">${icon("exchange",14)} 记一笔交易</button>
     ${(data.__trash||[]).some(e=>e.key==="portfolio"||e.key==="trades"||e.key==="money")?`<button class="btn ghost" id="pf-trash">${icon("trash",14)} 回收站 <span class="badge">${(data.__trash||[]).filter(e=>e.key==="portfolio"||e.key==="trades"||e.key==="money").length}</span></button>`:''}
@@ -5355,24 +5360,32 @@ const PORTFOLIO_CSS = `
 .rv-nw-leg i{display:inline-block;width:10px;height:10px;border-radius:2px}
 
 /* Modal + Toast */
-.modal-root{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:9999}
+.modal-root{position:fixed;inset:0;background:color-mix(in srgb,var(--text) 44%,transparent);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px}
 .modal-root.show{display:flex}
-.modal-card{background:var(--surface-card);border:1px solid var(--border);border-radius:14px;width:90%;max-width:480px;max-height:85vh;overflow:auto}
-.modal-h{padding:14px 18px;border-bottom:1px solid var(--border);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.modal-card{background:var(--surface-card);border:1px solid var(--border);border-radius:20px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px color-mix(in srgb,var(--text) 26%,transparent);animation:pop .18s cubic-bezier(.2,.8,.3,1)}
+.modal-h{padding:18px 20px 14px;border-bottom:1px solid var(--border);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .modal-h h3{margin:0}
 .modal-x{border:none;background:transparent;color:var(--text-tertiary);font-size:22px;line-height:1;cursor:pointer;padding:2px 8px;border-radius:8px;flex:0 0 auto}
 .modal-x:hover{background:var(--surface-nested);color:var(--text)}
-.modal-b{padding:16px 18px}
-.modal-f{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
-.modal-body{padding:16px 18px}
+.modal-b{padding:16px 20px}
+.modal-hd{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800;padding:18px 20px 14px;border-bottom:1px solid var(--border);color:var(--text)}
+.modal-hd svg{color:var(--accent);flex:0 0 auto}
+.modal-card>p{padding:14px 20px 0;margin:0 0 8px}
+.modal-card>.field[style*="flex-direction"]{display:flex;align-items:center;gap:12px;margin:10px 0;padding:0 20px}
+.modal-card>.field[style*="flex-direction"] label{flex:1;margin:0;font-size:13px;font-weight:600;color:var(--text-secondary)}
+.modal-card>.field[style*="flex-direction"] input{flex:0 0 120px;width:120px}
+.modal-f{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap;padding:0 20px}
+.modal-body{padding:16px 20px}
 .modal-body .field{margin-bottom:10px}
 .modal-body .field label{display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;font-weight:600}
-.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:8px 10px;border-radius:8px;background:var(--surface-nested);border:1px solid var(--border);color:var(--text-primary);font-size:13px}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:9px 12px;border-radius:10px;background:var(--surface-nested);border:1px solid var(--border-input);color:var(--text);font-size:13px;outline:none}
+.modal-body input:focus,.modal-body select:focus,.modal-body textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-muted)}
 .modal-body .field-row{display:flex;gap:10px}
 .modal-body .field-row .field{flex:1}
 .modal-tip{font-size:11px;color:var(--text-tertiary);margin-top:8px}
 .modal-tip a{color:var(--module-6)}
-.modal-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.modal-foot{position:sticky;bottom:0;background:var(--surface-card);padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.modal-foot .btn:first-child{background:var(--surface-card);color:var(--text-secondary);border:1px solid var(--border-input);box-shadow:none;font-weight:500}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.85);color:#fff;padding:10px 18px;border-radius:24px;font-size:13px;z-index:10000;opacity:0;transition:all .25s;display:flex;align-items:center;gap:12px;max-width:92vw}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast-undo{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:16px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer}
