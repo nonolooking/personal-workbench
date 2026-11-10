@@ -1,5 +1,5 @@
 /* 个人工作台 Service Worker —— 单文件应用离线缓存 */
-const CACHE = "wb-v6";
+const CACHE = "wb-v7";
 const ASSETS = ["./", "./workbench-desktop.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {

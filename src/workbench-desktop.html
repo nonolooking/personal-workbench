@@ -830,20 +830,16 @@
   .rv-delta.up, .cm-up { color:var(--module-2); }
   .rv-delta.down, .cm-down { color:var(--danger); }
   .rv-delta.flat, .cm-flat { color:var(--text-tertiary); }
-  /* 各板块统计：从模块页收拢到复盘，可折叠，浅底无框 */
-  .rv-mod-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; margin-top:14px; align-items:start; }
-  .rv-mod { background:var(--surface-nested); border-radius:var(--radius-card); padding:14px; }
-  .rv-mod > summary { display:flex; align-items:center; gap:9px; font-size:13.5px; font-weight:800; cursor:pointer; list-style:none; }
-  .rv-mod > summary::-webkit-details-marker { display:none; }
-  .rv-mod > summary::after { content:""; width:7px; height:7px; margin-left:auto; flex:0 0 auto;
-    border-right:1.6px solid var(--text-tertiary); border-bottom:1.6px solid var(--text-tertiary);
-    transform:rotate(45deg); transition:transform .15s; }
-  .rv-mod[open] > summary::after { transform:rotate(-135deg); }
-  .rv-mod-ic { width:28px; height:28px; border-radius:9px; display:grid; place-items:center; flex:0 0 auto; }
-  .rv-mod-cnt { font-size:11.5px; font-weight:500; color:var(--text-tertiary); }
-  .rv-mod-body { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
-  .rv-mod-body .side-card { border:none; box-shadow:none; border-radius:12px; }
-  .rv-mod-body .side-card .sh { margin-bottom:8px; }
+  /* 复盘按板块分区：每个模块独立成块，内容统一网格 */
+  .rv-board { margin-top:32px; }
+  .rv-board-hd { display:flex; align-items:center; gap:9px; margin-bottom:14px; }
+  .rv-board-ic { width:30px; height:30px; border-radius:9px; display:grid; place-items:center; flex:0 0 auto; }
+  .rv-board-t { font-size:15px; font-weight:800; letter-spacing:-.01em; }
+  .rv-board-n { font-size:11.5px; color:var(--text-tertiary); }
+  .rv-board-body { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:start; }
+  .rv-board-body .rv-card, .rv-board-body .side-card { border:none; box-shadow:none; background:var(--surface-card); border-radius:12px; }
+  .rv-board-body .side-card .sh { margin-bottom:8px; }
+  .rv-board-body .habit-cal-card { grid-column:1 / -1; margin-top:0; }
   /* 投资表现 · 本月收益 */
   .rv-im { padding:12px; background:var(--surface-nested); border-radius:12px; margin-bottom:12px; }
   .rv-im-hd { font-size:11.5px; color:var(--text-secondary); font-weight:600; display:flex; align-items:center; gap:6px; }
@@ -2877,17 +2873,32 @@ function renderInsight(){
   // 投资复盘 + 净资产聚合（月底自动写入资产快照）
   maybeSnapshotAsset();
   const investHTML=investmentReviewHTML(insightMonth);
-  const reviews=[checkinReview(),financeReview(),spendCategoryReview(),intimateReview(),investHTML].filter(Boolean).join("");
-  const hasReviews=!!reviews;
 
-  // 各板块统计：原模块页右侧统计栏统一收拢到复盘，按模块折叠
-  const statBlocks=["todo","checkin","money","note","intimate","trades"].map(k=>{
-    const bm=modOf(k); if(!bm) return "";
-    const list=data[k]||[];
-    const body=sideStats(bm,list);
-    if(!body || !body.trim()) return "";
-    return `<details class="rv-mod" open><summary><span class="rv-mod-ic" style="color:${bm.color};background:${bm.tint}">${icon(bm.icon,15)}</span>${bm.name}<span class="rv-mod-cnt">${list.length} 条</span></summary><div class="rv-mod-body">${body}</div></details>`;
-  }).join("");
+  // 按板块归位：每个模块的复盘内容集中到自己的板块下
+  const boardSection=(key,body,extra="")=>{
+    const bm=modOf(key); if(!bm) return "";
+    const hasBody=!!(body && body.trim());
+    const hasExtra=!!(extra && extra.trim());
+    if(!hasBody && !hasExtra) return "";
+    const list=data[key]||[];
+    return `<section class="rv-board">
+      <div class="rv-board-hd">
+        <span class="rv-board-ic" style="color:${bm.color};background:${bm.tint}">${icon(bm.icon,16)}</span>
+        <span class="rv-board-t">${bm.name}</span>
+        <span class="rv-board-n">${list.length} 项</span>
+      </div>
+      ${hasBody?`<div class="rv-board-body">${body}</div>`:""}
+      ${hasExtra?extra:""}
+    </section>`;
+  };
+  const boards=[
+    boardSection("todo", sideStats(modOf("todo"), data.todo||[])),
+    boardSection("checkin", checkinReview()+sideStats(modOf("checkin"), data.checkin||[]), habitCalendarHTML(insightMonth)),
+    boardSection("money", financeReview()+spendCategoryReview()+sideStats(modOf("money"), data.money||[])),
+    boardSection("note", sideStats(modOf("note"), data.note||[])),
+    boardSection("portfolio", investHTML+sideStats(modOf("trades"), data.trades||[])),
+    boardSection("intimate", intimateReview()+sideStats(modOf("intimate"), data.intimate||[])),
+  ].join("");
 
   const [cy,cm]=curYM().split("-").map(Number);
   const canPrev=true;
@@ -2905,10 +2916,7 @@ function renderInsight(){
         <button class="btn ghost" id="rv-next" ${canNext?'':'disabled'}>下月 ${icon("chevron",13)}</button>
       </div>
     </div>
-    ${hasReviews?`<div class="rv-grid">${reviews}</div>`:`<div class="focus-empty" style="margin:10px 0">还没有可统计的目标 — 到「习惯打卡」「阅读」「锻炼」编辑器里填入「每周/每月目标」，或设置「本月预算」</div>`}
-    ${habitCalendarHTML(insightMonth)}
-    <div class="sec-title" style="margin-top:28px">${icon("grid",15)} 各板块统计<span style="margin-left:auto;font-weight:500;color:var(--text-secondary);font-size:12px">点击标题可折叠</span></div>
-    <div class="rv-mod-grid">${statBlocks}</div>
+    ${boards}
     ${budgetEditor}`;
 
   $("#screen").querySelectorAll("[data-open]").forEach(el=>el.onclick=()=>go(el.dataset.open));
@@ -5164,8 +5172,9 @@ function maybeSnapshotAsset(){
 // 投资复盘卡片（嵌入 renderInsight）
 function investmentReviewHTML(month){
   const holdings = data.portfolio || [];
-  if(!holdings.length) return "";
+  const allTrades = data.trades || [];
   const ym = month || curYM();
+  if(!holdings.length && !allTrades.length) return "";
   let totalCost=0, totalValue=0;
   const byKind = {}; // 按类型分组
   holdings.forEach(h=>{
@@ -5183,8 +5192,8 @@ function investmentReviewHTML(month){
   const totalPct = totalCost>0 ? (totalValue-totalCost)/totalCost*100 : 0;
   const cls = totalPct>=0 ? "done" : "warn";
 
-  // 本月投资收益：按所选月份的交易流水口径（已实现价差 + 分红 − 费用）
-  const monthTrades = (data.trades||[]).filter(t=>(t.date||"").startsWith(ym));
+  // 本月投资收益：交易流水口径（已实现 + 分红 − 费用），并用上月快照补「持仓浮动」
+  const monthTrades = allTrades.filter(t=>(t.date||"").startsWith(ym));
   let mBuy=0, mSell=0, mRealized=0, mDiv=0, mFee=0, mBuyN=0, mSellN=0, mDivN=0;
   monthTrades.forEach(t=>{
     const q=+t.qty||0, p=+t.price||0, f=+t.fee||0;
@@ -5200,26 +5209,29 @@ function investmentReviewHTML(month){
     else if(t.action==="dividend"){ mDiv += Math.max(0, q>0?q*p:p); mDivN++; }
   });
   const mNet = mRealized + mDiv - mFee;
-  const monthBlock = monthTrades.length
-    ? `<div class="rv-im">
-        <div class="rv-im-hd">${icon("calendar",13)} ${+ym.slice(5)} 月投资收益 <span class="rv-cap">按当月交易流水</span></div>
-        <div class="rv-im-big ${mNet>=0?'up':'down'}">${mNet>=0?'+':''}¥${mNet.toFixed(2)}</div>
-        <div class="rv-im-rows">
-          <span>已实现 <b>¥${mRealized.toFixed(0)}</b></span>
-          <span>分红 <b>¥${mDiv.toFixed(0)}</b></span>
-          <span>费用 <b>−¥${mFee.toFixed(0)}</b></span>
-          <span>交易 <b>${monthTrades.length} 笔</b></span>
-        </div>
-        <div class="rv-im-rows" style="margin-top:6px">
-          <span>买入 <b>¥${mBuy.toFixed(0)}</b>（${mBuyN} 笔）</span>
-          <span>卖出 <b>¥${mSell.toFixed(0)}</b>（${mSellN} 笔）</span>
-          <span>分红 <b>${mDivN} 笔</b></span>
-        </div>
-      </div>`
-    : `<div class="rv-im">
-        <div class="rv-im-hd">${icon("calendar",13)} ${+ym.slice(5)} 月投资收益</div>
-        <div class="rv-im-big" style="font-size:15px;font-weight:600;color:var(--text-secondary)">本月暂无交易记录</div>
-      </div>`;
+  // 上月资产快照 → 本月浮动变化（仅当前月有实时市值，历史月份不估算）
+  const prevSnap = ym===curYM() ? (data.__assetSnapshots||[]).find(s=>s.ym===prevYM(ym)) : null;
+  const mFloat = prevSnap ? (totalValue-(+prevSnap.totalValue||0)) - (mBuy-mSell) : null;
+  const mTotal = mNet + (mFloat||0);
+  const accPnl = totalValue - totalCost;
+  const yuan = v => `${v>=0?'+':'−'}¥${Math.abs(v).toFixed(2)}`;
+  const monthBlock = `<div class="rv-im">
+      <div class="rv-im-hd">${icon("calendar",13)} ${+ym.slice(5)} 月投资收益 <span class="rv-cap">${mFloat!=null?"含持仓浮动":"交易口径"}</span></div>
+      <div class="rv-im-big ${mTotal>=0?'up':'down'}">${yuan(mTotal)}</div>
+      <div class="rv-im-rows">
+        <span>已实现 <b>${yuan(mRealized)}</b></span>
+        <span>分红 <b>¥${mDiv.toFixed(0)}</b></span>
+        <span>费用 <b>−¥${mFee.toFixed(0)}</b></span>
+        ${mFloat!=null?`<span>浮动 <b>${yuan(mFloat)}</b></span>`:""}
+        <span>交易 <b>${monthTrades.length} 笔</b></span>
+      </div>
+      <div class="rv-im-rows" style="margin-top:6px">
+        <span>买入 <b>¥${mBuy.toFixed(0)}</b>（${mBuyN} 笔）</span>
+        <span>卖出 <b>¥${mSell.toFixed(0)}</b>（${mSellN} 笔）</span>
+        <span>累计浮盈 <b>${yuan(accPnl)}</b></span>
+      </div>
+      ${(!monthTrades.length && mFloat==null)?`<div class="rv-im-rows" style="margin-top:6px;color:var(--text-tertiary)">本月暂无交易记录，收益按 0 计；记录买卖后自动统计</div>`:""}
+    </div>`;
   // 月目标完成度
   const rows = Object.entries(byKind).map(([k,v])=>{
     const pct = v.monthGoal ? Math.min(100, Math.round((totalPct/v.monthGoal)*100)) : 0;
