@@ -830,16 +830,22 @@
   .rv-delta.up, .cm-up { color:var(--module-2); }
   .rv-delta.down, .cm-down { color:var(--danger); }
   .rv-delta.flat, .cm-flat { color:var(--text-tertiary); }
-  /* 复盘按板块分区：每个模块独立成块，内容统一网格 */
+  /* 复盘按板块分区：可折叠，每个模块独立成块 */
   .rv-board { margin-top:32px; }
-  .rv-board-hd { display:flex; align-items:center; gap:9px; margin-bottom:14px; }
+  .rv-board > summary { display:flex; align-items:center; gap:9px; margin-bottom:14px; list-style:none; cursor:pointer; }
+  .rv-board > summary::-webkit-details-marker { display:none; }
+  .rv-board:not([open]) > summary { margin-bottom:0; }
+  .rv-board > summary::after { content:""; width:7px; height:7px; margin-left:auto; flex:0 0 auto;
+    border-right:1.6px solid var(--text-tertiary); border-bottom:1.6px solid var(--text-tertiary);
+    transform:rotate(45deg); transition:transform .15s; }
+  .rv-board[open] > summary::after { transform:rotate(-135deg); }
   .rv-board-ic { width:30px; height:30px; border-radius:9px; display:grid; place-items:center; flex:0 0 auto; }
   .rv-board-t { font-size:15px; font-weight:800; letter-spacing:-.01em; }
   .rv-board-n { font-size:11.5px; color:var(--text-tertiary); }
   .rv-board-body { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; align-items:start; }
   .rv-board-body .rv-card, .rv-board-body .side-card { border:none; box-shadow:none; background:var(--surface-card); border-radius:12px; }
   .rv-board-body .side-card .sh { margin-bottom:8px; }
-  .rv-board-body .habit-cal-card { grid-column:1 / -1; margin-top:0; }
+  .rv-board > .habit-cal-card { margin-top:12px; }
   /* 投资表现 · 本月收益 */
   .rv-im { padding:12px; background:var(--surface-nested); border-radius:12px; margin-bottom:12px; }
   .rv-im-hd { font-size:11.5px; color:var(--text-secondary); font-weight:600; display:flex; align-items:center; gap:6px; }
@@ -847,8 +853,8 @@
   .rv-im-big.up { color:var(--module-2); } .rv-im-big.down { color:var(--danger); }
   .rv-im-rows { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:11.5px; color:var(--text-secondary); }
   .rv-im-rows b { color:var(--text); font-variant-numeric:tabular-nums; }
-  /* 习惯打卡 · 本月对比上月（模块页概览） */
-  .cm-compare { margin-bottom:14px; }
+  /* 习惯 · 本月对比上月（复盘页） */
+  .cm-compare { margin-bottom:0; }
   .cm-total { display:flex; align-items:baseline; gap:8px; margin-bottom:10px; }
   .cm-total b { font-size:26px; font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums; }
   .cm-delta { margin-left:auto; font-size:12.5px; font-weight:700; }
@@ -1062,8 +1068,8 @@
   .mv-stars i { color:var(--text-tertiary); display:inline-flex; }
   .mv-stars i.on { color:#f5b301; }
 
-  /* 习惯打卡月历：每个习惯一张 7 列小日历（周对齐，不再折成两行） */
-  /* 习惯打卡月历：迷你卡片网格，一排 2-3 个（参考年度总结样式） */
+  /* 习惯月历：每个习惯一张 7 列小日历（周对齐，不再折成两行） */
+  /* 习惯月历：迷你卡片网格，一排 2-3 个（参考年度总结样式） */
   .habit-cal-card .hc-wrap { display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:14px; margin-top:8px; }
   .habit-cal-card .hc-item { margin-bottom:0; min-width:0; }
   .habit-cal-card .hc-top { display:flex; align-items:baseline; gap:6px; margin-bottom:4px; }
@@ -1263,7 +1269,7 @@ const CONFIG = {
   overview: [
     { key:"todo", label:"今日待办", icon:"list", color:"var(--accent)",
       calc: d => { const it=d.todo||[]; const done=it.filter(x=>x.done).length; return { value: it.length?Math.round(done/it.length*100):0, sub:`${done}/${it.length} 条` }; } },
-    { key:"habits", label:"习惯打卡", icon:"leaf", color:"var(--module-1)",
+    { key:"habits", label:"习惯", icon:"leaf", color:"var(--module-1)",
       calc: d => {
         const t=today();
         const chk=d.checkin||[]; const cDone=chk.filter(x=>x.log&&x.log[t]).length;
@@ -1302,9 +1308,9 @@ const CONFIG = {
              {id:13,title:"整理今日工作纪要",priority:"P2",done:true,note:"",date:isoToday()} ] },
 
     // 习惯系（自由打卡，阅读 / 运动 / 电影 等由用户在打卡里自行新建）
-    { key:"habits", name:"习惯打卡", icon:"leaf", tint:"#f0dcc0", color:"var(--module-1)", type:"group", desc:"每日打卡·自由记录",
+    { key:"habits", name:"习惯", icon:"leaf", tint:"#f0dcc0", color:"var(--module-1)", type:"group", desc:"每日习惯 · 自由打卡",
       subKeys:["checkin"], defaultSub:"checkin" },
-    { key:"checkin", name:"打卡", icon:"leaf", tint:"#f0dcc0", color:"var(--module-1)", type:"checkin", desc:"每日小习惯打卡（可自由增删，如阅读 / 运动 / 电影）", parent:"habits",
+    { key:"checkin", name:"习惯", icon:"leaf", tint:"#f0dcc0", color:"var(--module-1)", type:"checkin", desc:"每日小习惯打卡（可自由增删，如阅读 / 运动 / 电影）", parent:"habits",
       seed:[ {id:21,title:"喝够 8 杯水",log:{},weekGoal:7,monthGoal:25}, {id:22,title:"23:30 前睡觉",log:{},weekGoal:7,monthGoal:25}, {id:23,title:"维生素 / 补品",log:{},weekGoal:7,monthGoal:20} ] },
 
     { key:"money", name:"记账本", icon:"wallet", tint:"#f0ddcf", color:"var(--module-4)", type:"finance", desc:"收入·支出·分类·占比",
@@ -2076,15 +2082,15 @@ function habitTileHTML(){
       return `<td class="${i===tIdx?'tdcol':''}"><span class="hcell js-habit ${on?'on':'off'}" data-id="${x.id}" data-day="${day}">${chk}</span></td>`; }).join("");
     const rate=Math.round(cnt/7*100);
     return `<tr><td class="hn"><span class="hdot" style="background:${palette[ri%palette.length]}"></span>${esc(x.title)}</td>${cells}<td class="hrate" style="color:${palette[ri%palette.length]}">${rate}%</td></tr>`;
-  }).join("") : `<tr><td colspan="9" style="text-align:center;color:var(--text-tertiary);font-size:12.5px;padding:18px 0">还没有习惯，去「习惯打卡」添加吧</td></tr>`;
+  }).join("") : `<tr><td colspan="9" style="text-align:center;color:var(--text-tertiary);font-size:12.5px;padding:18px 0">还没有习惯，去「习惯」添加吧</td></tr>`;
   return `<div class="tile b7"><div class="tile-h"><span class="tic">${icon("leaf",16)}</span><div class="tt"><span class="en">HABIT TRACKER</span><span class="zh">本周习惯追踪表</span></div><span class="r js-open" data-open="checkin">本周 · 周${dnames[((new Date().getDay())+6)%7]}</span></div>
     <div class="hbt-scroll"><table class="habit-tb"><thead><tr><th class="hh">习惯</th>${ths}<th class="hr">完成率</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
-/* 习惯打卡：本月打卡天数对比上月（模块页概览） */
-function checkinCompareHTML(){
+/* 习惯：所选月份打卡天数对比上月（复盘页「习惯」板块） */
+function checkinCompareHTML(ym){
   const items=data.checkin||[]; if(!items.length) return "";
-  const ym=curYM(), last=prevYM(ym);
+  ym = ym || curYM(); const last=prevYM(ym);
   const days=(log,y)=> log?Object.keys(log).filter(d=>d.startsWith(y)&&log[d]).length:0;
   let cur=0, prev=0;
   const rows=items.map(x=>{
@@ -2099,7 +2105,7 @@ function checkinCompareHTML(){
   const d=cur-prev, cls=d>0?"up":(d<0?"down":"flat");
   const dTxt=d>0?`▲ +${d} 天`:(d<0?`▼ ${d} 天`:`— 与上月持平`);
   return `<div class="rv-card cm-compare">
-    <div class="rv-hd">${icon("leaf",15)} 本月打卡 <span class="rv-cap">对比 ${+last.slice(5)} 月</span></div>
+    <div class="rv-hd">${icon("leaf",15)} 习惯 · ${+ym.slice(5)} 月天数 <span class="rv-cap">对比 ${+last.slice(5)} 月</span></div>
     <div class="cm-total"><b>${cur}</b> 天 <span class="rv-g">上月 ${prev} 天</span><span class="cm-delta ${cls}">${dTxt}</span></div>
     ${rows}</div>`;
 }
@@ -2183,7 +2189,7 @@ function pomoTileHTML(){
     if(!items.length) return "";
     return `<optgroup label="${label}">${items.map(x=>`<option value="${key}|${type}|${x.id}" ${pomo.linkedId===x.id&&pomo.linkedKey===key?'selected':''}>${esc(x.title||'未命名')}</option>`).join("")}</optgroup>`;
   };
-  const opts=optGrp("习惯打卡",habits,"checkin","checkin");
+  const opts=optGrp("习惯",habits,"checkin","checkin");
 
   const linkedLabel=pomo.linkedTitle?`<span class="plink-cur">${esc(pomo.linkedTitle)}</span>`:`<span class="plink-none">未关联</span>`;
 
@@ -2331,7 +2337,7 @@ function renderHome(){
       ${lifeTileHTML()}
     </div>
 
-    ${grp("习惯打卡","HABITS")}
+    ${grp("习惯","HABITS")}
     <div class="bento">${habitTileHTML()}</div>
 
     ${grp("今日待办","TODAY'S&nbsp;&nbsp;TASKS")}
@@ -2648,8 +2654,8 @@ function habitCalRow(name, log, days, ym){
 function habitCalendarHTML(ym){
   const days=monthDaysArr(ym); const rows=[];
   (data.checkin||[]).forEach(x=>{ rows.push(habitCalRow(esc(x.title),x.log||{},days,ym)); });
-  if(!rows.length) return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历</div><div class="focus-empty">还没有打卡项，去「习惯打卡」添加吧</div></div>`;
-  return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡月历</div><div class="hc-wrap">${rows.join("")}</div>
+  if(!rows.length) return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯月历</div><div class="focus-empty">还没有习惯，去「习惯」添加吧</div></div>`;
+  return `<div class="rv-card habit-cal-card"><div class="rv-hd">${icon("calendar",15)} 习惯月历</div><div class="hc-wrap">${rows.join("")}</div>
     <div class="hc-legend"><span class="hc-dot on"></span>已打卡<span class="hc-dot"></span>未打卡</div></div>`;
 }
 // 伴侣周期：日历法阶段推算（经期 / 易孕期 / 排卵日 / 安全期）
@@ -2714,7 +2720,7 @@ function intimateCalendarHTML(ym){
     const meta=[r.duration?r.duration+" 分钟":"", r.rating?"★".repeat(r.rating):"", r.mood?r.mood:""].filter(Boolean).join(" · ");
     return `<div class="ic-rec" data-edit="${r.id}"><span class="ic-rec-b">${r.behavior==="solo"?icon("user",11):icon("heart",11)} ${esc(bh)}</span><span class="ic-rec-m">${esc(meta)}</span></div>`;
   }).join("") : `<div class="focus-empty" style="padding:10px 0">这一天还没有记录，点下方「+ 添加」或右上角「新建」</div>`;
-  return `<div class="sec-title">${icon("calendar",14)} 打卡日历 <span style="margin-left:auto;font-weight:500;color:var(--text-secondary);font-size:12px">点击日期查看当天记录</span></div>
+  return `<div class="sec-title">${icon("calendar",14)} 记录日历 <span style="margin-left:auto;font-weight:500;color:var(--text-secondary);font-size:12px">点击日期查看当天记录</span></div>
     <div id="ic-cal" class="ic-cal">
       <div class="ic-nav"><button class="btn ghost xs" id="ic-prev">${icon("chevron",13)} 上月</button><span class="ic-ym">${y}年${mo}月</span><button class="btn ghost xs" id="ic-next">下月 ${icon("chevron",13)}</button></div>
       <div class="ic-grid">${wk}${cells}</div>
@@ -2760,8 +2766,8 @@ function intimateReview(){
   const partnerN=arr.filter(x=>(x.date||"").startsWith(ym)&&x.behavior!=="solo").length;
   const soloN=arr.filter(x=>(x.date||"").startsWith(ym)&&x.behavior==="solo").length;
   const row=(k,v)=>`<div class="stat-row"><span class="k">${k}</span><span class="val">${v}</span></div>`;
-  return `<div class="rv-card"><div class="rv-hd">${icon("heart",15)} 亲密健康 · 本月</div>
-    ${row("本月次数",`${mc} 次`)}
+  return `<div class="rv-card"><div class="rv-hd">${icon("heart",15)} 亲密健康 · ${+ym.slice(5)} 月</div>
+    ${row("当月次数",`${mc} 次`)}
     ${row("平均时长",`${avgDur} 分钟`)}
     ${row("伴侣 / 自慰",`${partnerN} / ${soloN}`)}</div>`;
 }
@@ -2772,39 +2778,9 @@ function renderInsight(){
   const [vy,vm]=insightMonth.split("-").map(Number);
   const monthName=`${vy}年${vm}月`;
 
-  const cards=CONFIG.modules.filter(m=>!m.parent).map(m=>{ const it=data[m.key]||[]; let main="", pct=0;
-    if(m.type==="group"){ main=`${m.subKeys.length} 个子项 · 聚合页`; pct=0; }
-    else if(m.type==="todo"){ main=`${it.filter(x=>x.done).length}/${it.length} 已完成`; pct=it.length?Math.round(it.filter(x=>x.done).length/it.length*100):0; }
-    else if(m.type==="checkin"){ const t=today(); main=`今日 ${it.filter(x=>x.log&&x.log[t]).length}/${it.length} 打卡`; pct=it.length?Math.round(it.filter(x=>x.log&&x.log[t]).length/it.length*100):0; }
-    else if(m.type==="progress"){ pct=avgProgress(it).value; main=`平均进度 ${pct}%`; }
-    else if(m.type==="finance"){ const e=it.filter(x=>x.type==="expense").reduce((a,x)=>a+ +x.amount,0); const inc=it.filter(x=>x.type==="income").reduce((a,x)=>a+ +x.amount,0); main=`收 ¥${inc} · 支 ¥${e}`; }
-    else main=`${it.length} 条记录`;
-    return `<div class="pin" data-open="${m.key}" style="cursor:pointer">
-      <span class="pin-ic" style="color:${m.color};background:${m.tint};border-color:transparent">${icon(m.icon,19)}</span>
-      <div class="pin-b"><div class="pin-t">${m.name}</div><div class="pin-m">${main}</div>
-      ${['progress','todo','checkin'].includes(m.type)?`<div class="hero-bar" style="margin-top:9px"><i style="width:${pct}%;background:${m.color}"></i></div>`:''}</div>
-      <span class="arw" style="color:var(--text-tertiary)">${icon("chevron",16,2)}</span></div>`; }).join("");
-
   // === 月度复盘板块 ===
   const budget=data.__budget||{};
-  // 阅读 / 锻炼：current 累计 vs monthGoal
-  const progressReview=(key,label,unit)=>{
-    const arr=(data[key]||[]).filter(x=>x.monthGoal);
-    if(!arr.length) return "";
-    const rows=arr.map(x=>{
-      const cur=+x.current||0; const goal=+x.monthGoal||0;
-      const pct=goal?Math.min(100,Math.round(cur/goal*100)):0;
-      const cls=pct>=100?"done":(pct>=60?"ok":"warn");
-      return `<div class="rv-row ${cls}">
-        <div class="rv-name">${esc(x.title||"")}</div>
-        <div class="rv-bar"><i style="width:${pct}%"></i></div>
-        <div class="rv-val">${cur}<span class="rv-g">/${goal} ${unit}</span></div>
-        <div class="rv-pct ${cls}">${pct}%</div>
-      </div>`;
-    }).join("");
-    return `<div class="rv-card"><div class="rv-hd">${icon(key==="read"?"book":"activity",15)} ${label}</div>${rows}</div>`;
-  };
-  // 打卡：本周 vs 每周目标；本月 vs 每月目标（对比上月完成率）
+  // 习惯：本周 vs 每周目标；本月 vs 每月目标（对比上月）
   const checkinReview=()=>{
     const items=(data.checkin||[]).filter(x=>(x.weekGoal||x.monthGoal));
     if(!items.length) return "";
@@ -2819,7 +2795,7 @@ function renderInsight(){
       const cls=pct>=100?"done":(pct>=60?"ok":"warn");
       return `<div class="rv-row ${cls}"><div class="rv-name">${esc(x.title||"")}</div><div class="rv-bar"><i style="width:${pct}%"></i></div><div class="rv-val">${wc}<span class="rv-g">/${goal} 天</span></div><div class="rv-pct ${cls}">${pct}%</div></div>`;
     }).join("");
-    const wkCard= wkRows?`<div class="rv-card"><div class="rv-hd">${icon("calendar",15)} 习惯打卡 · 本周</div>${wkRows}</div>`:"";
+    const wkCard= (wkRows && insightMonth===curYM())?`<div class="rv-card"><div class="rv-hd">${icon("calendar",15)} 习惯 · 本周</div>${wkRows}</div>`:"";
     // 本月（对比每月目标 + 对比上月）
     const moItems=items.filter(x=>x.monthGoal);
     const moRows=moItems.map(x=>{
@@ -2830,7 +2806,7 @@ function renderInsight(){
       const cls=pct>=100?"done":(pct>=60?"ok":"warn");
       return `<div class="rv-row ${cls}"><div class="rv-name">${esc(x.title||"")}</div><div class="rv-bar"><i style="width:${pct}%"></i></div><div class="rv-val">${mc}<span class="rv-g">/${goal} 天 · 上月 ${lmc}</span></div><div class="rv-pct ${cls}">${pct}%<span class="rv-delta ${ddCls}">${dTxt}</span></div></div>`;
     }).join("");
-    const moCard= moRows?`<div class="rv-card"><div class="rv-hd">${icon("leaf",15)} 习惯打卡 · 本月 <span class="rv-cap">对比上月</span></div>${moRows}</div>`:"";
+    const moCard= moRows?`<div class="rv-card"><div class="rv-hd">${icon("leaf",15)} 习惯 · ${+insightMonth.slice(5)} 月目标 <span class="rv-cap">对比 ${+lastYM.slice(5)} 月</span></div>${moRows}</div>`:"";
     return wkCard+moCard;
   };
   // 记账：本月支出 vs 预算
@@ -2841,9 +2817,9 @@ function renderInsight(){
       .reduce((a,x)=>a+ +x.amount,0);
     const pct=bud?Math.min(100,Math.round(exp/bud*100)):0;
     const cls=pct>=100?"warn":(pct>=80?"warn":(pct>=60?"ok":"ok"));
-    return `<div class="rv-card"><div class="rv-hd">${icon("wallet",15)} 月度预算</div>
+    return `<div class="rv-card"><div class="rv-hd">${icon("wallet",15)} ${+insightMonth.slice(5)} 月预算</div>
       <div class="rv-row ${cls}">
-        <div class="rv-name">本月支出</div>
+        <div class="rv-name">当月支出</div>
         <div class="rv-bar"><i style="width:${pct}%"></i></div>
         <div class="rv-val">¥${exp}<span class="rv-g">/¥${bud}</span></div>
         <div class="rv-pct ${cls}">${pct}%</div>
@@ -2859,13 +2835,13 @@ function renderInsight(){
     if(!cats.length) return "";
     const maxC=cats[0][1];
     const catBars=cats.map((c,i)=>`<div class="cbrow"><span class="cbn">${esc(c[0])}</span><span class="cbt"><i style="width:${Math.round(c[1]/maxC*100)}%;background:${palette[i%palette.length]}"></i></span><span class="cbv">¥${c[1]}</span></div>`).join("");
-    return `<div class="rv-card"><div class="rv-hd">${icon("chart",15)} 支出分类占比</div><div class="catbar">${catBars}</div></div>`;
+    return `<div class="rv-card"><div class="rv-hd">${icon("chart",15)} ${+insightMonth.slice(5)} 月支出分类占比</div><div class="catbar">${catBars}</div></div>`;
   };
 
   // 预算编辑入口
   const budgetEditor=`
     <div class="rv-budget">
-      <span class="rvb-label">${icon("wallet",13)} 本月预算 ¥</span>
+      <span class="rvb-label">${icon("wallet",13)} 月度预算 ¥</span>
       <input id="rv-budget" type="number" value="${budget.expense||""}" placeholder="设置预算（如 2000）"/>
       <button class="btn" id="rv-budget-save">保存</button>
     </div>`;
@@ -2875,29 +2851,30 @@ function renderInsight(){
   const investHTML=investmentReviewHTML(insightMonth);
 
   // 按板块归位：每个模块的复盘内容集中到自己的板块下
+  const BOARD_TITLE={todo:"今日待办",checkin:"习惯",money:"记账本",note:"笔记",portfolio:"投资看板",intimate:"亲密健康"};
   const boardSection=(key,body,extra="")=>{
     const bm=modOf(key); if(!bm) return "";
     const hasBody=!!(body && body.trim());
     const hasExtra=!!(extra && extra.trim());
     if(!hasBody && !hasExtra) return "";
     const list=data[key]||[];
-    return `<section class="rv-board">
-      <div class="rv-board-hd">
+    return `<details class="rv-board" open>
+      <summary class="rv-board-hd">
         <span class="rv-board-ic" style="color:${bm.color};background:${bm.tint}">${icon(bm.icon,16)}</span>
-        <span class="rv-board-t">${bm.name}</span>
+        <span class="rv-board-t">${BOARD_TITLE[key]||bm.name}</span>
         <span class="rv-board-n">${list.length} 项</span>
-      </div>
+      </summary>
       ${hasBody?`<div class="rv-board-body">${body}</div>`:""}
       ${hasExtra?extra:""}
-    </section>`;
+    </details>`;
   };
   const boards=[
-    boardSection("todo", sideStats(modOf("todo"), data.todo||[])),
-    boardSection("checkin", checkinReview()+sideStats(modOf("checkin"), data.checkin||[]), habitCalendarHTML(insightMonth)),
-    boardSection("money", financeReview()+spendCategoryReview()+sideStats(modOf("money"), data.money||[])),
-    boardSection("note", sideStats(modOf("note"), data.note||[])),
-    boardSection("portfolio", investHTML+sideStats(modOf("trades"), data.trades||[])),
-    boardSection("intimate", intimateReview()+sideStats(modOf("intimate"), data.intimate||[])),
+    boardSection("todo", sideStats(modOf("todo"), data.todo||[], insightMonth)),
+    boardSection("checkin", checkinCompareHTML(insightMonth)+checkinReview()+sideStats(modOf("checkin"), data.checkin||[], insightMonth), habitCalendarHTML(insightMonth)),
+    boardSection("money", financeReview()+spendCategoryReview()+sideStats(modOf("money"), data.money||[], insightMonth)),
+    boardSection("note", sideStats(modOf("note"), data.note||[], insightMonth)),
+    boardSection("portfolio", investHTML+sideStats(modOf("trades"), data.trades||[], insightMonth)),
+    boardSection("intimate", intimateReview()+sideStats(modOf("intimate"), data.intimate||[], insightMonth)),
   ].join("");
 
   const [cy,cm]=curYM().split("-").map(Number);
@@ -2909,7 +2886,7 @@ function renderInsight(){
 
 
     <div class="sec-title" style="margin-top:28px">
-      <div class="rv-title">${icon("target",16)} 月度复盘</div>
+      <div class="rv-title">${icon("chart",16)} 复盘 · 按板块</div>
       <div class="rv-month-nav">
         <button class="btn ghost" id="rv-prev" ${canPrev?'':'disabled'}>${icon("chevron",13)} 上月</button>
         <span class="rv-month-name">${monthName}</span>
@@ -3004,7 +2981,7 @@ function renderModule(key){
     ${head}
     ${FIXED_HABITS.includes(key)?habitBarHTML(key):''}
     <div class="mod-layout">
-      <div class="mod-main">${m.type==="checkin"?checkinCompareHTML():""}${mainContent}</div>
+      <div class="mod-main">${mainContent}</div>
     </div>`;
   const tgl=$("#toggle-done"); if(tgl) tgl.onclick=()=>{ showDoneTodos=!showDoneTodos; renderModule(key); };
   const rbAdd=$("#rb-add"); if(rbAdd) rbAdd.onclick=()=>openRecurringModal(null);
@@ -3253,9 +3230,9 @@ function renderModuleResults(key){
   wireModule(key);
 }
 
-/* 模块统计侧栏：按 type 生成多维数据，填满右侧空间 */
-function sideStats(m, all){
-  const t=today();
+/* 复盘板块统计：按 type 生成多维数据，ym 为复盘所选月份 */
+function sideStats(m, all, ym){
+  ym = ym || curYM();
   const palette=["var(--accent)","var(--module-1)","var(--module-2)","var(--module-3)","var(--module-4)","var(--module-5)","var(--danger)"];
   const row=(k,v,dot)=>`<div class="stat-row"><span class="k">${dot?`<span class="kd" style="background:${dot}"></span>`:''}${k}</span><span class="val">${v}</span></div>`;
 
@@ -3268,14 +3245,12 @@ function sideStats(m, all){
     const maxC=cats.length?cats[0][1]:1;
     const catBars=cats.length? cats.map((c,i)=>`<div class="cbrow"><span class="cbn">${esc(c[0])}</span><span class="cbt"><i style="width:${Math.round(c[1]/maxC*100)}%;background:${palette[i%palette.length]}"></i></span><span class="cbv">¥${c[1]}</span></div>`).join("")
       : `<div style="color:var(--text-tertiary);font-size:12.5px;padding:6px 0">暂无支出记录</div>`;
-    const todayExp=all.filter(x=>x.type==="expense"&&x.date===t).reduce((a,x)=>a+ +x.amount,0);
     return `<div class="side-card"><div class="sh">${icon("wallet",15)} 收支概况</div>
         ${row("总收入",`<span style="color:var(--module-1)">¥${inc}</span>`)}
         ${row("总支出",`<span style="color:var(--danger)">¥${exp}</span>`)}
         ${row("净结余",`¥${inc-exp}`)}
-        ${row("今日支出",`¥${todayExp}`)}
         ${row("总笔数",`${all.length} 笔`)}</div>
-      ${financeBudgetCard(m)}`;
+      ${financeBudgetCard(m, ym)}`;
   }
 
   if(m.type==="progress"){
@@ -3293,13 +3268,10 @@ function sideStats(m, all){
   }
 
   if(m.type==="checkin"){
-    const done=all.filter(x=>x.log&&x.log[t]).length; const pct=all.length?Math.round(done/all.length*100):0;
     const streaks=all.map(x=>({title:x.title,s:streak(x.log)})).sort((a,b)=>b.s-a.s);
     const best=streaks[0]?streaks[0].s:0;
     const list=streaks.slice(0,6).map(x=>`<div class="stat-row"><span class="k">${esc(x.title)}</span><span class="val" style="color:var(--module-3)">${x.s} 天</span></div>`).join("");
-    return `<div class="side-card"><div class="sh">${icon("leaf",15)} 今日打卡</div>
-        <div class="side-ring"><div class="dial">${ringSVG(pct,m.color)}<span class="mid"><span class="big" style="color:${m.color}">${done}/${all.length}</span><span class="cap">已完成</span></span></div></div></div>
-      <div class="side-card"><div class="sh">${icon("flame",15)} 连续天数</div>
+    return `<div class="side-card"><div class="sh">${icon("flame",15)} 连续天数</div>
         ${row("最长连续",`<span style="color:var(--module-3)">${best} 天</span>`)}
         ${row("习惯总数",`${all.length} 个`)}
         <div style="margin-top:6px">${list}</div></div>`;
@@ -3313,9 +3285,9 @@ function sideStats(m, all){
     const avgPerMonth=(total/monthsActive).toFixed(1);
     const durs=recs.map(r=>+r.duration||0).filter(v=>v>0);
     const avgDur=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
-    // 月度趋势（近 6 个月）
-    const now=new Date(); const trend=[];
-    for(let i=5;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); const ym=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; trend.push(recs.filter(r=>(r.date||"").startsWith(ym)).length); }
+    // 月度趋势（截至复盘所选月份的近 6 个月）
+    const [ey,em]=ym.split("-").map(Number); const trend=[];
+    for(let i=5;i>=0;i--){ const d=new Date(ey,em-1-i,1); const mk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; trend.push(recs.filter(r=>(r.date||"").startsWith(mk)).length); }
     const trendSvg = trend.some(v=>v>0)? trendSVG(trend) : `<div class="focus-empty" style="padding:6px 0;font-size:12px">近 6 个月暂无数据</div>`;
     // 行为分布
     const partnerN=recs.filter(r=>r.behavior!=="solo").length, soloN=recs.filter(r=>r.behavior==="solo").length;
@@ -3335,7 +3307,7 @@ function sideStats(m, all){
   }
 
   if(m.type==="movie"){
-    const ym=curYM(); const thisMonth=(data.movie||[]).filter(x=>(x.date||"").startsWith(ym)).length;
+    const thisMonth=(data.movie||[]).filter(x=>(x.date||"").startsWith(ym)).length;
     const goal=movieGoal(); const pct=goal?Math.min(100,Math.round(thisMonth/goal*100)):0;
     const rated=(data.movie||[]).filter(x=>x.rating).length;
     return `<div class="side-card"><div class="sh">${icon("film",15)} 观影统计</div>
@@ -3350,14 +3322,13 @@ function sideStats(m, all){
   }
 
   if(m.type==="trades"){
-    const ym=curYM();
     const row2=(k,v)=>`<div class="stat-row"><span class="k">${k}</span><span class="val">${v}</span></div>`;
     const sum=(action)=>all.filter(x=>x.action===action).reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
     const mCount=all.filter(x=>(x.date||"").startsWith(ym)).length;
     const fees=all.reduce((a,x)=>a+(+x.fee||0),0);
     return `<div class="side-card"><div class="sh">${icon("exchange",15)} 交易概况</div>
         ${row2("累计交易",`${all.length} 笔`)}
-        ${row2("本月交易",`<span style="color:var(--accent)">${mCount} 笔</span>`)}
+        ${row2(`${+ym.slice(5)} 月交易`,`<span style="color:var(--accent)">${mCount} 笔</span>`)}
         ${row2("累计买入",`¥${sum("buy").toFixed(0)}`)}
         ${row2("累计卖出",`¥${sum("sell").toFixed(0)}`)}
         ${row2("累计分红",`¥${sum("dividend").toFixed(0)}`)}
@@ -3365,18 +3336,13 @@ function sideStats(m, all){
   }
 
   if(m.type==="todo"){
-    const done=all.filter(x=>x.done).length; const pct=all.length?Math.round(done/all.length*100):0;
     const byP={}; (m.priorities||[]).forEach(p=>byP[p.key]=0); all.forEach(x=>{ if(byP[x.priority]!=null) byP[x.priority]++; });
     const pRows=(m.priorities||[]).map(p=>`<div class="stat-row"><span class="k"><span class="kd" style="background:${p.text}"></span>${p.label}</span><span class="val">${byP[p.key]||0} 项</span></div>`).join("");
-    return `<div class="side-card"><div class="sh">${icon("list",15)} 完成情况</div>
-        <div class="side-ring"><div class="dial">${ringSVG(pct,m.color)}<span class="mid"><span class="big" style="color:${m.color}">${pct}%</span><span class="cap">${done}/${all.length} 完成</span></span></div></div></div>
-      <div class="side-card"><div class="sh">${icon("chart",15)} 优先级分布</div>
-        ${pRows}
-        ${row("剩余待办",`${all.length-done} 项`)}</div>`;
+    return `<div class="side-card"><div class="sh">${icon("chart",15)} 优先级分布</div>
+        ${pRows}</div>`;
   }
 
   // note
-  const todayN=all.filter(x=>x.date===t).length;
   const byMood={}; all.forEach(x=>{ const md=x.mood||"未分类"; byMood[md]=(byMood[md]||0)+1; });
   const moods=Object.entries(byMood).sort((a,b)=>b[1]-a[1]);
   const maxM=moods.length?moods[0][1]:1;
@@ -3384,7 +3350,6 @@ function sideStats(m, all){
     : `<div style="color:var(--text-tertiary);font-size:12.5px;padding:6px 0">暂无记录</div>`;
   return `<div class="side-card"><div class="sh">${icon("pen",15)} 记录统计</div>
       ${row("累计记录",`${all.length} 条`)}
-      ${row("今日新增",`${todayN} 条`)}
       ${row("标签种类",`${moods.length} 种`)}</div>
     <div class="side-card"><div class="sh">${icon("chart",15)} 标签分布</div><div class="catbar">${moodBars}</div></div>`;
 }
@@ -3586,7 +3551,7 @@ function openEditor(key,item,prefill){
         <div class="subtask-add"><input id="f-st" type="text" placeholder="新子任务，回车添加"/><button class="btn" id="f-st-add" type="button">添加</button></div>
       </div>`;
   } else if(m.type==="checkin"){
-    fields=`<div class="field"><label>打卡项</label><input id="f-title" value="${attr(d.title)}" placeholder="例如：喝够 8 杯水"/></div>
+    fields=`<div class="field"><label>习惯</label><input id="f-title" value="${attr(d.title)}" placeholder="例如：喝够 8 杯水"/></div>
       <div class="frow">
         <div class="field"><label>${icon("calendar",14)} 每周目标（天）</label><input id="f-week-goal" type="number" value="${d.weekGoal??''}" placeholder="如 7（每周 7 天）"/></div>
         <div class="field"><label>${icon("target",14)} 每月目标（天）</label><input id="f-month-goal" type="number" value="${d.monthGoal??''}" placeholder="如 25（每月天）"/></div>
@@ -5330,10 +5295,10 @@ function closeModal(){
 }
 
 /* 记账本：信封预算卡片（分类额度 + 超支预警） */
-function financeBudgetCard(m){
+function financeBudgetCard(m, ym){
   const bud = data.__budget || {};
   const catsBud = bud.cats || {};
-  const ym = curYM();
+  ym = ym || curYM();
   const cats = m.categories || [];
   const rows = cats.map(c=>{
     const spent = (data.money||[]).filter(x=>x.type==="expense" && (x.category||"其他")===c && (x.date||"").startsWith(ym))
@@ -5351,7 +5316,7 @@ function financeBudgetCard(m){
   const totalBud = Object.values(catsBud).reduce((a,x)=>a+x,0);
   const totalSpent = (data.money||[]).filter(x=>x.type==="expense" && (x.date||"").startsWith(ym)).reduce((a,x)=>a+ +x.amount,0);
   const totalOver = totalBud>0 && totalSpent>totalBud;
-  return `<div class="side-card"><div class="sh">${icon("wallet",15)} 信封预算 · 本月</div>
+  return `<div class="side-card"><div class="sh">${icon("wallet",15)} 信封预算 · ${+ym.slice(5)} 月</div>
       <div class="catbar">${rows || '<div style="color:var(--text-tertiary);font-size:12.5px">暂无分类</div>'}</div>
       ${totalBud>0?`<div class="cbrow" style="margin-top:6px;border-top:1px dashed var(--border);padding-top:8px">
         <span class="cbn"><b>合计</b></span><span class="cbt"></span>
