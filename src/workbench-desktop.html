@@ -5,7 +5,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#3a3530" />
-<meta name="description" content="复古报刊风格的个人看板：待办·习惯·记账·笔记·课表·投资看板。PWA 支持，多设备同步。" />
+<meta name="description" content="克制、现代的单文件个人工作台：待办·习惯·记账·笔记·课表·投资·健康。本地优先，PWA 离线可用，多设备同步。" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="我的看板" />
@@ -76,8 +76,8 @@
     --radius-sheet: 22px;
     --pad-card: 14px 16px;
 
-    /* ---- 阴影（报纸油墨感） ---- */
-    --shadow-card: 0 1px 2px rgba(28,22,16,.04), 0 8px 24px rgba(28,22,16,.06);
+    /* ---- 阴影（克制、贴地） ---- */
+    --shadow-card: 0 1px 2px rgba(28,32,40,.03), 0 6px 18px rgba(28,32,40,.05);
     --shadow-overlay: 0 20px 50px rgba(28,22,16,.18);
 
     /* ---- 字体与布局 ---- */
@@ -110,7 +110,7 @@
   .layout { min-height: 100vh; }
 
   /* ============================================================
-     复古报刊编辑部 · 装饰元素（邮票 / 胶带 / 铅笔批注 / 报头 / 小猫涂鸦）
+     通用排版元素（字体工具类 / 报头 / 栏线）
      ============================================================ */
   /* 手写字体工具类 */
   .hand { font-family: var(--font-hand); font-weight: normal; }
@@ -282,28 +282,48 @@
   .date-chip svg { color: var(--text-tertiary); }
 
 
-  /* ---------- 人生进度卡片（首页，替代原问候 hero） ---------- */
-  .life-card { padding: 22px 26px; }
+  /* ---------- 人生进度卡片（首页主数据卡） ---------- */
+  .life-card { padding: 20px 22px; }
   .life-head { display: flex; align-items: center; gap: 10px; }
   .life-head .spacer { flex: 1; }
-  .life-title { display: flex; align-items: center; gap: 9px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+  .life-title { display: flex; align-items: center; gap: 9px; font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
+  .life-ic { width: 30px; height: 30px; border-radius: 9px; background: var(--accent-muted); color: var(--accent);
+    display: grid; place-items: center; flex: 0 0 auto; }
   .life-title svg { color: var(--accent); }
-  .life-age { font-size: 12px; font-weight: 600; color: var(--text-secondary); background: var(--surface-nested); padding: 3px 10px; border-radius: 999px; }
-  .life-target { font-size: 12.5px; color: var(--text-secondary); }
-  .life-bar { position: relative; height: 10px; border-radius: 999px; background: var(--surface-nested); overflow: hidden; margin: 16px 0 14px; }
-  .life-bar i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 999px; background: var(--accent); transition: width .5s cubic-bezier(.2,.8,.3,1); }
+  .life-age { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); background: var(--surface-nested); padding: 3px 9px; border-radius: 999px; }
+  .life-target { font-size: 12px; color: var(--text-secondary); }
+  .life-main { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.05fr); gap: 16px 24px; align-items: center; margin-top: 16px; }
   .life-cap { font-size: 12.5px; color: var(--text-secondary); }
-  .life-pct { font-size: 46px; font-weight: 800; letter-spacing: -.04em; color: var(--accent); line-height: 1.1; margin: 2px 0 10px; }
-  .life-pct .u { font-size: 22px; font-weight: 800; margin-left: 2px; }
-  .life-foot { display: flex; gap: 26px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-secondary); }
-  .life-foot b { color: var(--text); font-size: 14.5px; font-weight: 800; letter-spacing: -.01em; }
+  .life-pct { font-size: 50px; font-weight: 800; letter-spacing: -.045em; color: var(--accent); line-height: 1.05;
+    margin: 3px 0 0; font-variant-numeric: tabular-nums; }
+  .life-pct .u { font-size: 21px; font-weight: 700; margin-left: 3px; opacity: .72; }
+  .life-bar { position: relative; height: 8px; border-radius: 999px; background: var(--surface-nested); overflow: hidden; margin: 0; }
+  .life-bar i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 999px; background: var(--accent); transition: width .5s cubic-bezier(.2,.8,.3,1); }
+  .life-main > .life-bar { grid-column: 1 / -1; }
+  .life-stats { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1px; background: var(--border);
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .life-stat { background: var(--surface-card); padding: 10px 13px; display: flex; flex-direction: column; gap: 1px; }
+  .life-stat b { color: var(--text); font-size: 19px; font-weight: 800; letter-spacing: -.02em; line-height: 1.25; font-variant-numeric: tabular-nums; }
+  .life-stat span { font-size: 11.5px; color: var(--text-secondary); }
+  .life-stats.two .life-stat { padding: 9px 13px; }
+  .life-stats.two .life-stat b { font-size: 17px; }
   .life-empty { color: var(--text-secondary); font-size: var(--fs-body); padding: 18px 0 6px; }
-  .life-sep { height: 1px; background: var(--border); margin: 16px 0 14px; }
-  .life-year-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+  .life-sep { height: 1px; background: var(--border); margin: 18px 0 14px; }
+  .life-year-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 9px; }
   .life-year-head > span:first-child { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
-  .life-year-pct { font-size: 14px; font-weight: 800; color: var(--module-2); letter-spacing: -.01em; }
+  .life-year-pct { font-size: 14px; font-weight: 800; color: var(--module-2); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .life-bar.year { margin: 0 0 12px; }
   .life-bar.year i { background: var(--module-2); }
-  @media (max-width: 640px){ .life-card { padding: 18px 16px; } .life-pct { font-size: 38px; } }
+  @media (max-width: 640px){
+    .life-card { padding: 16px 15px; }
+    .life-title { font-size: 16px; }
+    .life-main { grid-template-columns: 1fr; gap: 14px; margin-top: 13px; }
+    .life-main > .life-bar { grid-column: 1; }
+    .life-pct { font-size: 40px; }
+    .life-stat { padding: 9px 12px; }
+    .life-stat b { font-size: 17px; }
+    .life-sep { margin: 16px 0 13px; }
+  }
 
   .card { background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
   .sec-title { display:flex; align-items:center; gap:9px; font-size:var(--fs-h3); font-weight:800; margin: 18px 2px 10px; letter-spacing: -.01em; }
@@ -644,18 +664,21 @@
   .b6{grid-column:span 6} .b7{grid-column:span 7} .b8{grid-column:span 8} .b12{grid-column:span 12}
 
   /* 分组标题（EN 副标题 + 中文标题 + 分隔线） */
-  .sec-grp { display:flex; align-items:center; gap:12px; margin:26px 2px 14px; }
-  .sec-grp .bar { width:4px; height:19px; border-radius:2px; background:var(--accent); flex:0 0 auto; }
+  .sec-grp { display:flex; align-items:center; gap:11px; margin:24px 2px 12px; }
+  .sec-grp .bar { width:3px; height:17px; border-radius:3px; background:var(--accent); flex:0 0 auto; }
   .sec-grp .zh { font-size:var(--fs-h2); font-weight:800; letter-spacing:-.02em; }
-  .sec-grp .en { font-size:10.5px; font-weight:800; letter-spacing:.15em; color:var(--text-tertiary); }
+  .sec-grp .en { font-size:9.5px; font-weight:700; letter-spacing:.16em; color:var(--text-tertiary);
+    padding-left:11px; border-left:1px solid var(--border); }
   .sec-grp .line { flex:1; height:1px; background:var(--border); }
 
   /* 通用瓷砖 */
   .tile { background:var(--surface-card); border:1px solid var(--border); border-radius:var(--radius-card); box-shadow:var(--shadow-card);
     padding:16px 18px; display:flex; flex-direction:column; position:relative; }
-  .tile-h { display:flex; align-items:center; gap:9px; margin-bottom:14px; }
-  .tile-h .tic { color:var(--text-tertiary); display:flex; }
-  .tile-h .en { font-size:9.5px; font-weight:800; letter-spacing:.14em; color:var(--text-tertiary); line-height:1; }
+  .tile-h { display:flex; align-items:center; gap:11px; margin-bottom:14px; }
+  .tile-h .tic { width:32px; height:32px; border-radius:10px; background:var(--surface-nested); color:var(--text-secondary);
+    display:grid; place-items:center; flex:0 0 auto; }
+  .tile-h .tic svg { width:16px; height:16px; }
+  .tile-h .en { font-size:9.5px; font-weight:700; letter-spacing:.15em; color:var(--text-tertiary); line-height:1; }
   .tile-h .zh { font-size:var(--fs-h2); font-weight:800; letter-spacing:-.01em; line-height:1.15; }
   .tile-h .tt { display:flex; flex-direction:column; gap:3px; }
   .tile-h .r { margin-left:auto; font-size:12px; color:var(--text-secondary); font-weight:700; }
@@ -697,7 +720,8 @@
   .focus-row .fn { font-size:13.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .focus-row .fn.done { text-decoration:line-through; color:var(--text-secondary); }
   .focus-row .fm { font-size:11px; color:var(--text-secondary); margin-top:2px; }
-  .focus-empty { color:var(--text-secondary); font-size:12.5px; line-height:1.7; padding:6px 0; }
+  .focus-empty { color:var(--text-secondary); font-size:12.5px; line-height:1.7; padding:12px 14px;
+    background:var(--surface-nested); border-radius:10px; text-align:center; }
   .stat-big { font-size:32px; font-weight:800; letter-spacing:-.03em; line-height:1; }
   .stat-big small { font-size:15px; color:var(--text-secondary); font-weight:700; letter-spacing:0; }
   .stat-cap { font-size:12px; color:var(--text-secondary); margin-top:7px; }
@@ -892,22 +916,24 @@
     /* 顶栏右侧控件统一高度，保证同一水平线 */
     .sidebar .foot .sync-indicator { padding: 0; gap: 5px; height: 28px; display: inline-flex; align-items: center; }
     .sidebar .foot .auth-btn, .sidebar .foot .backup-btn { display: inline-flex; align-items: center; justify-content: center;
-      width: auto; height: 28px; margin-top: 0; padding: 0 10px; font-size: 11px; }
+      width: auto; height: 28px; margin-top: 0; padding: 0 10px; font-size: 11px; border-radius: 9px; }
     .sidebar .foot .backup-row { margin-top: 0; flex: 0 0 auto; align-items: center; gap: 6px; height: 28px; }
     /* 备份按钮改为图标（↓导出 / ↑导入），tooltip 由 title 提供 */
-    .sidebar .foot .backup-btn { font-size: 0; padding: 0 9px; }
+    .sidebar .foot .backup-btn { font-size: 0; padding: 0 9px; background: var(--surface-nested); }
     .sidebar .foot .backup-btn::before { font-size: 15px; line-height: 1; }
+    .sidebar .foot .auth-btn { color: var(--accent); background: var(--accent-muted); font-weight: 700; }
     #btnFullExport::before { content: "\2193"; }
     #btnFullImport::before { content: "\2191"; }
     /* 底部 Tab 栏：图标 + 短标签，可横滑；选中态主色强调 + 顶部指示条 */
     .sidebar .nav { position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: 100%;
       display: flex; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
       -webkit-overflow-scrolling: touch; order: 3; gap: 0; padding: 7px 6px calc(7px + env(safe-area-inset-bottom));
-      background: var(--drawer-bg); border-top: 1px solid var(--drawer-hover); z-index: 60; scrollbar-width: none; }
+      background: var(--drawer-bg); border-top: 1px solid var(--border); z-index: 60; scrollbar-width: none; }
     .sidebar .nav::-webkit-scrollbar { display: none; }
-    .navi { margin-bottom: 0; padding: 6px 0; white-space: nowrap; flex: 0 0 auto; min-width: 60px;
-      display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10.5px; border-radius: 0; background: transparent; }
-    .navi.active { background: transparent; color: var(--accent); box-shadow: inset 0 2px 0 var(--accent); }
+    .navi { margin-bottom: 0; padding: 7px 6px; white-space: nowrap; flex: 0 0 auto; min-width: 60px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10.5px;
+      border-radius: 11px; background: transparent; transition: background .15s, color .15s; }
+    .navi.active { background: var(--drawer-active); color: var(--accent); box-shadow: none; font-weight: 700; }
     .navi.active svg { color: var(--accent); }
     .navi svg { width: 20px; height: 20px; }
     .nav-full { display: none; }
@@ -2186,22 +2212,34 @@ function yearInfo(){
 function lifeTileHTML(){
   const i=lifeInfo(); const y=yearInfo();
   const lifeBlock = i ? `
-    <div class="life-bar"><i style="width:${i.pctStr}%"></i></div>
-    <div class="life-cap">你已经走过人生的</div>
-    <div class="life-pct">${i.pctStr}<span class="u">%</span></div>
-    <div class="life-foot"><span><b>${i.yearsLeft}</b> 年剩余</span><span><b>${i.monthsLeft}</b> 月剩余</span><span><b>${i.daysLeft}</b> 天剩余</span><span><b>${i.hoursLeft}</b> 小时剩余</span></div>` :
+    <div class="life-main">
+      <div class="life-primary">
+        <div class="life-cap">你已经走过人生的</div>
+        <div class="life-pct">${i.pctStr}<span class="u">%</span></div>
+      </div>
+      <div class="life-stats">
+        <div class="life-stat"><b>${i.yearsLeft}</b><span>年剩余</span></div>
+        <div class="life-stat"><b>${i.monthsLeft}</b><span>月剩余</span></div>
+        <div class="life-stat"><b>${i.daysLeft}</b><span>天剩余</span></div>
+        <div class="life-stat"><b>${i.hoursLeft}</b><span>小时剩余</span></div>
+      </div>
+      <div class="life-bar"><i style="width:${i.pctStr}%"></i></div>
+    </div>` :
     `<div class="life-empty">设置生日与目标年龄后，这里会显示你的人生进度。</div>`;
   const ageTag = i ? `<span class="life-age">当前 ${i.age} 岁</span>` : ``;
   const targetTag = i ? `<span class="life-target">目标 ${i.target} 岁</span>` : ``;
   return `<div class="card life-card b12">
-    <div class="life-head"><div class="life-title">${icon("activity",17)} 人生进度 ${ageTag}</div>
+    <div class="life-head"><div class="life-title"><span class="life-ic">${icon("activity",17)}</span> 人生进度 ${ageTag}</div>
       <div class="spacer"></div>${targetTag}
       <button class="btn ghost xs" id="btn-life-set">${icon("pen",13)}</button></div>
     ${lifeBlock}
     <div class="life-sep"></div>
     <div class="life-year-head"><span>本年进度</span><span class="life-year-pct">${y.yearPctStr}%</span></div>
     <div class="life-bar year"><i style="width:${y.yearPctStr}%"></i></div>
-    <div class="life-foot"><span><b>${y.yearElapsed}</b> 天已过</span><span><b>${y.yearLeft}</b> 天剩余（共 ${y.yearTotal} 天）</span></div>
+    <div class="life-stats two">
+      <div class="life-stat"><b>${y.yearElapsed}</b><span>天已过</span></div>
+      <div class="life-stat"><b>${y.yearLeft}</b><span>天剩余 · 共 ${y.yearTotal} 天</span></div>
+    </div>
   </div>`;
 }
 function openLifeSettings(){
