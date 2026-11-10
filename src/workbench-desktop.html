@@ -818,12 +818,6 @@
   .rv-pct.done { color:var(--module-3); }
   .rv-pct.ok { color:var(--accent); }
   .rv-pct.warn { color:var(--danger); }
-  .rv-budget { display:flex; align-items:center; gap:8px; margin-top:14px; padding:12px 14px;
-    background:var(--surface-card); border:1px solid var(--border); border-radius:var(--radius-card); }
-  .rvb-label { font-size:12px; color:var(--text-secondary); display:inline-flex; align-items:center; gap:5px; }
-  .rv-budget input { width:120px; padding:6px 8px; border:1px solid var(--border-input); border-radius:6px;
-    background:var(--surface-nested); color:var(--text); font-size:12px; }
-  .rv-budget .btn { padding:6px 12px; font-size:12px; }
   /* 复盘卡片标题右侧小字 / 环比标记 */
   .rv-cap { margin-left:auto; font-size:11px; font-weight:500; color:var(--text-tertiary); }
   .rv-delta { font-size:10.5px; font-weight:700; margin-left:3px; }
@@ -2567,6 +2561,7 @@ function financeOverviewHTML(){
     <div class="fo-set">
       <label class="fo-opening">期初现金 ¥<input id="fo-opening" type="number" step="any" value="${(+(data.__cashOpening||0))}" placeholder="0"/></label>
       <label class="fo-toggle"><input type="checkbox" id="fo-link" ${data.__linkTradeToLedger!==false?'checked':''}/> 投资买卖自动回写记账本</label>
+      <button class="btn ghost sm" id="btn-budget">${icon("edit",13)} 设置月度预算</button>
     </div>
     <div class="fo-note">现金随投资买卖同步增减，总资产不会重复计入。修改期初现金或开关后自动重算。</div>
   </div>`;
@@ -2755,21 +2750,46 @@ function openCycleSettings(){
   };
 }
 
-// 复盘页：亲密健康本月概览
-function intimateReview(){
-  const arr=(data.intimate||[]);
+// 复盘页：亲密健康月度复盘（月概览 + 近 6 月趋势 + 当月星期分布；不再叠加全量口径）
+function intimateReview(ym){
+  ym = ym || curYM();
+  const arr=data.intimate||[];
   if(!arr.length) return "";
-  const ym=insightMonth;
-  const mc=arr.filter(x=>(x.date||"").startsWith(ym)).length;
-  const durs=arr.filter(x=>(x.date||"").startsWith(ym)).map(x=>+x.duration||0).filter(v=>v>0);
+  const mn=+ym.slice(5);
+  const mine=arr.filter(x=>(x.date||"").startsWith(ym));
+  const lastN=arr.filter(x=>(x.date||"").startsWith(prevYM(ym))).length;
+  const durs=mine.map(x=>+x.duration||0).filter(v=>v>0);
   const avgDur=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
-  const partnerN=arr.filter(x=>(x.date||"").startsWith(ym)&&x.behavior!=="solo").length;
-  const soloN=arr.filter(x=>(x.date||"").startsWith(ym)&&x.behavior==="solo").length;
+  const partnerN=mine.filter(x=>x.behavior!=="solo").length;
+  const soloN=mine.length-partnerN;
+  const dd=mine.length-lastN;
+  const dTxt=dd>0?`▲ +${dd} 次`:(dd<0?`▼ ${dd} 次`:"— 持平");
+  const dCls=dd>0?"up":(dd<0?"down":"flat");
   const row=(k,v)=>`<div class="stat-row"><span class="k">${k}</span><span class="val">${v}</span></div>`;
-  return `<div class="rv-card"><div class="rv-hd">${icon("heart",15)} 亲密健康 · ${+ym.slice(5)} 月</div>
-    ${row("当月次数",`${mc} 次`)}
-    ${row("平均时长",`${avgDur} 分钟`)}
-    ${row("伴侣 / 自慰",`${partnerN} / ${soloN}`)}</div>`;
+  const behBars=[["伴侣",partnerN],["自慰",soloN]].filter(x=>x[1]>0).map(([k,v])=>{
+    const pct=mine.length?Math.round(v/mine.length*100):0;
+    return `<div class="cbrow"><span class="cbn">${k}</span><span class="cbt"><i style="width:${pct}%;background:var(--module-8)"></i></span><span class="cbv">${v} 次</span></div>`;
+  }).join("") || `<div class="focus-empty" style="padding:6px 0;font-size:12px">本月暂无记录</div>`;
+  const [ey,em]=ym.split("-").map(Number); const trend=[], labels=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(ey,em-1-i,1);
+    const mk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+    trend.push(arr.filter(r=>(r.date||"").startsWith(mk)).length);
+    labels.push(`${d.getMonth()+1} 月`);
+  }
+  const trendSvg=trend.some(v=>v>0)?trendSVG(trend):`<div class="focus-empty" style="padding:6px 0;font-size:12px">近 6 个月暂无数据</div>`;
+  const wd=[0,0,0,0,0,0,0], wdNames=["一","二","三","四","五","六","日"];
+  mine.forEach(r=>{ const dt=r.date?new Date(r.date+"T00:00:00"):null; if(dt&&!isNaN(dt)) wd[(dt.getDay()+6)%7]++; });
+  const maxW=Math.max(1,...wd);
+  const wdBars=wd.map((v,i)=>`<div class="cbrow"><span class="cbn">周${wdNames[i]}</span><span class="cbt"><i style="width:${Math.round(v/maxW*100)}%;background:var(--module-2)"></i></span><span class="cbv">${v}</span></div>`).join("");
+  return `<div class="rv-card"><div class="rv-hd">${icon("heart",15)} 亲密健康 · ${mn} 月概览</div>
+      ${row("当月次数",`${mine.length} 次 <span class="rv-delta ${dCls}">${dTxt}</span>`)}
+      ${row("平均时长",`${avgDur} 分钟`)}
+      <div class="catbar" style="margin-top:8px">${behBars}</div></div>
+    <div class="rv-card"><div class="rv-hd">${icon("chart",15)} 近 6 月趋势 <span class="rv-cap">截至 ${mn} 月</span></div>
+      <div class="ic-trend">${trendSvg}</div>
+      <div class="rv-im-rows" style="margin-top:6px;color:var(--text-tertiary)">${labels.join(" · ")}</div></div>
+    <div class="rv-card"><div class="rv-hd">${icon("calendar",15)} ${mn} 月星期分布</div><div class="catbar">${wdBars}</div></div>`;
 }
 
 function renderInsight(){
@@ -2778,13 +2798,11 @@ function renderInsight(){
   const [vy,vm]=insightMonth.split("-").map(Number);
   const monthName=`${vy}年${vm}月`;
 
-  // === 月度复盘板块 ===
-  const budget=data.__budget||{};
-  // 习惯：本周 vs 每周目标；本月 vs 每月目标（对比上月）
+  // === 月度复盘板块：只呈现该月可解释的数据；设置类入口留在各模块页 ===
+  // 习惯：本周 vs 每周目标；本月 vs 每月目标
   const checkinReview=()=>{
     const items=(data.checkin||[]).filter(x=>(x.weekGoal||x.monthGoal));
     if(!items.length) return "";
-    const lastYM=prevYM(insightMonth);
     const countDays=(log,ym)=> log?Object.keys(log).filter(d=>d.startsWith(ym)&&log[d]).length : 0;
     const wk=weekKeys(today());
     const wcOf=(log)=> wk.filter(k=>(log||{})[k]).length;
@@ -2796,37 +2814,17 @@ function renderInsight(){
       return `<div class="rv-row ${cls}"><div class="rv-name">${esc(x.title||"")}</div><div class="rv-bar"><i style="width:${pct}%"></i></div><div class="rv-val">${wc}<span class="rv-g">/${goal} 天</span></div><div class="rv-pct ${cls}">${pct}%</div></div>`;
     }).join("");
     const wkCard= (wkRows && insightMonth===curYM())?`<div class="rv-card"><div class="rv-hd">${icon("calendar",15)} 习惯 · 本周</div>${wkRows}</div>`:"";
-    // 本月（对比每月目标 + 对比上月）
+    // 本月目标达成率（天数环比已由「本月天数」卡呈现，此处不重复）
     const moItems=items.filter(x=>x.monthGoal);
     const moRows=moItems.map(x=>{
       const mc=countDays(x.log,insightMonth); const goal=+x.monthGoal||0; const pct=goal?Math.min(100,Math.round(mc/goal*100)):0;
-      const lmc=countDays(x.log,lastYM);
-      const dd=mc-lmc; const ddCls=dd>0?"up":(dd<0?"down":"flat");
-      const dTxt=dd>0?`▲ +${dd} 天`:dd<0?`▼ ${dd} 天`:`— 持平`;
       const cls=pct>=100?"done":(pct>=60?"ok":"warn");
-      return `<div class="rv-row ${cls}"><div class="rv-name">${esc(x.title||"")}</div><div class="rv-bar"><i style="width:${pct}%"></i></div><div class="rv-val">${mc}<span class="rv-g">/${goal} 天 · 上月 ${lmc}</span></div><div class="rv-pct ${cls}">${pct}%<span class="rv-delta ${ddCls}">${dTxt}</span></div></div>`;
+      return `<div class="rv-row ${cls}"><div class="rv-name">${esc(x.title||"")}</div><div class="rv-bar"><i style="width:${pct}%"></i></div><div class="rv-val">${mc}<span class="rv-g">/${goal} 天</span></div><div class="rv-pct ${cls}">${pct}%</div></div>`;
     }).join("");
-    const moCard= moRows?`<div class="rv-card"><div class="rv-hd">${icon("leaf",15)} 习惯 · ${+insightMonth.slice(5)} 月目标 <span class="rv-cap">对比 ${+lastYM.slice(5)} 月</span></div>${moRows}</div>`:"";
+    const moCard= moRows?`<div class="rv-card"><div class="rv-hd">${icon("leaf",15)} 习惯 · ${+insightMonth.slice(5)} 月目标</div>${moRows}</div>`:"";
     return wkCard+moCard;
   };
-  // 记账：本月支出 vs 预算
-  const financeReview=()=>{
-    const bud=budget.expense||0;
-    if(!bud) return "";
-    const exp=(data.money||[]).filter(x=>x.type==="expense" && (x.date||"").startsWith(insightMonth))
-      .reduce((a,x)=>a+ +x.amount,0);
-    const pct=bud?Math.min(100,Math.round(exp/bud*100)):0;
-    const cls=pct>=100?"warn":(pct>=80?"warn":(pct>=60?"ok":"ok"));
-    return `<div class="rv-card"><div class="rv-hd">${icon("wallet",15)} ${+insightMonth.slice(5)} 月预算</div>
-      <div class="rv-row ${cls}">
-        <div class="rv-name">当月支出</div>
-        <div class="rv-bar"><i style="width:${pct}%"></i></div>
-        <div class="rv-val">¥${exp}<span class="rv-g">/¥${bud}</span></div>
-        <div class="rv-pct ${cls}">${pct}%</div>
-      </div></div>`;
-  };
-
-  // 记账：本月支出分类占比（原为记账模块侧栏，现统一收拢到复盘页）
+  // 记账：本月支出分类占比（月度口径）
   const spendCategoryReview=()=>{
     const palette=["var(--accent)","var(--module-1)","var(--module-2)","var(--module-3)","var(--module-4)","var(--module-5)","var(--danger)"];
     const byCat={}; (data.money||[]).filter(x=>x.type==="expense" && (x.date||"").startsWith(insightMonth))
@@ -2838,51 +2836,44 @@ function renderInsight(){
     return `<div class="rv-card"><div class="rv-hd">${icon("chart",15)} ${+insightMonth.slice(5)} 月支出分类占比</div><div class="catbar">${catBars}</div></div>`;
   };
 
-  // 预算编辑入口
-  const budgetEditor=`
-    <div class="rv-budget">
-      <span class="rvb-label">${icon("wallet",13)} 月度预算 ¥</span>
-      <input id="rv-budget" type="number" value="${budget.expense||""}" placeholder="设置预算（如 2000）"/>
-      <button class="btn" id="rv-budget-save">保存</button>
-    </div>`;
-
-  // 投资复盘 + 净资产聚合（月底自动写入资产快照）
+  // 资产快照只用于投资看板的资产曲线，不参与「本月投资收益」计算
   maybeSnapshotAsset();
   const investHTML=investmentReviewHTML(insightMonth);
 
-  // 按板块归位：每个模块的复盘内容集中到自己的板块下
+  // 按板块归位：每个板块只保留该月可解释的内容，计数也用月内记录数
   const BOARD_TITLE={todo:"今日待办",checkin:"习惯",money:"记账本",note:"笔记",portfolio:"投资看板",intimate:"亲密健康"};
-  const boardSection=(key,body,extra="")=>{
+  const boardSection=(key,body,extra="",count="")=>{
     const bm=modOf(key); if(!bm) return "";
     const hasBody=!!(body && body.trim());
     const hasExtra=!!(extra && extra.trim());
     if(!hasBody && !hasExtra) return "";
     const list=data[key]||[];
+    const n=count||`${list.length} 项`;
     return `<details class="rv-board" open>
       <summary class="rv-board-hd">
         <span class="rv-board-ic" style="color:${bm.color};background:${bm.tint}">${icon(bm.icon,16)}</span>
         <span class="rv-board-t">${BOARD_TITLE[key]||bm.name}</span>
-        <span class="rv-board-n">${list.length} 项</span>
+        <span class="rv-board-n">${n}</span>
       </summary>
       ${hasBody?`<div class="rv-board-body">${body}</div>`:""}
       ${hasExtra?extra:""}
     </details>`;
   };
+  const cnt=(key)=>(data[key]||[]).filter(x=>(x.date||"").startsWith(insightMonth)).length;
   const boards=[
-    boardSection("todo", sideStats(modOf("todo"), data.todo||[], insightMonth)),
-    boardSection("checkin", checkinCompareHTML(insightMonth)+checkinReview()+sideStats(modOf("checkin"), data.checkin||[], insightMonth), habitCalendarHTML(insightMonth)),
-    boardSection("money", financeReview()+spendCategoryReview()+sideStats(modOf("money"), data.money||[], insightMonth)),
-    boardSection("note", sideStats(modOf("note"), data.note||[], insightMonth)),
-    boardSection("portfolio", investHTML+sideStats(modOf("trades"), data.trades||[], insightMonth)),
-    boardSection("intimate", intimateReview()+sideStats(modOf("intimate"), data.intimate||[], insightMonth)),
+    boardSection("todo", monthStats(modOf("todo"), data.todo||[], insightMonth), "", `${cnt("todo")} 项`),
+    boardSection("checkin", checkinCompareHTML(insightMonth)+checkinReview(), habitCalendarHTML(insightMonth), `${(data.checkin||[]).length} 个习惯`),
+    boardSection("money", spendCategoryReview()+monthStats(modOf("money"), data.money||[], insightMonth), "", `${cnt("money")} 笔`),
+    boardSection("note", monthStats(modOf("note"), data.note||[], insightMonth), "", `${cnt("note")} 条`),
+    boardSection("portfolio", investHTML, "", `${cnt("trades")} 笔`),
+    boardSection("intimate", intimateReview(insightMonth), "", `${cnt("intimate")} 次`),
   ].join("");
 
-  const [cy,cm]=curYM().split("-").map(Number);
   const canPrev=true;
   const isCurMonth=insightMonth===curYM();
   const canNext=!isCurMonth;
 
-  $("#screen").innerHTML=`<div class="header"><div><h2>复盘</h2><p>各模块进展一览 · 记录—执行—统计—反馈</p></div></div>
+  $("#screen").innerHTML=`<div class="header"><div><h2>复盘</h2><p>按所选月份回顾各板块表现 · 记录—执行—统计—反馈</p></div></div>
 
 
     <div class="sec-title" style="margin-top:28px">
@@ -2893,8 +2884,7 @@ function renderInsight(){
         <button class="btn ghost" id="rv-next" ${canNext?'':'disabled'}>下月 ${icon("chevron",13)}</button>
       </div>
     </div>
-    ${boards}
-    ${budgetEditor}`;
+    ${boards}`;
 
   $("#screen").querySelectorAll("[data-open]").forEach(el=>el.onclick=()=>go(el.dataset.open));
   // 月份切换
@@ -2907,12 +2897,6 @@ function renderInsight(){
     let [yy,mm]=insightMonth.split("-").map(Number);
     mm++; if(mm>12){ mm=1; yy++; }
     insightMonth=`${yy}-${String(mm).padStart(2,"0")}`; renderInsight();
-  };
-  // 保存预算
-  const bs=$("#rv-budget-save"); if(bs) bs.onclick=()=>{
-    data.__budget=data.__budget||{};
-    data.__budget.expense=Math.max(0,+($("#rv-budget").value)||0);
-    store.save(); renderInsight();
   };
 }
 let insightMonth=""; // 切换的月份 YYYY-MM
@@ -2972,7 +2956,9 @@ function renderModule(key){
     mainContent = `<div class="sec-title">${m.type==="todo"?"全部任务":"全部记录"} <span id="rec-count" style="margin-left:auto;font-weight:500;color:var(--text-secondary);font-size:12px">${listItems.length} 条</span>${doneToggle}</div>
       <div class="rec-grid">${body}</div>`;
   }
-  if(m.type==="finance"){ mainContent = financeOverviewHTML() + assetAllocationHTML() + liabilitiesHTML() + recurringHTML() + mainContent; }
+  if(m.type==="finance"){ mainContent = financeOverviewHTML() + financeBudgetCard(m, curYM()) + assetAllocationHTML() + liabilitiesHTML() + recurringHTML() + mainContent; }
+  // 周期预测是「当前状态」，归到亲密健康模块页，不进入月度复盘
+  if(m.type==="intimate"){ mainContent = cycleCardHTML() + mainContent; }
 
   $("#screen").innerHTML=`<div class="header"><div><h2>${m.name}</h2><p>${m.desc}</p></div></div>
     <div class="toolbar">
@@ -2990,6 +2976,7 @@ function renderModule(key){
   // 财务总览 / 负债 接线（仅记账本存在这些元素）
   const foOpen=$("#fo-opening"); if(foOpen) foOpen.onchange=()=>{ data.__cashOpening=Math.max(0,+foOpen.value||0); persist(); renderModule("money"); };
   const foLink=$("#fo-link"); if(foLink) foLink.onchange=()=>{ data.__linkTradeToLedger=foLink.checked; if(foLink.checked) syncTradeLedger(); persist(); renderModule("money"); };
+  const bb=$("#btn-budget"); if(bb) bb.onclick=()=>openBudgetModal();
   const lbAdd=$("#lb-add"); if(lbAdd) lbAdd.onclick=()=>openLiabilityModal(null);
   $("#screen").querySelectorAll(".js-lb-del").forEach(b=>b.onclick=()=>{ const it=(data.liabilities||[]).find(x=>x.id==b.dataset.id); data.liabilities=(data.liabilities||[]).filter(x=>x.id!=b.dataset.id); if(it) markTomb("liabilities",[it]); persist(); renderModule("money"); });
   // 视图切换
@@ -3230,128 +3217,68 @@ function renderModuleResults(key){
   wireModule(key);
 }
 
-/* 复盘板块统计：按 type 生成多维数据，ym 为复盘所选月份 */
-function sideStats(m, all, ym){
+/* 复盘板块月度统计：所有指标均按所选月份过滤，累计/当前快照口径不混入月度复盘 */
+function monthStats(m, all, ym){
   ym = ym || curYM();
+  const mn=+ym.slice(5);
+  const inYM=x=>(x.date||"").startsWith(ym);
+  const inLast=x=>(x.date||"").startsWith(prevYM(ym));
+  const row=(k,v)=>`<div class="stat-row"><span class="k">${k}</span><span class="val">${v}</span></div>`;
+  const card=(t,b)=>`<div class="side-card"><div class="sh">${t}</div>${b}</div>`;
+  const delta=(cur,prev,unit="")=>{
+    const d=Math.round((cur-prev)*100)/100, cls=d>0?"up":(d<0?"down":"flat");
+    return `<span class="rv-delta ${cls}">${d>0?`▲ +${d}`:d<0?`▼ ${d}`:"— 持平"}${unit?` ${unit}`:""}</span>`;
+  };
   const palette=["var(--accent)","var(--module-1)","var(--module-2)","var(--module-3)","var(--module-4)","var(--module-5)","var(--danger)"];
-  const row=(k,v,dot)=>`<div class="stat-row"><span class="k">${dot?`<span class="kd" style="background:${dot}"></span>`:''}${k}</span><span class="val">${v}</span></div>`;
 
   if(m.type==="finance"){
-    const inc=all.filter(x=>x.type==="income").reduce((a,x)=>a+ +x.amount,0);
-    const exp=all.filter(x=>x.type==="expense").reduce((a,x)=>a+ +x.amount,0);
-    // 支出按分类聚合
-    const byCat={}; all.filter(x=>x.type==="expense").forEach(x=>{ const c=x.category||"其他"; byCat[c]=(byCat[c]||0)+ +x.amount; });
-    const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
-    const maxC=cats.length?cats[0][1]:1;
-    const catBars=cats.length? cats.map((c,i)=>`<div class="cbrow"><span class="cbn">${esc(c[0])}</span><span class="cbt"><i style="width:${Math.round(c[1]/maxC*100)}%;background:${palette[i%palette.length]}"></i></span><span class="cbv">¥${c[1]}</span></div>`).join("")
-      : `<div style="color:var(--text-tertiary);font-size:12.5px;padding:6px 0">暂无支出记录</div>`;
-    return `<div class="side-card"><div class="sh">${icon("wallet",15)} 收支概况</div>
-        ${row("总收入",`<span style="color:var(--module-1)">¥${inc}</span>`)}
-        ${row("总支出",`<span style="color:var(--danger)">¥${exp}</span>`)}
-        ${row("净结余",`¥${inc-exp}`)}
-        ${row("总笔数",`${all.length} 笔`)}</div>
-      ${financeBudgetCard(m, ym)}`;
-  }
-
-  if(m.type==="progress"){
-    const p=avgProgress(all);
-    const doneN=all.filter(x=>((x.current/x.target)*100||0)>=100).length;
-    const totalCur=all.reduce((a,x)=>a+ (+x.current||0),0);
-    const totalTgt=all.reduce((a,x)=>a+ (+x.target||0),0);
-    return `<div class="side-card"><div class="sh">${icon("target",15)} 总体进度</div>
-        <div class="side-ring"><div class="dial">${ringSVG(p.value,m.color)}<span class="mid"><span class="big" style="color:${m.color}">${p.value}%</span><span class="cap">平均进度</span></span></div></div></div>
-      <div class="side-card"><div class="sh">${icon("list",15)} 数据统计</div>
-        ${row("进行项目",`${all.length} 项`)}
-        ${row("已达成",`${doneN} 项`)}
-        ${row("累计完成",`${totalCur} ${all[0]?.unit||m.unit||''}`)}
-        ${row("总目标量",`${totalTgt} ${all[0]?.unit||m.unit||''}`)}</div>`;
-  }
-
-  if(m.type==="checkin"){
-    const streaks=all.map(x=>({title:x.title,s:streak(x.log)})).sort((a,b)=>b.s-a.s);
-    const best=streaks[0]?streaks[0].s:0;
-    const list=streaks.slice(0,6).map(x=>`<div class="stat-row"><span class="k">${esc(x.title)}</span><span class="val" style="color:var(--module-3)">${x.s} 天</span></div>`).join("");
-    return `<div class="side-card"><div class="sh">${icon("flame",15)} 连续天数</div>
-        ${row("最长连续",`<span style="color:var(--module-3)">${best} 天</span>`)}
-        ${row("习惯总数",`${all.length} 个`)}
-        <div style="margin-top:6px">${list}</div></div>`;
-  }
-
-  if(m.type==="intimate"){
-    const recs=all; const total=recs.length;
-    if(!total) return `<div class="side-card"><div class="sh">${icon("heart",15)} 概览</div><div class="focus-empty" style="padding:8px 0">还没有记录，点右上角「新建」添加第一条吧</div></div>`;
-    const months=new Set(recs.map(r=>(r.date||"").slice(0,7)));
-    const monthsActive=Math.max(1,months.size);
-    const avgPerMonth=(total/monthsActive).toFixed(1);
-    const durs=recs.map(r=>+r.duration||0).filter(v=>v>0);
-    const avgDur=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
-    // 月度趋势（截至复盘所选月份的近 6 个月）
-    const [ey,em]=ym.split("-").map(Number); const trend=[];
-    for(let i=5;i>=0;i--){ const d=new Date(ey,em-1-i,1); const mk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; trend.push(recs.filter(r=>(r.date||"").startsWith(mk)).length); }
-    const trendSvg = trend.some(v=>v>0)? trendSVG(trend) : `<div class="focus-empty" style="padding:6px 0;font-size:12px">近 6 个月暂无数据</div>`;
-    // 行为分布
-    const partnerN=recs.filter(r=>r.behavior!=="solo").length, soloN=recs.filter(r=>r.behavior==="solo").length;
-    const behBars=[["伴侣",partnerN],["自慰",soloN]].filter(x=>x[1]>0).map(([k,v])=>{ const pct=Math.round(v/total*100); return `<div class="cbrow"><span class="cbn">${k}</span><span class="cbt"><i style="width:${pct}%;background:var(--module-8)"></i></span><span class="cbv">${v}</span></div>`; }).join("");
-    // 星期分布
-    const wd=[0,0,0,0,0,0,0]; recs.forEach(r=>{ const dt=r.date?new Date(r.date+"T00:00:00"):null; if(dt) wd[(dt.getDay()+6)%7]++; });
-    const maxW=Math.max(1,...wd); const wdNames=["一","二","三","四","五","六","日"];
-    const wdBars=wd.map((v,i)=>`<div class="cbrow"><span class="cbn">周${wdNames[i]}</span><span class="cbt"><i style="width:${Math.round(v/maxW*100)}%;background:var(--module-2)"></i></span><span class="cbv">${v}</span></div>`).join("");
-    return `<div class="side-card"><div class="sh">${icon("heart",15)} 概览</div>
-        ${row("总次数",`${total} 次`)}
-        ${row("月均频次",`${avgPerMonth} 次/月`)}
-        ${row("平均时长",`${avgDur} 分钟`)}</div>
-      <div class="side-card"><div class="sh">${icon("chart",15)} 月度趋势</div><div class="ic-trend">${trendSvg}</div></div>
-      <div class="side-card"><div class="sh">${icon("target",15)} 行为分布</div><div class="catbar">${behBars||'<div class="focus-empty" style="padding:6px 0;font-size:12px">暂无数据</div>'}</div></div>
-      <div class="side-card"><div class="sh">${icon("calendar",15)} 星期分布</div><div class="catbar">${wdBars}</div></div>
-      ${cycleCardHTML()}`;
-  }
-
-  if(m.type==="movie"){
-    const thisMonth=(data.movie||[]).filter(x=>(x.date||"").startsWith(ym)).length;
-    const goal=movieGoal(); const pct=goal?Math.min(100,Math.round(thisMonth/goal*100)):0;
-    const rated=(data.movie||[]).filter(x=>x.rating).length;
-    return `<div class="side-card"><div class="sh">${icon("film",15)} 观影统计</div>
-      <div class="side-ring"><div class="dial">${ringSVG(pct,m.color)}<span class="mid"><span class="big" style="color:${m.color}">${thisMonth}</span><span class="cap">本月部数</span></span></div></div></div>
-      <div class="side-card"><div class="sh">${icon("star",15)} 数据</div>
-        ${row("本月观影",`${thisMonth} 部`)}
-        ${row("月度目标",`${goal} 部`)}
-        ${row("已评分",`${rated} 部`)}
-        ${row("总记录",`${all.length} 部`)}</div>
-      <div class="side-card"><div class="sh">${icon("target",15)} 本月目标</div>
-        <div class="field" style="margin:0"><input id="mv-goal" type="number" value="${goal}" placeholder="本月看几部" style="width:100%"/></div></div>`;
-  }
-
-  if(m.type==="trades"){
-    const row2=(k,v)=>`<div class="stat-row"><span class="k">${k}</span><span class="val">${v}</span></div>`;
-    const sum=(action)=>all.filter(x=>x.action===action).reduce((a,x)=>a+(+x.qty||0)*(+x.price||0),0);
-    const mCount=all.filter(x=>(x.date||"").startsWith(ym)).length;
-    const fees=all.reduce((a,x)=>a+(+x.fee||0),0);
-    return `<div class="side-card"><div class="sh">${icon("exchange",15)} 交易概况</div>
-        ${row2("累计交易",`${all.length} 笔`)}
-        ${row2(`${+ym.slice(5)} 月交易`,`<span style="color:var(--accent)">${mCount} 笔</span>`)}
-        ${row2("累计买入",`¥${sum("buy").toFixed(0)}`)}
-        ${row2("累计卖出",`¥${sum("sell").toFixed(0)}`)}
-        ${row2("累计分红",`¥${sum("dividend").toFixed(0)}`)}
-        ${row2("累计费用",`¥${fees.toFixed(0)}`)}</div>`;
+    const list=all.filter(inYM), li=all.filter(inLast);
+    const sum=(arr,t)=>arr.filter(x=>x.type===t).reduce((a,x)=>a+(+x.amount||0),0);
+    const inc=sum(list,"income"), exp=sum(list,"expense"), lastExp=sum(li,"expense");
+    return card(`${icon("wallet",15)} ${mn} 月收支`,
+      row("收入",`<span style="color:var(--module-1)">¥${inc.toFixed(2)}</span>`)+
+      row("支出",`<span style="color:var(--danger)">¥${exp.toFixed(2)}</span>`)+
+      row("结余",`¥${(inc-exp).toFixed(2)}`)+
+      row("笔数",`${list.length} 笔`)+
+      row("较上月支出",delta(exp,lastExp,"元")));
   }
 
   if(m.type==="todo"){
-    const byP={}; (m.priorities||[]).forEach(p=>byP[p.key]=0); all.forEach(x=>{ if(byP[x.priority]!=null) byP[x.priority]++; });
-    const pRows=(m.priorities||[]).map(p=>`<div class="stat-row"><span class="k"><span class="kd" style="background:${p.text}"></span>${p.label}</span><span class="val">${byP[p.key]||0} 项</span></div>`).join("");
-    return `<div class="side-card"><div class="sh">${icon("chart",15)} 优先级分布</div>
-        ${pRows}</div>`;
+    const list=all.filter(inYM), li=all.filter(inLast);
+    const done=list.filter(x=>x.done).length;
+    const pct=list.length?Math.round(done/list.length*100):0;
+    const lastPct=li.length?Math.round(li.filter(x=>x.done).length/li.length*100):0;
+    const overdue=ym===curYM()?list.filter(x=>!x.done&&x.date&&x.date<today()).length:0;
+    const byP={}; (m.priorities||[]).forEach(p=>byP[p.key]=0);
+    list.forEach(x=>{ if(byP[x.priority]!=null) byP[x.priority]++; });
+    const pBars=(m.priorities||[]).map(p=>{
+      const v=byP[p.key]||0, w=list.length?Math.round(v/list.length*100):0;
+      return `<div class="cbrow"><span class="cbn">${p.label}</span><span class="cbt"><i style="width:${w}%;background:${p.text}"></i></span><span class="cbv">${v} 项</span></div>`;
+    }).join("");
+    return card(`${icon("list",15)} ${mn} 月待办执行`,
+      row("月内计划",`${list.length} 项`)+
+      row("已完成",`${done} 项`)+
+      row("完成率",`${pct}% ${delta(pct,lastPct,"%")}`)+
+      row("未完成",`${list.length-done} 项${ym===curYM()&&overdue?`（逾期 ${overdue} 项）`:""}`)+
+      `<div class="rv-im-rows" style="margin-top:8px;color:var(--text-tertiary)">按计划日期归属月份，完成状态取当前值</div>`)
+      + card(`${icon("chart",15)} ${mn} 月优先级分布`,
+        `<div class="catbar">${pBars||'<div class="focus-empty" style="padding:6px 0;font-size:12px">本月暂无待办</div>'}</div>`);
   }
 
-  // note
-  const byMood={}; all.forEach(x=>{ const md=x.mood||"未分类"; byMood[md]=(byMood[md]||0)+1; });
-  const moods=Object.entries(byMood).sort((a,b)=>b[1]-a[1]);
-  const maxM=moods.length?moods[0][1]:1;
-  const moodBars=moods.length? moods.map((c,i)=>`<div class="cbrow"><span class="cbn">${esc(c[0])}</span><span class="cbt"><i style="width:${Math.round(c[1]/maxM*100)}%;background:${palette[i%palette.length]}"></i></span><span class="cbv">${c[1]} 条</span></div>`).join("")
-    : `<div style="color:var(--text-tertiary);font-size:12.5px;padding:6px 0">暂无记录</div>`;
-  return `<div class="side-card"><div class="sh">${icon("pen",15)} 记录统计</div>
-      ${row("累计记录",`${all.length} 条`)}
-      ${row("标签种类",`${moods.length} 种`)}</div>
-    <div class="side-card"><div class="sh">${icon("chart",15)} 标签分布</div><div class="catbar">${moodBars}</div></div>`;
+  if(m.type==="note"){
+    const list=all.filter(inYM);
+    const days=new Set(list.map(x=>x.date).filter(Boolean)).size;
+    const byMood={}; list.forEach(x=>{ const k=x.mood||"未分类"; byMood[k]=(byMood[k]||0)+1; });
+    const moods=Object.entries(byMood).sort((a,b)=>b[1]-a[1]);
+    const maxM=moods.length?moods[0][1]:1;
+    const bars=moods.length? moods.map((c,i)=>`<div class="cbrow"><span class="cbn">${esc(c[0])}</span><span class="cbt"><i style="width:${Math.round(c[1]/maxM*100)}%;background:${palette[i%palette.length]}"></i></span><span class="cbv">${c[1]} 条</span></div>`).join("")
+      : `<div class="focus-empty" style="padding:6px 0;font-size:12px">本月暂无记录</div>`;
+    return card(`${icon("pen",15)} ${mn} 月记录`,
+      row("记录条数",`${list.length} 条`)+row("记录天数",`${days} 天`)+row("标签种类",`${moods.length} 种`))
+      + card(`${icon("chart",15)} ${mn} 月标签分布`,`<div class="catbar">${bars}</div>`);
+  }
+
+  return "";
 }
 
 /* per-module hero header: icon + big number + label */
@@ -5115,13 +5042,13 @@ function portfolioTileHTML(){
 /* ============================================================
    PHASE 6 — 洞察页：投资复盘 + 净资产聚合 + 月度快照
    ============================================================ */
-// 月底自动写入资产快照
+// 每月首次打开复盘页记录一条「当月访问时点」资产快照，仅供投资看板的资产曲线使用。
+// 它不是上月末市值，因此不参与「本月投资收益」计算。
 function maybeSnapshotAsset(){
   const ym = curYM();
   const snaps = data.__assetSnapshots = data.__assetSnapshots || [];
   // 当月已写入则跳过
   if(snaps.find(s=>s.ym===ym)) return;
-  // 月份结束当天或之前写入（这里简化为：每次访问洞察页时如果当月还没写且不是1号则补写）
   const holdings = data.portfolio || [];
   const totalValue = holdings.reduce((a,h)=>a + portfolioCalc(h).marketValue, 0);
   const totalCost = holdings.reduce((a,h)=>a + portfolioCalc(h).costBasis, 0);
@@ -5132,6 +5059,43 @@ function maybeSnapshotAsset(){
   // 仅保留最近 24 个月
   if(snaps.length>24) snaps.splice(0, snaps.length-24);
   store.save();
+}
+
+/* 本月交易收益台账：按成交日期顺序滚动加权成本，得到卖出时点的真实成本基础。
+   口径与 tradeAgg 一致（期初取持仓 qty/costPrice，买入费摊入成本，卖出费计入已实现）。
+   买卖成交金额只是现金流，不参与收益加减；持仓浮动属于当前快照，不重复计入本月收益。 */
+function monthTradeStats(ym){
+  const trades=(data.trades||[]).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")||((+a.id||0)-(+b.id||0)));
+  const books={};
+  const book=(code)=>{
+    if(!books[code]){
+      const h=(data.portfolio||[]).find(x=>x.code===code);
+      books[code]={qty:+(h&&h.qty)||0, avgCost:+(h&&h.costPrice)||0};
+    }
+    return books[code];
+  };
+  const r={realized:0, dividends:0, otherFees:0, buy:0, sell:0, buyN:0, sellN:0, divN:0, feeN:0, count:0};
+  trades.forEach(t=>{
+    const b=book(t.code||""), q=+t.qty||0, p=+t.price||0, f=+t.fee||0;
+    const hit=(t.date||"").startsWith(ym);
+    if(t.action==="buy"){
+      const nq=b.qty+q;
+      b.avgCost=nq>0?(b.qty*b.avgCost+q*p+f)/nq:0;
+      b.qty=nq;
+      if(hit){ r.buy+=q*p; r.buyN++; r.count++; }
+    } else if(t.action==="sell"){
+      const gain=(p-b.avgCost)*q-f;
+      b.qty=Math.max(0,b.qty-q);
+      if(hit){ r.realized+=gain; r.sell+=q*p; r.sellN++; r.count++; }
+    } else if(t.action==="dividend"){
+      if(hit){ r.dividends+=Math.max(0,(q>0?q*p:p)-f); r.divN++; r.count++; }
+    } else if(t.action==="fee"){
+      if(hit){ r.otherFees+=f; r.feeN++; r.count++; }
+      if(b.qty>0) b.avgCost+=f/b.qty;
+    }
+  });
+  r.net=r.realized+r.dividends-r.otherFees;
+  return r;
 }
 
 // 投资复盘卡片（嵌入 renderInsight）
@@ -5157,45 +5121,26 @@ function investmentReviewHTML(month){
   const totalPct = totalCost>0 ? (totalValue-totalCost)/totalCost*100 : 0;
   const cls = totalPct>=0 ? "done" : "warn";
 
-  // 本月投资收益：交易流水口径（已实现 + 分红 − 费用），并用上月快照补「持仓浮动」
-  const monthTrades = allTrades.filter(t=>(t.date||"").startsWith(ym));
-  let mBuy=0, mSell=0, mRealized=0, mDiv=0, mFee=0, mBuyN=0, mSellN=0, mDivN=0;
-  monthTrades.forEach(t=>{
-    const q=+t.qty||0, p=+t.price||0, f=+t.fee||0;
-    mFee += f;
-    if(t.action==="buy"){ mBuy+=q*p; mBuyN++; }
-    else if(t.action==="sell"){
-      mSell+=q*p; mSellN++;
-      const agg=tradeAgg(t.code);
-      const h=(data.portfolio||[]).find(x=>x.code===t.code);
-      const cost=agg?agg.avgCost:(+((h||{}).costPrice)||0);
-      mRealized += (p-cost)*q;
-    }
-    else if(t.action==="dividend"){ mDiv += Math.max(0, q>0?q*p:p); mDivN++; }
-  });
-  const mNet = mRealized + mDiv - mFee;
-  // 上月资产快照 → 本月浮动变化（仅当前月有实时市值，历史月份不估算）
-  const prevSnap = ym===curYM() ? (data.__assetSnapshots||[]).find(s=>s.ym===prevYM(ym)) : null;
-  const mFloat = prevSnap ? (totalValue-(+prevSnap.totalValue||0)) - (mBuy-mSell) : null;
-  const mTotal = mNet + (mFloat||0);
+  // 本月投资收益：只统计当月成交产生的已实现盈亏、分红净额与独立费用（交易口径）
+  const mt = monthTradeStats(ym);
   const accPnl = totalValue - totalCost;
   const yuan = v => `${v>=0?'+':'−'}¥${Math.abs(v).toFixed(2)}`;
   const monthBlock = `<div class="rv-im">
-      <div class="rv-im-hd">${icon("calendar",13)} ${+ym.slice(5)} 月投资收益 <span class="rv-cap">${mFloat!=null?"含持仓浮动":"交易口径"}</span></div>
-      <div class="rv-im-big ${mTotal>=0?'up':'down'}">${yuan(mTotal)}</div>
+      <div class="rv-im-hd">${icon("calendar",13)} ${+ym.slice(5)} 月投资收益 <span class="rv-cap">交易口径</span></div>
+      <div class="rv-im-big ${mt.net>=0?'up':'down'}">${yuan(mt.net)}</div>
       <div class="rv-im-rows">
-        <span>已实现 <b>${yuan(mRealized)}</b></span>
-        <span>分红 <b>¥${mDiv.toFixed(0)}</b></span>
-        <span>费用 <b>−¥${mFee.toFixed(0)}</b></span>
-        ${mFloat!=null?`<span>浮动 <b>${yuan(mFloat)}</b></span>`:""}
-        <span>交易 <b>${monthTrades.length} 笔</b></span>
+        <span>已实现 <b>${yuan(mt.realized)}</b></span>
+        <span>分红 <b>${yuan(mt.dividends)}</b></span>
+        <span>其他费用 <b>−¥${mt.otherFees.toFixed(2)}</b></span>
+        <span>交易 <b>${mt.count} 笔</b></span>
       </div>
       <div class="rv-im-rows" style="margin-top:6px">
-        <span>买入 <b>¥${mBuy.toFixed(0)}</b>（${mBuyN} 笔）</span>
-        <span>卖出 <b>¥${mSell.toFixed(0)}</b>（${mSellN} 笔）</span>
+        <span>买入 <b>¥${mt.buy.toFixed(2)}</b>（${mt.buyN} 笔）</span>
+        <span>卖出 <b>¥${mt.sell.toFixed(2)}</b>（${mt.sellN} 笔）</span>
         <span>累计浮盈 <b>${yuan(accPnl)}</b></span>
       </div>
-      ${(!monthTrades.length && mFloat==null)?`<div class="rv-im-rows" style="margin-top:6px;color:var(--text-tertiary)">本月暂无交易记录，收益按 0 计；记录买卖后自动统计</div>`:""}
+      <div class="rv-im-rows" style="margin-top:6px;color:var(--text-tertiary)">按成交日期归属月份；买卖金额为现金流不计入收益；累计浮盈为当前快照，不重复计入本月收益</div>
+      ${!mt.count?`<div class="rv-im-rows" style="margin-top:6px;color:var(--text-tertiary)">本月暂无交易记录，收益按 ¥0.00 计</div>`:""}
     </div>`;
   // 月目标完成度
   const rows = Object.entries(byKind).map(([k,v])=>{
@@ -5224,7 +5169,7 @@ function investmentReviewHTML(month){
 
   return `
     <div class="rv-card rv-invest-overview">
-      <div class="rv-hd">${icon("wallet",15)} 净资产总览</div>
+      <div class="rv-hd">${icon("wallet",15)} 净资产总览 <span class="rv-cap">当前快照</span></div>
       <div class="rv-net-worth">
         <div class="rv-nw-val">¥${netWorth.toFixed(2)}</div>
         <div class="rv-nw-bar">
@@ -5240,7 +5185,7 @@ function investmentReviewHTML(month){
       </div>
     </div>
     <div class="rv-card">
-      <div class="rv-hd">${icon("trending",15)} 投资表现</div>
+      <div class="rv-hd">${icon("trending",15)} 投资表现 <span class="rv-cap">收益按所选月 · 持仓为当前快照</span></div>
       ${monthBlock}
       <div class="rv-row ${cls}">
         <div class="rv-name">综合收益率</div>
@@ -5294,7 +5239,7 @@ function closeModal(){
   if(m){ m.classList.remove("show"); m.innerHTML=""; }
 }
 
-/* 记账本：信封预算卡片（分类额度 + 超支预警） */
+/* 记账本模块页：信封预算卡片（分类额度 + 超支预警；设置于财务总览区） */
 function financeBudgetCard(m, ym){
   const bud = data.__budget || {};
   const catsBud = bud.cats || {};
@@ -5321,7 +5266,7 @@ function financeBudgetCard(m, ym){
       ${totalBud>0?`<div class="cbrow" style="margin-top:6px;border-top:1px dashed var(--border);padding-top:8px">
         <span class="cbn"><b>合计</b></span><span class="cbt"></span>
         <span class="cbv" style="color:${totalOver?'var(--danger)':'inherit'}"><b>¥${totalSpent}<span class="rv-g">/¥${totalBud}</span>${totalOver?` · 超支¥${(totalSpent-totalBud).toFixed(0)}`:''}</b></span></div>`:''}
-      <button class="btn ghost" onclick="openBudgetModal()" style="margin-top:10px;width:100%">${icon("edit",13)} 设置预算</button></div>`;
+    </div>`;
 }
 
 /* 记账本：预算设置弹窗（按分类设月度额度） */
@@ -5336,7 +5281,7 @@ function openBudgetModal(){
     <p style="color:var(--text-secondary);font-size:12.5px;margin:0 0 10px">为各分类设定每月额度，超出将标红预警。留空表示不限。</p>
     ${rows}
     <div class="field" style="flex-direction:row;align-items:center;gap:10px;margin:12px 0 4px">
-      <label style="flex:1;margin:0">总预算（月度复盘汇总）</label>
+      <label style="flex:1;margin:0">总预算（每月支出上限）</label>
       <input id="bud-total" type="number" value="${bud.expense||""}" placeholder="如 2000" style="width:120px"/></div>
     <div class="modal-foot"><button class="btn" id="bud-cancel">取消</button>
       <button class="btn primary" id="bud-save">${icon("check",13)} 保存</button></div>`);
