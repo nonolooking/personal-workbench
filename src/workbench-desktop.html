@@ -548,11 +548,11 @@
     padding:9px 11px; min-height:72px; cursor:pointer; transition:all .12s; display:flex; flex-direction:column; gap:3px; position:relative; }
   .tt-cell:hover { border-color:var(--border-input); box-shadow:var(--shadow-overlay); }
   .tt-cell.today { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-muted); }
-  .tt-cell .tt-sub { font-weight:800; font-size:17px; color:var(--text); line-height:1.15; letter-spacing:.5px; }
-  .tt-cell .tt-loc { font-size:11px; color:var(--text-secondary); display:flex; align-items:center; gap:3px; }
-  .tt-cell .tt-teacher { font-size:11px; color:var(--text-tertiary); }
-  .tt-cell .tt-note { font-size:10.5px; color:var(--accent); margin-top:2px; }
-  .tt-cell .tt-hw { font-size:10.5px; color:var(--module-4); margin-top:2px; display:flex; align-items:center; gap:3px; }
+  .tt-cell .tt-sub { font-weight:700; font-size:15px; color:var(--text); line-height:1.2; letter-spacing:.2px; }
+  .tt-cell .tt-loc { font-size:10.5px; color:var(--text-secondary); display:flex; align-items:center; gap:3px; }
+  .tt-cell .tt-teacher { font-size:10.5px; color:var(--text-tertiary); }
+  .tt-cell .tt-note { font-size:10px; color:var(--accent); margin-top:2px; }
+  .tt-cell .tt-hw { font-size:10px; color:var(--module-4); margin-top:2px; display:flex; align-items:center; gap:3px; }
   .tt-week-tag { position:absolute; top:4px; right:6px; font-size:9px; font-weight:700; color:var(--text-tertiary); background:var(--surface-nested); border-radius:4px; padding:1px 4px; }
   .tt-week-tag.off { color:var(--text-tertiary); opacity:.6; }
   .tt-cell.offweek { opacity:.32; filter:grayscale(.5); }
@@ -565,18 +565,17 @@
   .tt-cell.tutoring .tt-sub { color:var(--module-5); }
   .tt-cell.tutoring .tt-tag { position:absolute; top:4px; right:6px; font-size:9px; font-weight:700;
     background:var(--module-5); color:#fff; padding:1px 5px; border-radius:4px; letter-spacing:.5px; }
-  /* 课间休息行 */
-  .tt-break { grid-column:1 / -1; display:grid; grid-template-columns:60px 1fr; align-items:center; gap:5px; }
-  .tt-break-label { grid-column:2; text-align:center; font-size:11px; font-weight:700; color:var(--text-tertiary);
-    background:color-mix(in srgb, var(--text) 5%, transparent); border-radius:var(--radius-tile); padding:4px 8px;
-    border:1px dashed var(--border); }
-  .tt-break-time { font-size:9.5px; color:var(--text-tertiary); font-weight:600; }
-  .tt-hd { font-size:11.5px; font-weight:700; color:var(--text-secondary); text-align:center; padding:6px 4px;
+  /* 课间休息行：弱化为分隔提示，不与课程卡片争夺视觉层级 */
+  .tt-break { grid-column:1 / -1; display:grid; grid-template-columns:60px 1fr; align-items:center; gap:5px; margin:1px 0; }
+  .tt-break-label { grid-column:2; text-align:center; font-size:10px; font-weight:500; color:var(--text-tertiary);
+    background:transparent; border:0; border-top:1px dashed var(--border); border-radius:0; padding:3px 8px; letter-spacing:.3px; }
+  .tt-break-time { font-size:9px; color:var(--text-tertiary); font-weight:500; opacity:.85; margin-left:4px; }
+  .tt-hd { font-size:12px; font-weight:700; color:var(--text-secondary); text-align:center; padding:5px 4px;
     border-radius:var(--radius-tile); }
   .tt-hd.today { color:var(--accent); }
-  .tt-pd { font-size:10.5px; color:var(--text-tertiary); text-align:center; padding:4px; display:flex; flex-direction:column; justify-content:center; gap:1px; }
-  .tt-pd .tt-period { font-weight:700; color:var(--text-secondary); font-size:11px; }
-  .tt-pd .tt-time { font-size:9.5px; color:var(--text-tertiary); }
+  .tt-pd { font-size:10px; color:var(--text-tertiary); text-align:center; padding:4px; display:flex; flex-direction:column; justify-content:center; gap:1px; }
+  .tt-pd .tt-period { font-weight:700; color:var(--text-secondary); font-size:10.5px; }
+  .tt-pd .tt-time { font-size:9px; color:var(--text-tertiary); }
   .tt-del { position:absolute; top:3px; right:4px; opacity:0; background:transparent; border:none; color:var(--text-tertiary); cursor:pointer;
     font-size:13px; line-height:1; padding:2px; }
   .tt-cell:hover .tt-del { opacity:1; }
@@ -584,8 +583,8 @@
   /* 自定义时段分区 */
   .tt-custom-section { margin-top:22px; }
   .tt-section-hd { display:flex; align-items:baseline; gap:10px; padding-bottom:10px; border-bottom:1px dashed var(--border); margin-bottom:12px; }
-  .tt-section-title { font-size:14px; font-weight:700; color:var(--text); display:inline-flex; align-items:center; gap:6px; }
-  .tt-section-sub { font-size:11px; color:var(--text-secondary); }
+  .tt-section-title { font-size:13px; font-weight:700; color:var(--text); display:inline-flex; align-items:center; gap:6px; }
+  .tt-section-sub { font-size:10.5px; color:var(--text-secondary); }
   .tt-day-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
   .tt-day-col { display:flex; flex-direction:column; gap:6px; }
   .tt-day-hd { font-size:11.5px; font-weight:700; color:var(--text-secondary); text-align:center; padding:5px; border-radius:var(--radius-tile); background:var(--surface-nested); }
@@ -798,6 +797,8 @@
 
   /* 月度复盘 */
   .rv-title { display:inline-flex; align-items:center; gap:6px; font-weight:700; color:var(--text); font-size:14px; }
+  .rv-month-only::before { display:none; }
+  .rv-month-only .rv-month-nav { margin-left:0; }
   .rv-month-nav { display:flex; align-items:center; gap:10px; margin-left:auto; }
   .rv-month-name { font-size:13px; font-weight:700; color:var(--accent); min-width:80px; text-align:center; }
   .rv-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; margin-top:14px; }
@@ -1103,10 +1104,12 @@
 
     /* 课表卡片：进一步缩小字号与内边距 */
     .tt-cell { padding: 5px 7px; min-height: 50px; gap: 2px; }
-    .tt-cell .tt-sub { font-size: 12px; letter-spacing: 0; }
+    .tt-cell .tt-sub { font-size: 12.5px; letter-spacing: 0; }
     .tt-cell .tt-loc, .tt-cell .tt-teacher { font-size: 9.5px; }
     .tt-cell .tt-note, .tt-cell .tt-hw { font-size: 9px; }
     .tt-cell .tt-week-tag, .tt-cell .tt-tag { font-size: 8px; }
+    .tt-break-label { font-size: 9px; padding: 2px 6px; }
+    .tt-break-time { font-size: 8.5px; }
     .tt-hd { font-size: 11px; padding: 5px 2px; }
     .tt-pd { font-size: 9.5px; }
 
@@ -1475,6 +1478,20 @@ const ICONS = {
   film:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
   square:'<rect x="5" y="5" width="14" height="14" rx="2"/>',
   heart:'<path d="M12 20s-7-4.6-7-9.3A3.7 3.7 0 0 1 12 7a3.7 3.7 0 0 1 7 3.7C19 15.4 12 20 12 20z"/>',
+  edit:'<path d="M4 20l1.2-4L16 5.2l2.8 2.8L8 19z"/><path d="M14.2 7l2.8 2.8"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/>',
+  alert:'<path d="M12 4 2.6 20h18.8z"/><path d="M12 10v4M12 17v.5"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/>',
+  key:'<circle cx="8" cy="8" r="4"/><path d="M11 11l9 9M16 16l2-2M19 19l2-2"/>',
+  refresh:'<path d="M20 11a8 8 0 0 0-14-4L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14 4l2-2"/><path d="M20 20v-5h-5"/>',
+  exchange:'<path d="M4 8h14l-3-3M20 16H6l3 3"/>',
+  market:'<path d="M3 17l5-5 4 3 5-7 4 4"/><path d="M3 21h18"/>',
+  trending:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  table:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/>',
+  pie:'<path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M14 3.5A9 9 0 0 1 20.5 10H14z"/>',
+  hash:'<path d="M6 3 4 21M18 3l-2 18M3 9h18M2 15h18"/>',
+  box:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M8 7V4h8v3"/>',
+  trophy:'<path d="M7 4h10v6a5 5 0 0 1-10 0z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 15v4M8 20h8"/>',
 };
 function icon(name, size=22, sw=1.7){
   const path = ICONS[name] || ICONS.grid;
@@ -2109,10 +2126,9 @@ function todoTileHTML(){
   const it=data.todo||[]; const done=it.filter(x=>x.done).length; const pct=it.length?Math.round(done/it.length*100):0;
   const chk=icon("check",12,2.8);
   const active = it.filter(x=>!x.done);
-  const list = active.length ? active.map(x=>{ const m=modOf("todo"); const p=(m.priorities||[]).find(p=>p.key===x.priority);
-    return `<div class="tk-row"><div class="tk-chk js-pin-chk ${x.done?'on':''}" data-mkey="todo" data-id="${x.id}">${chk}</div>
-      <span class="tk-name ${x.done?'done':''} js-pin-open" data-mkey="todo" data-id="${x.id}">${esc(x.title)}</span>
-      ${p?`<span class="badge" style="background:${p.color};color:${p.text}"><span class="dot"></span>${p.label}</span>`:''}</div>`; }).join("")
+  const list = active.length ? active.map(x=>
+    `<div class="tk-row"><div class="tk-chk js-pin-chk ${x.done?'on':''}" data-mkey="todo" data-id="${x.id}">${chk}</div>
+      <span class="tk-name ${x.done?'done':''} js-pin-open" data-mkey="todo" data-id="${x.id}">${esc(x.title)}</span></div>`).join("")
     : `<div class="focus-empty">今天的待办都已完成，去「今日计划」添加吧</div>`;
   return `<div class="tile b5"><div class="tile-h"><span class="tic">${icon("list",16)}</span><div class="tt"><span class="en">TODO LIST</span><span class="zh">待办清单</span></div><span class="r js-open" data-open="todo">查看全部</span></div>
     <div class="tk-head"><span class="pct">${done}<span style="color:var(--text-secondary)">/${it.length}</span></span><span class="cnt">完成 ${pct}%</span><span class="bar"><i style="width:${pct}%"></i></span></div>
@@ -2876,8 +2892,7 @@ function renderInsight(){
   $("#screen").innerHTML=`<div class="header"><div><h2>复盘</h2><p>按所选月份回顾各板块表现 · 记录—执行—统计—反馈</p></div></div>
 
 
-    <div class="sec-title" style="margin-top:28px">
-      <div class="rv-title">${icon("chart",16)} 复盘 · 按板块</div>
+    <div class="sec-title rv-month-only" style="margin-top:28px">
       <div class="rv-month-nav">
         <button class="btn ghost" id="rv-prev" ${canPrev?'':'disabled'}>${icon("chevron",13)} 上月</button>
         <span class="rv-month-name">${monthName}</span>
@@ -2926,9 +2941,6 @@ function renderModule(key){
   } else if(m.type==="movie"){
     const ym=curYM(); const thisMonth=(all).filter(x=>(x.date||"").startsWith(ym)).length;
     head=headHero(m, `${thisMonth}`, `本月观影 · 共 ${all.length} 部`);
-  } else if(m.type==="intimate"){
-    const ym=curYM(); const total=all.length; const thisMonth=all.filter(x=>(x.date||"").startsWith(ym)).length;
-    head=headHero(m, `${thisMonth}`, `本月记录 · 共 ${total} 次`);
   }
 
   // 视图切换按钮（todo / intimate 支持 清单/日历）
@@ -3062,14 +3074,11 @@ function renderTodoCalendar(key, all, q){
       if(!q) return true;
       return (x.title||"").toLowerCase().includes(q) || (x.note||"").toLowerCase().includes(q);
     });
-    const items=list.slice(0,3).map(x=>{
-      const p=(CONFIG.modules.find(m=>m.key==="todo").priorities||[]).find(p=>p.key===x.priority);
-      const pc=p?p.text:"var(--text-tertiary)";
-      return `<div class="cal-item ${x.done?'done':''}" data-id="${x.id}" style="border-left:3px solid ${pc}">
+    const items=list.slice(0,3).map(x=>
+      `<div class="cal-item ${x.done?'done':''}" data-id="${x.id}">
         ${x.time?`<span class="cal-time">${esc(x.time)}</span>`:''}
         <span class="cal-txt">${esc(x.title||"")}</span>
-      </div>`;
-    }).join("");
+      </div>`).join("");
     const more=list.length>3?`<div class="cal-more">+${list.length-3}</div>`:'';
     return `<div class="cal-day ${isToday?'today':''} ${isCurMonth?'':'other-month'}" data-add-date="${dt}">
       <div class="cal-day-num">${dayNum}</div>
@@ -3080,7 +3089,7 @@ function renderTodoCalendar(key, all, q){
   const monthNames=["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
   return `<div class="todo-cal">
     <div class="cal-month-hd"><span class="cal-month-title">${y}年 ${monthNames[mo]}</span>
-      <span class="cal-month-sub">点击空白日期添加 · 点击任务编辑 · 优先级用左侧色条标识</span></div>
+      <span class="cal-month-sub">点击空白日期添加 · 点击任务编辑</span></div>
     <div class="cal-dow-row">${dowHd}</div>
     <div class="cal-grid">${grid}</div>
   </div>`;
@@ -3249,20 +3258,12 @@ function monthStats(m, all, ym){
     const pct=list.length?Math.round(done/list.length*100):0;
     const lastPct=li.length?Math.round(li.filter(x=>x.done).length/li.length*100):0;
     const overdue=ym===curYM()?list.filter(x=>!x.done&&x.date&&x.date<today()).length:0;
-    const byP={}; (m.priorities||[]).forEach(p=>byP[p.key]=0);
-    list.forEach(x=>{ if(byP[x.priority]!=null) byP[x.priority]++; });
-    const pBars=(m.priorities||[]).map(p=>{
-      const v=byP[p.key]||0, w=list.length?Math.round(v/list.length*100):0;
-      return `<div class="cbrow"><span class="cbn">${p.label}</span><span class="cbt"><i style="width:${w}%;background:${p.text}"></i></span><span class="cbv">${v} 项</span></div>`;
-    }).join("");
     return card(`${icon("list",15)} ${mn} 月待办执行`,
       row("月内计划",`${list.length} 项`)+
       row("已完成",`${done} 项`)+
       row("完成率",`${pct}% ${delta(pct,lastPct,"%")}`)+
       row("未完成",`${list.length-done} 项${ym===curYM()&&overdue?`（逾期 ${overdue} 项）`:""}`)+
-      `<div class="rv-im-rows" style="margin-top:8px;color:var(--text-tertiary)">按计划日期归属月份，完成状态取当前值</div>`)
-      + card(`${icon("chart",15)} ${mn} 月优先级分布`,
-        `<div class="catbar">${pBars||'<div class="focus-empty" style="padding:6px 0;font-size:12px">本月暂无待办</div>'}</div>`);
+      `<div class="rv-im-rows" style="margin-top:8px;color:var(--text-tertiary)">按计划日期归属月份，完成状态取当前值</div>`);
   }
 
   if(m.type==="note"){
@@ -3318,15 +3319,13 @@ function recHTML(m,x){
   }
 
   // default layout
-  if(m.type==="todo"){ const p=(m.priorities||[]).find(p=>p.key===x.priority);
+  if(m.type==="todo"){
     const overdue = !x.done && x.date && x.date < today();
     const st=x.subtasks||[]; const sd=st.filter(s=>s.done).length;
     return `<div class="rec ${layoutCls}">${acts}<div class="top" style="padding-right:44px"><div class="chk js-chk ${x.done?'on':''}" data-id="${x.id}">${chkMark}</div>
-      ${thumb}
       <div class="body" data-edit="${x.id}"><span class="rname ${x.done?'done':''}">${esc(x.title)}</span>
-      ${p?`<span class="badge" style="background:${p.color};color:${p.text}"><span class="dot"></span>${p.label}</span>`:''}
-      ${x.date?`<span class="rdate ${overdue?'overdue':''}">${overdue?icon("alert",11)+' ':''}${x.date}${overdue?' · 逾期':''}</span>`:''}
-      ${st.length?`<span class="badge" style="background:var(--surface-nested);color:var(--text-secondary)">${icon("check",10)} ${sd}/${st.length}</span>`:''}
+      ${x.date?`<span class="rdate ${overdue?'overdue':''}">${x.date}${overdue?' · 逾期':''}</span>`:''}
+      ${st.length?`<span class="rdate" style="margin-left:0;color:var(--text-tertiary)">子任务 ${sd}/${st.length}</span>`:''}
       ${x.note?`<span class="rdate" style="margin-left:0;color:var(--text-tertiary)">${esc(x.note).slice(0,40)}</span>`:''}${customBlock}</div></div></div>`; }
   if(m.type==="checkin"){ const on=!!(x.log&&x.log[today()]); const st=streak(x.log); const lst=longestStreak(x.log);
     const ym=curYM(); const mc=Object.keys(x.log||{}).filter(k=>k.startsWith(ym)&&x.log[k]).length; const goal=x.monthGoal||0;
@@ -3469,7 +3468,6 @@ function openEditor(key,item,prefill){
   let fields="";
   if(m.type==="todo"){
     fields=`<div class="field"><label>任务</label><input id="f-title" value="${attr(d.title)}" placeholder="要做什么？"/></div>
-      <div class="field"><label>优先级</label><div class="seg" id="f-prio">${(m.priorities||[]).map(p=>`<div class="opt ${p.key===d.priority?'on':''}" data-v="${p.key}">${p.label}</div>`).join("")}</div></div>
       <div class="frow"><div class="field"><label>日期</label><input id="f-date" type="date" value="${d.date||isoToday()}"/></div>
       <div class="field"><label>时刻（可选）</label><input id="f-time" type="time" value="${attr(d.time||'')}"/></div></div>
       <div class="field"><label>备注</label><textarea id="f-note" placeholder="补充说明">${esc(d.note||'')}</textarea></div>
@@ -3620,8 +3618,7 @@ function openEditor(key,item,prefill){
     else if(f.type==="number") fields+=`<div class="field"><label>${esc(f.label)}</label><input id="f-cf-${f.key}" type="number" value="${attr(v)}" placeholder="${attr(f.placeholder||'')}"/></div>`;
     else fields+=`<div class="field"><label>${esc(f.label)}</label><input id="f-cf-${f.key}" value="${attr(v)}" placeholder="${attr(f.placeholder||'')}"/></div>`;
   });
-  // shared image URL field (all types)
-  fields+=`<div class="field"><label>图片 URL（可选）</label><input id="f-image" value="${attr(d.image||'')}" placeholder="https://..."/></div>`;
+  // 图片 URL 字段已取消（各模块统一不再提供）
   const overlay=document.createElement("div"); overlay.className="overlay";
   overlay.innerHTML=`<div class="modal"><h3>${editing?'编辑':'新建'} · ${m.name}</h3><div class="sub">${m.desc}</div>${fields}
     <div class="modal-actions">${editing?'<button class="link-danger" id="m-del">删除</button>':''}<div class="spacer"></div>
@@ -3837,7 +3834,7 @@ function openEditor(key,item,prefill){
     const seg=id=>{ const el=overlay.querySelector(id+" .on"); return el?el.dataset.v:undefined; };
     d.title=(val("#f-title")||"").trim()||"未命名";
     d.layout='default';   // 已取消卡片样式选项，统一标准布局
-    if(m.type==="todo"){ d.priority=seg("#f-prio")||d.priority; d.note=(val("#f-note")||"").trim(); d.date=val("#f-date")||isoToday(); d.time=(val("#f-time")||"").trim(); d.subtasks=_subtasks; }
+    if(m.type==="todo"){ d.note=(val("#f-note")||"").trim(); d.date=val("#f-date")||isoToday(); d.time=(val("#f-time")||"").trim(); d.subtasks=_subtasks; }
     else if(m.type==="progress"){
       d.current=Math.max(0,+val("#f-cur")||0);
       d.target=Math.max(1,+val("#f-tgt")||1);
@@ -3937,8 +3934,6 @@ function openEditor(key,item,prefill){
       else if(f.type==="number") d[f.key]=Math.max(0,+val("#f-cf-"+f.key)||0);
       else d[f.key]=(val("#f-cf-"+f.key)||"").trim();
     });
-    // save image
-    d.image=(val("#f-image")||"").trim();
     if(!editing) (data[key]=data[key]||[]).unshift(d);
     persist(); close();
     // 关闭后若是 portfolio 视图，刷新一次（持仓改动影响总览）
@@ -3977,7 +3972,7 @@ function openEditor(key,item,prefill){
 }
 
 function newItem(m){ const base={id:Date.now()}; let item;
-  if(m.type==="todo") item={...base,title:"",priority:(m.priorities&&m.priorities[1]?m.priorities[1].key:"P1"),done:false,note:"",date:isoToday(),time:"",subtasks:[]};
+  if(m.type==="todo") item={...base,title:"",done:false,note:"",date:isoToday(),time:"",subtasks:[]};
   else if(m.type==="checkin") item={...base,title:"",log:{},monthGoal:0};
   else if(m.type==="progress") item={...base,title:"",current:0,target:(m.unit==="页"?100:20),unit:m.unit||"",note:"",reflection:"",quotes:[],tags:[],monthGoal:0};
   else if(m.type==="finance") item={...base,title:"",type:"expense",amount:"",category:(m.categories&&m.categories[0])||"其他",date:isoToday()};
@@ -5042,28 +5037,47 @@ function portfolioTileHTML(){
 /* ============================================================
    PHASE 6 — 洞察页：投资复盘 + 净资产聚合 + 月度快照
    ============================================================ */
-// 每月首次打开复盘页记录一条「当月访问时点」资产快照，仅供投资看板的资产曲线使用。
-// 它不是上月末市值，因此不参与「本月投资收益」计算。
+// 每月首次打开复盘页记录一条资产快照：openValue 为该月期初持仓市值基准，
+// totalValue 同时供投资看板资产曲线使用。旧快照若无 openValue 则按 totalValue 兼容。
 function maybeSnapshotAsset(){
   const ym = curYM();
   const snaps = data.__assetSnapshots = data.__assetSnapshots || [];
-  // 当月已写入则跳过
-  if(snaps.find(s=>s.ym===ym)) return;
   const holdings = data.portfolio || [];
   const totalValue = holdings.reduce((a,h)=>a + portfolioCalc(h).marketValue, 0);
   const totalCost = holdings.reduce((a,h)=>a + portfolioCalc(h).costBasis, 0);
   const money = data.money || [];
   const inc = money.filter(x=>x.type==="income").reduce((a,x)=>a+ +x.amount,0);
   const exp = money.filter(x=>x.type==="expense").reduce((a,x)=>a+ +x.amount,0);
-  snaps.push({ym, totalValue: +totalValue.toFixed(2), totalCost: +totalCost.toFixed(2), cash: +(inc-exp).toFixed(2)});
+  const cur = snaps.find(s=>s.ym===ym);
+  if(cur){
+    if(cur.openValue==null){ cur.openValue=+cur.totalValue||0; store.save(); }
+    return;
+  }
+  const v=+totalValue.toFixed(2);
+  snaps.push({ym, openValue:v, totalValue:v, totalCost: +totalCost.toFixed(2), cash: +(inc-exp).toFixed(2)});
   // 仅保留最近 24 个月
   if(snaps.length>24) snaps.splice(0, snaps.length-24);
   store.save();
 }
 
-/* 本月交易收益台账：按成交日期顺序滚动加权成本，得到卖出时点的真实成本基础。
+/* 该月期初/期末持仓市值：快照按「当月首次访问」记录，视为该月月初基准；
+   当前月期末用实时市值，历史月期末用次月快照（≈ 当月月末）。 */
+function monthAssetBase(ym, liveValue){
+  const snaps=(data.__assetSnapshots||[]).slice().sort((a,b)=>(a.ym||"").localeCompare(b.ym||""));
+  const self=snaps.find(s=>s.ym===ym);
+  const prev=snaps.find(s=>s.ym===prevYM(ym));
+  const next=snaps.find(s=>(s.ym||"")>ym);
+  const num=v=>+v||0;
+  const open=self?(self.openValue!=null?num(self.openValue):num(self.totalValue)):(prev?num(prev.totalValue):null);
+  const close=(ym===curYM())?liveValue:(next?num(next.totalValue):null);
+  if(open==null||close==null) return null;
+  return {open,close};
+}
+
+/* 本月交易台账：按成交日期顺序滚动加权成本，得到卖出时点的真实成本基础。
    口径与 tradeAgg 一致（期初取持仓 qty/costPrice，买入费摊入成本，卖出费计入已实现）。
-   买卖成交金额只是现金流，不参与收益加减；持仓浮动属于当前快照，不重复计入本月收益。 */
+   buyCash / sellCash 是含费的实际现金流，供资产变动口径扣除净投入；
+   net 为缺少资产快照时回退的交易口径收益。 */
 function monthTradeStats(ym){
   const trades=(data.trades||[]).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")||((+a.id||0)-(+b.id||0)));
   const books={};
@@ -5074,7 +5088,7 @@ function monthTradeStats(ym){
     }
     return books[code];
   };
-  const r={realized:0, dividends:0, otherFees:0, buy:0, sell:0, buyN:0, sellN:0, divN:0, feeN:0, count:0};
+  const r={realized:0, dividends:0, otherFees:0, buy:0, sell:0, buyCash:0, sellCash:0, buyN:0, sellN:0, divN:0, feeN:0, count:0};
   trades.forEach(t=>{
     const b=book(t.code||""), q=+t.qty||0, p=+t.price||0, f=+t.fee||0;
     const hit=(t.date||"").startsWith(ym);
@@ -5082,11 +5096,11 @@ function monthTradeStats(ym){
       const nq=b.qty+q;
       b.avgCost=nq>0?(b.qty*b.avgCost+q*p+f)/nq:0;
       b.qty=nq;
-      if(hit){ r.buy+=q*p; r.buyN++; r.count++; }
+      if(hit){ r.buy+=q*p; r.buyCash+=q*p+f; r.buyN++; r.count++; }
     } else if(t.action==="sell"){
       const gain=(p-b.avgCost)*q-f;
       b.qty=Math.max(0,b.qty-q);
-      if(hit){ r.realized+=gain; r.sell+=q*p; r.sellN++; r.count++; }
+      if(hit){ r.realized+=gain; r.sell+=q*p; r.sellCash+=q*p-f; r.sellN++; r.count++; }
     } else if(t.action==="dividend"){
       if(hit){ r.dividends+=Math.max(0,(q>0?q*p:p)-f); r.divN++; r.count++; }
     } else if(t.action==="fee"){
@@ -5094,6 +5108,7 @@ function monthTradeStats(ym){
       if(b.qty>0) b.avgCost+=f/b.qty;
     }
   });
+  r.netCash=r.buyCash-r.sellCash;
   r.net=r.realized+r.dividends-r.otherFees;
   return r;
 }
@@ -5121,26 +5136,35 @@ function investmentReviewHTML(month){
   const totalPct = totalCost>0 ? (totalValue-totalCost)/totalCost*100 : 0;
   const cls = totalPct>=0 ? "done" : "warn";
 
-  // 本月投资收益：只统计当月成交产生的已实现盈亏、分红净额与独立费用（交易口径）
+  // 本月投资收益（资产变动口径）：期末市值 − 期初市值 − 净投入 + 分红 − 独立费用
+  // 市值变化已包含行情浮动与买卖产生的已实现盈亏，因此不再重复相加
   const mt = monthTradeStats(ym);
+  const base = monthAssetBase(ym, totalValue);
   const accPnl = totalValue - totalCost;
   const yuan = v => `${v>=0?'+':'−'}¥${Math.abs(v).toFixed(2)}`;
+  const gain = base ? (base.close-base.open) - mt.netCash + mt.dividends - mt.otherFees : mt.net;
   const monthBlock = `<div class="rv-im">
-      <div class="rv-im-hd">${icon("calendar",13)} ${+ym.slice(5)} 月投资收益 <span class="rv-cap">交易口径</span></div>
-      <div class="rv-im-big ${mt.net>=0?'up':'down'}">${yuan(mt.net)}</div>
+      <div class="rv-im-hd">${icon("calendar",13)} ${+ym.slice(5)} 月投资收益 <span class="rv-cap">${base?"含持仓浮动":"交易口径"}</span></div>
+      <div class="rv-im-big ${gain>=0?'up':'down'}">${yuan(gain)}</div>
       <div class="rv-im-rows">
-        <span>已实现 <b>${yuan(mt.realized)}</b></span>
-        <span>分红 <b>${yuan(mt.dividends)}</b></span>
-        <span>其他费用 <b>−¥${mt.otherFees.toFixed(2)}</b></span>
+        ${base?`<span>期初市值 <b>¥${base.open.toFixed(2)}</b></span>
+        <span>期末市值 <b>¥${base.close.toFixed(2)}</b></span>
+        <span>市值变化 <b>${yuan(base.close-base.open)}</b></span>`:""}
         <span>交易 <b>${mt.count} 笔</b></span>
       </div>
       <div class="rv-im-rows" style="margin-top:6px">
+        <span>净投入 <b>¥${mt.netCash.toFixed(2)}</b></span>
         <span>买入 <b>¥${mt.buy.toFixed(2)}</b>（${mt.buyN} 笔）</span>
         <span>卖出 <b>¥${mt.sell.toFixed(2)}</b>（${mt.sellN} 笔）</span>
+        <span>分红 <b>${yuan(mt.dividends)}</b></span>
+        <span>其他费用 <b>−¥${mt.otherFees.toFixed(2)}</b></span>
+      </div>
+      <div class="rv-im-rows" style="margin-top:6px">
+        <span>其中已实现 <b>${yuan(mt.realized)}</b></span>
         <span>累计浮盈 <b>${yuan(accPnl)}</b></span>
       </div>
-      <div class="rv-im-rows" style="margin-top:6px;color:var(--text-tertiary)">按成交日期归属月份；买卖金额为现金流不计入收益；累计浮盈为当前快照，不重复计入本月收益</div>
-      ${!mt.count?`<div class="rv-im-rows" style="margin-top:6px;color:var(--text-tertiary)">本月暂无交易记录，收益按 ¥0.00 计</div>`:""}
+      <div class="rv-im-rows" style="margin-top:6px;color:var(--text-tertiary)">${base?"收益 = 期末市值 − 期初市值 − 净投入 + 分红 − 费用；行情涨跌与已实现收益已包含在内，不重复相加":"缺少该月资产快照，暂按成交统计交易收益"}</div>
+      ${base&&!mt.count?`<div class="rv-im-rows" style="margin-top:6px;color:var(--text-tertiary)">本月无交易，收益来自持仓行情变化</div>`:""}
     </div>`;
   // 月目标完成度
   const rows = Object.entries(byKind).map(([k,v])=>{
@@ -5185,7 +5209,7 @@ function investmentReviewHTML(month){
       </div>
     </div>
     <div class="rv-card">
-      <div class="rv-hd">${icon("trending",15)} 投资表现 <span class="rv-cap">收益按所选月 · 持仓为当前快照</span></div>
+      <div class="rv-hd">${icon("trending",15)} 投资表现 <span class="rv-cap">收益含行情浮动 · 持仓为当前快照</span></div>
       ${monthBlock}
       <div class="rv-row ${cls}">
         <div class="rv-name">综合收益率</div>
@@ -5261,7 +5285,7 @@ function financeBudgetCard(m, ym){
   const totalBud = Object.values(catsBud).reduce((a,x)=>a+x,0);
   const totalSpent = (data.money||[]).filter(x=>x.type==="expense" && (x.date||"").startsWith(ym)).reduce((a,x)=>a+ +x.amount,0);
   const totalOver = totalBud>0 && totalSpent>totalBud;
-  return `<div class="side-card"><div class="sh">${icon("wallet",15)} 信封预算 · ${+ym.slice(5)} 月</div>
+  return `<div class="side-card" style="margin-bottom:14px"><div class="sh">${icon("wallet",15)} 信封预算 · ${+ym.slice(5)} 月</div>
       <div class="catbar">${rows || '<div style="color:var(--text-tertiary);font-size:12.5px">暂无分类</div>'}</div>
       ${totalBud>0?`<div class="cbrow" style="margin-top:6px;border-top:1px dashed var(--border);padding-top:8px">
         <span class="cbn"><b>合计</b></span><span class="cbt"></span>
